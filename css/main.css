@@ -106,6 +106,9 @@ p {
 }
 .btn-primary,
 .btn-secondary,
+.btn-secondaryESP,
+.btn-secondaryCAT,
+.btn-secondaryENG,
 button,
 input[type="button"],
 input[type="submit"],
@@ -153,17 +156,46 @@ input[type="submit"]:focus {
   border: 2px solid #edcd55;
 }
 .btn-secondary {
+  border-color: #444444;
+  background-color: transparent;
+  box-shadow: 0 10px 10px -8px rgba(0, 0, 0, 0.3);
+  color: #ede;
+  font-size: 12px;
+}
+
+.btn-secondaryCAT {
   border-color: #d5d5d5;
   background-color: transparent;
   box-shadow: 0 10px 10px -8px rgba(0, 0, 0, 0.3);
   color: #f5f5f5;
+  font-size: 12px;
 }
+
+.btn-secondaryESP {
+  border-color: #d5d5d5;
+  background-color: transparent;
+  box-shadow: 0 10px 10px -8px rgba(0, 0, 0, 0.3);
+  color: #f5f5f5;
+  font-size: 12px;
+}
+
+.btn-secondaryENG {
+  border-color: #d5d5d5;
+  background-color: transparent;
+  box-shadow: 0 10px 10px -8px rgba(0, 0, 0, 0.3);
+  color: #f5f5f5;
+  font-size: 12px;
+}
+
+
 .btn-secondary:hover,
 .btn-secondary:focus {
   color: #333;
-  border-color: #d5d5d5;
-  background-color: #d5d5d5;
+  border-color: #edcd55;
+  background-color: #edcd55;
 }
+
+
 .animated {
   -webkit-animation-duration: 1s;
   animation-duration: 1s;
