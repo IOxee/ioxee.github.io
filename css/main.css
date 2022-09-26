@@ -1185,31 +1185,31 @@ input[type="text"],
 }
 
 /* PORCENTAJES */
-.skills-second-style .skill-container.skill-1 .skill-percentage {
-  width: 25%;
-}
-.skills-second-style .skill-container.skill-2 .skill-percentage {
+.skills-second-style .skill-container.skill-1 .skill-percentage { /* LUA */
   width: 35%;
 }
-.skills-second-style .skill-container.skill-3 .skill-percentage {
-  width: 5%;
+.skills-second-style .skill-container.skill-2 .skill-percentage { /* HTML5 / CSS */
+  width: 35%;
 }
-.skills-second-style .skill-container.skill-4 .skill-percentage {
+.skills-second-style .skill-container.skill-3 .skill-percentage { /* JAVA */
+  width: 25%;
+}
+.skills-second-style .skill-container.skill-4 .skill-percentage { /* MYSQL */
   width: 20%;
 }
-.skills-second-style .skill-container.skill-5 .skill-percentage {
+.skills-second-style .skill-container.skill-5 .skill-percentage { /* PHP */
   width: 10%;
 }
-.skills-second-style .skill-container.skill-6 .skill-percentage {
-  width: 20%;
+.skills-second-style .skill-container.skill-6 .skill-percentage { /* JAVASCRIPT */
+  width: 10%;
 }
-.skills-second-style .skill-container.skill-7 .skill-percentage {
+.skills-second-style .skill-container.skill-7 .skill-percentage { /* PYTHON */
   width: 100%;
 }
-.skills-second-style .skill-container.skill-8 .skill-percentage {
+.skills-second-style .skill-container.skill-8 .skill-percentage { /* HTML */
   width: 75%;
 }
-.skills-second-style .skill-container.skill-9 .skill-percentage {
+.skills-second-style .skill-container.skill-9 .skill-percentage { /* CSS */
   width: 90%;
 }
 .pt-page .skills-second-style .skill-percentage,
@@ -2370,6 +2370,7 @@ blockquote {
   background-size: cover;
   background-repeat: no-repeat;
   z-index: -1;
+  background-image: url("../img/main_bg.png");
 }
 .vcentered {
   vertical-align: middle;
