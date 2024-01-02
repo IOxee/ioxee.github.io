@@ -14,6 +14,16 @@
             });
         }
     }
+	function calculateAge(birthDate) {
+		var today = new Date();
+		var birthDate = new Date(birthDate);
+		var age = today.getFullYear() - birthDate.getFullYear();
+		var m = today.getMonth() - birthDate.getMonth();
+		if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+			age--;
+		}
+		return age;
+	}
     function mobileMenuHide() {
         var windowWidth = $(window).width(),
             siteHeader = $("#site_header");
@@ -112,6 +122,10 @@
         $container.imagesLoaded(function () {
             $container.masonry();
         });
+		var userAge = $("#user-age");
+		if (userAge[0]) {
+			userAge.text(calculateAge("2002/04/14"));
+		}
         customScroll();
         $(".text-rotation").owlCarousel({
             loop: true,

@@ -1186,31 +1186,34 @@ input[type="text"],
 
 /* PORCENTAJES */
 .skills-second-style .skill-container.skill-1 .skill-percentage { /* LUA */
-  width: 35%;
-}
-.skills-second-style .skill-container.skill-2 .skill-percentage { /* HTML5 / CSS */
-  width: 35%;
-}
-.skills-second-style .skill-container.skill-3 .skill-percentage { /* JAVA */
-  width: 25%;
-}
-.skills-second-style .skill-container.skill-4 .skill-percentage { /* MYSQL */
-  width: 20%;
-}
-.skills-second-style .skill-container.skill-5 .skill-percentage { /* PHP */
-  width: 10%;
-}
-.skills-second-style .skill-container.skill-6 .skill-percentage { /* JAVASCRIPT */
-  width: 10%;
-}
-.skills-second-style .skill-container.skill-7 .skill-percentage { /* PYTHON */
-  width: 100%;
-}
-.skills-second-style .skill-container.skill-8 .skill-percentage { /* HTML */
   width: 75%;
 }
-.skills-second-style .skill-container.skill-9 .skill-percentage { /* CSS */
+.skills-second-style .skill-container.skill-2 .skill-percentage { /* HTML5 */
   width: 90%;
+}
+.skills-second-style .skill-container.skill-3 .skill-percentage { /* CSS */
+  width: 50%;
+}
+.skills-second-style .skill-container.skill-4 .skill-percentage { /* JS */
+  width: 75%;
+}
+.skills-second-style .skill-container.skill-5 .skill-percentage { /* PHP */
+  width: 50%;
+}
+.skills-second-style .skill-container.skill-6 .skill-percentage { /* Java */
+  width: 55%;
+}
+.skills-second-style .skill-container.skill-7 .skill-percentage { /* SQL */
+  width: 33%;
+}
+.skills-second-style .skill-container.skill-8 .skill-percentage { /* Angular */
+  width: 35%;
+}
+.skills-second-style .skill-container.skill-9 .skill-percentage { /* Python */
+  width: 25%;
+}
+.skills-second-style .skill-container.skill-10 .skill-percentage { /* C# */
+	width: 25%;
 }
 .pt-page .skills-second-style .skill-percentage,
 .pt-page .skills-second-style .skill-value {
