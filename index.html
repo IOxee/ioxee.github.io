@@ -49,7 +49,7 @@
 					</div>
 					<div class="header-titles">
 						<h2>Isidre Rosell</h2>
-						<h4>Programador</h4>
+						<h4>Full-Stack Developer</h4>
 					</div>
 				</div>
 
@@ -95,12 +95,9 @@
 					</ul>
 				</div>
 
-				<!-- <div class="header-buttons">
-					<a href="https://ioxee.github.io/#home" class="btn btn-secondaryESP">Español</a><br><br>
-					<a href="https://ioxee.github.io/" class="btn btn-primary">Volver al Inicio</a>
-				</div> -->
-
-				<div class="copyrights">© 2019 - 2024 All rights reserved. Created by Isidro Rosell</div>
+				<div class="copyrights">
+					© <span id="year-range"></span> All rights reserved. Created by Isidro Rosell
+				</div>
 			</header>
 
 			<!-- Mobile Navigation -->
@@ -157,7 +154,7 @@
 							</div>
 							<div class="row">
 								<div class="col-xs-10 col-sm-7">
-									<p>Soy un programador y diseñador de páginas web de Cataluña, España</p>
+									<p>Soy un programador Full-Stack</p>
 									<p>He estado trabajando en tiendas de informática como técnico y soporte remoto</p>
 									<p>Como hobby estoy trabajando a tiempo parcial en una tienda online, de recursos de
 										<a href="https://fractalgamestudios.es/" target="_blank">programación para servidores Roleplay</a> (GTA V, DayZ, Project Zomboid...)
@@ -185,7 +182,7 @@
 
 											<li>
 												<span class="title">Ocupación: </span>
-												<span class="value">Co-Chief Executive Officer de Fractal Game Studios</span>
+												<span class="value">Co-Founder de Fractal Game Studios</span>
 											</li>
 											<br><br><br>
 											<li>
@@ -251,7 +248,7 @@
 											</div>
 											<div class="divider"></div>
 											<div class="right-part">
-												<h4 class="item-title">Programador</h4>
+												<h4 class="item-title">Programador Full-Stack</h4>
 												<p>Programador de aplicaciones web y desktop</p>
 											</div>
 										</div>
@@ -273,7 +270,7 @@
 											</div>
 											<div class="divider"></div>
 											<div class="right-part">
-												<h4 class="item-title">Técnico Informatico</h4>
+												<h4 class="item-title">Técnico Informático</h4>
 												<p>Mantenimiento a empresas, sistema de seguridad y teletrabajo</p>
 											</div>
 										</div>
@@ -475,12 +472,12 @@
 									</a>
 								</div>
 								<div class="col-md-4 col-sm-6 mb-4">
-									<a href="https://github.com/IOxee/AB_Twitch_Bots">
+									<a href="https://github.com/IOxee/TrellordConnector">
 										<div class="card">
-											<img class="card-img-top" src="img/proyectos/ABTwitchBots.png" alt="Project Image">
+											<img class="card-img-top" src="img/proyectos/TrellordConnector.png" alt="Project Image">
 											<div class="card-body">
-												<h4 class="card-title">AB Twitch Bots</h4>
-												<p class="card-text text-light">Es un proyecto de bots para Twitch hecho en Python completamente configurable y usando peticiones Curl para obtener la lista de bots de la API</p>
+												<h4 class="card-title">Trellord Connector</h4>
+												<p class="card-text text-light">Es una herramienta de conexión entre la API de Trello y Discord, envia cualquier detección de cambios en Trello a un canal de Discord, permite tener multiples proyectos</p>
 											</div>
 										</div>
 									</a>
@@ -536,6 +533,14 @@
 	</div>
 	</div>
 
+	<script>
+		(function () {
+			const startYear = 2019;
+			const currentYear = new Date().getFullYear();
+			document.getElementById("year-range").textContent =
+			currentYear > startYear ? `${startYear} - ${currentYear}` : `${startYear}`;
+		})();
+	</script>
 	<script src="js/jquery-2.1.3.min.js"></script>
 	<script src="js/modernizr.custom.js"></script>
 	<script src="js/animating.js"></script>
