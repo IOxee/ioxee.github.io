@@ -1,0 +1,29 @@
+name: CI
+
+on:
+    pull_request:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+# Un push nuevo a la misma rama cancela la ejecución anterior.
+concurrency:
+    group: ci-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    verify:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 24
+                  cache: npm
+            - run: npm ci
+            - run: npm run format:check
+            - run: npm run check
+            - run: npm run test:coverage
+            - run: npm run build

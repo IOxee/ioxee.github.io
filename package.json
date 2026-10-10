@@ -1,0 +1,33 @@
+{
+	"name": "ioxee-github-io",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"description": "Portfolio de Isidro Rosell",
+	"engines": {
+		"node": ">=22.12.0"
+	},
+	"scripts": {
+		"dev": "astro dev",
+		"build": "astro build",
+		"preview": "astro preview",
+		"check": "astro check",
+		"test": "vitest run",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
+		"test:coverage": "vitest run --coverage"
+	},
+	"dependencies": {
+		"astro": "^7.3.8"
+	},
+	"devDependencies": {
+		"@astrojs/check": "^0.9.10",
+		"@types/node": "^22.20.5",
+		"@vitest/coverage-v8": "^4.1.11",
+		"prettier": "^3.9.10",
+		"prettier-plugin-astro": "^1.1.1",
+		"typescript": "^6.0.3",
+		"vitest": "^4.1.11",
+		"yaml": "^2.9.1"
+	}
+}

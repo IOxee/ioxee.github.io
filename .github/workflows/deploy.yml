@@ -1,0 +1,54 @@
+name: Deploy to GitHub Pages
+
+on:
+    push:
+        branches: [main]
+    # Redespliega cada lunes para que la edad y el año del copyright se refresquen
+    # en el HTML estático aunque no haya commits (el JS del navegador ya los corrige).
+    schedule:
+        - cron: '0 5 * * 1'
+    workflow_dispatch:
+
+# Permite clonar el repo y crear el despliegue de Pages
+permissions:
+    contents: read
+    pages: write
+    id-token: write
+
+jobs:
+    # Nada se publica si los tipos o los tests (incluida la validación de los datos) fallan:
+    # `withastro/action` solo compila, y un YAML mal formado no rompe el build por sí solo.
+    verify:
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 24
+                  cache: npm
+            - run: npm ci
+            - run: npm run check
+            - run: npm run test:coverage
+
+    build:
+        needs: verify
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout your repository using git
+              uses: actions/checkout@v7
+            - name: Install, build, and upload your site
+              uses: withastro/action@v6
+
+    deploy:
+        needs: build
+        runs-on: ubuntu-latest
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - name: Deploy to GitHub Pages
+              id: deployment
+              uses: actions/deploy-pages@v5

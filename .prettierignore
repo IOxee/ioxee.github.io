@@ -1,0 +1,12 @@
+dist/
+.astro/
+node_modules/
+coverage/
+package-lock.json
+public/
+
+# sitio v1 (se elimina en la Fase 6)
+css/
+js/
+img/
+index.html
