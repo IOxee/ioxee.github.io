@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { contrastRatio, parseOklch } from './color';
+import { contrastRatio, oklchToHex, parseOklch } from './color';
 
 describe('parseOklch', () => {
 	it('reads a percentage lightness', () => {
@@ -39,6 +39,30 @@ describe('parseOklch', () => {
 		'oklch(50% 0.1 200 / 0.5)',
 	])('rejects %j, because tokens must be opaque OKLCH colors', (input) => {
 		expect(() => parseOklch(input)).toThrow(RangeError);
+	});
+});
+
+describe('oklchToHex', () => {
+	it('converts black and white', () => {
+		expect(oklchToHex('oklch(0% 0 0)')).toBe('#000000');
+		expect(oklchToHex('oklch(100% 0 0)')).toBe('#ffffff');
+	});
+
+	it('converts a neutral grey through the sRGB transfer curve', () => {
+		// L = 0.5 → luz lineal 0.125 → 1.055 · 0.125^(1/2.4) − 0.055 = 0.3886 → 99/255 = 0x63.
+		expect(oklchToHex('oklch(0.5 0 0)')).toBe('#636363');
+	});
+
+	it('converts the OKLCH coordinates of pure sRGB red to #ff0000', () => {
+		expect(oklchToHex('oklch(0.628 0.2577 29.23)')).toBe('#ff0000');
+	});
+
+	it('clips colors outside the sRGB gamut to a valid six-digit hex', () => {
+		expect(oklchToHex('oklch(70% 0.4 30)')).toMatch(/^#[0-9a-f]{6}$/);
+	});
+
+	it('rejects what is not an opaque oklch() color', () => {
+		expect(() => oklchToHex('#fff')).toThrow(RangeError);
 	});
 });
 

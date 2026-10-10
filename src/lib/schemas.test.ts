@@ -33,6 +33,7 @@ const project = {
 	name: 'Demo',
 	summary: { es: 'Resumen' },
 	stack: ['TypeScript'],
+	imageAlt: { es: 'Captura de la portada' },
 	repo: 'https://github.com/example/demo',
 	order: 1,
 };
@@ -172,6 +173,15 @@ describe('projectSchema', () => {
 			false,
 		);
 	});
+
+	it.each([undefined, { es: '' }, { en: 'Screenshot' }])(
+		'requires the alt text of the screenshot, in Spanish (%j)',
+		(imageAlt) => {
+			expect(accepts(projectSchema, { ...project, imageAlt })).toBe(
+				false,
+			);
+		},
+	);
 
 	it('rejects an empty stack', () => {
 		expect(accepts(projectSchema, { ...project, stack: [] })).toBe(false);

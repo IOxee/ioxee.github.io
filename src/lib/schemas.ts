@@ -111,6 +111,8 @@ export const projectSchema = z.object({
 	name: nonEmpty,
 	summary: localizedText,
 	stack: z.array(nonEmpty).min(1),
+	/** Texto alternativo de la captura `src/assets/projects/<id>.png`: es contenido, no adorno. */
+	imageAlt: localizedText,
 	repo: httpsUrl,
 	order,
 });

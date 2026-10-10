@@ -3,6 +3,7 @@ import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import { sortExperience } from '../lib/experience';
 import type { Locale } from '../lib/i18n';
+import { pickImage } from '../lib/images';
 import { sortByOrder } from '../lib/order';
 import { partialDateKey } from '../lib/partial-date';
 import { SECTION_IDS } from '../lib/sections';
@@ -57,6 +58,13 @@ const languages = sortByOrder(
 	(await getCollection('languages')).map((entry) => entry.data),
 );
 
+// La captura de cada proyecto se llama como su id: `src/assets/projects/<id>.png`.
+const projectImages = import.meta.glob<{ default: ImageMetadata }>(
+	'../assets/projects/*.{png,jpg,jpeg,webp}',
+	{ eager: true },
+);
+const projectImage = (id: string) => pickImage(projectImages, id).default;
+
 const title = fill(t(locale, 'meta.title'), { name: profile.name });
 const description = fill(t(locale, 'meta.description'), { name: profile.name });
 ---
@@ -107,6 +115,7 @@ const description = fill(t(locale, 'meta.description'), { name: profile.name });
 				{projects.map((project, index) => (
 					<Mission
 						project={project}
+						image={projectImage(project.id)}
 						locale={locale}
 						tilt={MISSION_TILTS[index % MISSION_TILTS.length]}
 					/>

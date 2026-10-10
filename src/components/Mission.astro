@@ -1,4 +1,5 @@
 ---
+import { Image } from 'astro:assets';
 import { localize } from '../lib/i18n';
 import type { Locale } from '../lib/i18n';
 import type { Project } from '../lib/schemas';
@@ -8,11 +9,13 @@ import Sheet from './Sheet.astro';
 
 interface Props {
 	project: Project;
+	/** Captura del proyecto, ya importada para que `astro:assets` la optimice. */
+	image: ImageMetadata;
 	locale: Locale;
 	tilt?: number;
 }
 
-const { project, locale, tilt = 0.8 } = Astro.props;
+const { project, image, locale, tilt = 0.8 } = Astro.props;
 const titleId = `mission-${project.id}`;
 ---
 
@@ -34,6 +37,19 @@ const titleId = `mission-${project.id}`;
 			<circle cx="6" cy="18" r="3"></circle>
 			<path d="M8.5 7.5 21 18M8.5 16.5 21 6"></path>
 		</svg>
+
+		<div class="shot">
+			<Image
+				src={image}
+				alt={localize(project.imageAlt, locale)}
+				width={480}
+				height={240}
+				densities={[1, 2]}
+				fit="cover"
+				format="webp"
+				quality={78}
+			/>
+		</div>
 
 		<h3 id={titleId} class="name">
 			{project.name}
@@ -67,6 +83,21 @@ const titleId = `mission-${project.id}`;
 		top: -0.9rem;
 		left: var(--space-4);
 		color: var(--ink-muted);
+	}
+
+	/* La captura es una fotocopia pegada: `multiply` la tiñe del papel en vez de recortar un rectángulo ajeno. */
+	.shot {
+		margin-bottom: var(--space-1);
+		line-height: 0;
+		border: 2px solid var(--ink);
+	}
+
+	.shot :global(img) {
+		width: 100%;
+		height: auto;
+		aspect-ratio: 2 / 1;
+		object-fit: cover;
+		mix-blend-mode: multiply;
 	}
 
 	.name {

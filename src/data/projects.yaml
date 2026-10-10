@@ -10,6 +10,8 @@
       - Bootstrap 5.3
       - MVC
   repo: https://github.com/IOxee/DelawareTelegraph
+  imageAlt:
+      es: 'Portada de Delaware Telegraph: una cuadrícula de noticias con imagen, titular, autor, etiquetas y un botón «Ver más».'
   order: 1
 
 - id: trellord-connector
@@ -21,6 +23,8 @@
       - Trello API
       - Discord webhooks
   repo: https://github.com/IOxee/TrellordConnector
+  imageAlt:
+      es: 'Terminal con el logotipo en ASCII de Fractal Game Studios y el mensaje «Server started» al arrancar la herramienta.'
   order: 2
 
 - id: animal-crossing-api-wrapper
@@ -33,4 +37,6 @@
       - TypeScript
       - SCSS
   repo: https://github.com/IOxee/Animal_Crossing_API_Wrapper
+  imageAlt:
+      es: 'Interfaz «Nook Phone»: una cuadrícula de iconos redondeados con las secciones de Animal Crossing.'
   order: 3

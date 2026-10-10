@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { z } from 'astro/zod';
 import { parse } from 'yaml';
 import type { DocumentOptions, ParseOptions, SchemaOptions } from 'yaml';
@@ -74,6 +74,28 @@ describe('src/data/skills.yaml', () => {
 describe('src/data/projects.yaml', () => {
 	it('has no duplicate ids', () => {
 		expect(duplicateIds(load('projects.yaml', projectSchema))).toEqual([]);
+	});
+});
+
+describe('project screenshots', () => {
+	const EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp'];
+
+	it('has a source image in src/assets/projects named after every project id', () => {
+		const missing = load('projects.yaml', projectSchema)
+			.map((project) => project.id)
+			.filter(
+				(id) =>
+					!EXTENSIONS.some((extension) =>
+						existsSync(
+							new URL(
+								`../../src/assets/projects/${id}.${extension}`,
+								import.meta.url,
+							),
+						),
+					),
+			);
+
+		expect(missing).toEqual([]);
 	});
 });
 
