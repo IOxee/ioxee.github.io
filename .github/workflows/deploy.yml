@@ -3,10 +3,10 @@ name: Deploy to GitHub Pages
 on:
     push:
         branches: [main]
-    # Redespliega cada lunes para que la edad y el año del copyright se refresquen
-    # en el HTML estático aunque no haya commits (el JS del navegador ya los corrige).
+    # Redespliega a diario para que la edad y el año del copyright, que se calculan al
+    # compilar, se mantengan exactos aunque no haya commits.
     schedule:
-        - cron: '0 5 * * 1'
+        - cron: '0 5 * * *'
     workflow_dispatch:
 
 # Permite clonar el repo y crear el despliegue de Pages
