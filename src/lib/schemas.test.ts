@@ -34,6 +34,7 @@ const project = {
 	summary: { es: 'Resumen' },
 	stack: ['TypeScript'],
 	repo: 'https://github.com/example/demo',
+	order: 1,
 };
 
 const profile = {
@@ -53,7 +54,12 @@ const profile = {
 	cv: '/cv.pdf',
 };
 
-const language = { id: 'ca', name: { es: 'Catalán' }, level: 'native' };
+const language = {
+	id: 'ca',
+	name: { es: 'Catalán' },
+	level: 'native',
+	order: 1,
+};
 
 describe('skillSchema', () => {
 	it('accepts a valid skill', () => {
@@ -76,6 +82,19 @@ describe('skillSchema', () => {
 
 	it.each([1989, 2018.5, '2018'])('rejects the start year %j', (since) => {
 		expect(accepts(skillSchema, { ...skill, since })).toBe(false);
+	});
+
+	it.each(['daily', 'comfortable', 'intermediate', 'basic'])(
+		'accepts the state %s',
+		(state) => {
+			expect(accepts(skillSchema, { ...skill, state })).toBe(true);
+		},
+	);
+
+	it('rejects the retired "learning" state', () => {
+		expect(accepts(skillSchema, { ...skill, state: 'learning' })).toBe(
+			false,
+		);
 	});
 
 	it('rejects an unknown category or state', () => {
@@ -144,6 +163,16 @@ describe('projectSchema', () => {
 		expect(accepts(projectSchema, project)).toBe(true);
 	});
 
+	it.each([0, -1, 1.5, '1'])('rejects the display order %j', (order) => {
+		expect(accepts(projectSchema, { ...project, order })).toBe(false);
+	});
+
+	it('requires a display order, because the content store does not keep file order', () => {
+		expect(accepts(projectSchema, { ...project, order: undefined })).toBe(
+			false,
+		);
+	});
+
 	it('rejects an empty stack', () => {
 		expect(accepts(projectSchema, { ...project, stack: [] })).toBe(false);
 	});
@@ -178,10 +207,22 @@ describe('profileSchema', () => {
 		},
 	);
 
-	it('rejects a CV path that is not absolute', () => {
-		expect(accepts(profileSchema, { ...profile, cv: 'cv.pdf' })).toBe(
-			false,
-		);
+	it.each([
+		'cv.pdf',
+		'//evil.example/cv.pdf',
+		'/\\evil.example/cv.pdf',
+		'https://evil.example/cv.pdf',
+	])('rejects the CV path %j, which is not a path inside this site', (cv) => {
+		expect(accepts(profileSchema, { ...profile, cv })).toBe(false);
+	});
+
+	it('accepts an absolute path inside the site as the CV', () => {
+		expect(
+			accepts(profileSchema, {
+				...profile,
+				cv: '/assets/documents/cv.pdf',
+			}),
+		).toBe(true);
 	});
 
 	it('rejects an invalid email', () => {
@@ -216,6 +257,16 @@ describe('profileSchema', () => {
 describe('languageSchema', () => {
 	it('accepts a valid language', () => {
 		expect(accepts(languageSchema, language)).toBe(true);
+	});
+
+	it.each([0, -1, 1.5, '1'])('rejects the display order %j', (order) => {
+		expect(accepts(languageSchema, { ...language, order })).toBe(false);
+	});
+
+	it('requires a display order', () => {
+		expect(accepts(languageSchema, { ...language, order: undefined })).toBe(
+			false,
+		);
 	});
 
 	it('rejects an unknown level', () => {

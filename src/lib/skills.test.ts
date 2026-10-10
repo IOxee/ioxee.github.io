@@ -66,10 +66,16 @@ describe('groupSkills', () => {
 		const [group] = groupSkills(
 			[
 				skill({
-					id: 'learning',
-					name: 'Aprendiendo',
-					state: 'learning',
+					id: 'basic',
+					name: 'Básico',
+					state: 'basic',
 					since: 2010,
+				}),
+				skill({
+					id: 'mid',
+					name: 'Intermedio',
+					state: 'intermediate',
+					since: 2012,
 				}),
 				skill({
 					id: 'comfy',
@@ -104,7 +110,8 @@ describe('groupSkills', () => {
 			'daily-old',
 			'daily-new',
 			'comfy',
-			'learning',
+			'mid',
+			'basic',
 		]);
 	});
 

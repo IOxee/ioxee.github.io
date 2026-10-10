@@ -3,7 +3,12 @@ import { PARTIAL_DATE, partialDateKey } from './partial-date';
 
 export const SKILL_CATEGORIES = ['backend', 'frontend', 'data'] as const;
 /** De mayor a menor uso; el orden define cómo se ordenan las habilidades dentro de un grupo. */
-export const SKILL_STATES = ['daily', 'comfortable', 'learning'] as const;
+export const SKILL_STATES = [
+	'daily',
+	'comfortable',
+	'intermediate',
+	'basic',
+] as const;
 export const EXPERIENCE_KINDS = ['work', 'education'] as const;
 export const LANGUAGE_LEVELS = ['native', 'high', 'medium', 'basic'] as const;
 
@@ -15,6 +20,8 @@ const id = z
 		'Usa kebab-case: minúsculas, números y guiones',
 	);
 const partialDate = z.string().regex(PARTIAL_DATE, 'Usa AAAA o AAAA-MM');
+// Posición al mostrar la lista. Es explícita porque el almacén de contenido no conserva el orden del archivo.
+const order = z.number().int().min(1);
 
 // Estos enlaces acaban como `href`: solo https, para que ni un dato mal copiado ni un
 // importador automático puedan colar `javascript:`, `file:` o `http:`.
@@ -48,7 +55,13 @@ export const profileSchema = z.object({
 		email: z.email(),
 		company: httpsUrl.optional(),
 	}),
-	cv: z.string().startsWith('/'),
+	// Una ruta del propio sitio: `//host/…` y `/\host/…` serían una dirección externa.
+	cv: z
+		.string()
+		.regex(
+			/^\/(?![/\\])/,
+			'Usa una ruta del sitio, con una sola / al principio',
+		),
 });
 
 /**
@@ -99,12 +112,14 @@ export const projectSchema = z.object({
 	summary: localizedText,
 	stack: z.array(nonEmpty).min(1),
 	repo: httpsUrl,
+	order,
 });
 
 export const languageSchema = z.object({
 	id,
 	name: localizedText,
 	level: z.enum(LANGUAGE_LEVELS),
+	order,
 });
 
 export type Profile = z.infer<typeof profileSchema>;

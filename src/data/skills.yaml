@@ -1,58 +1,60 @@
 # Inventario de habilidades.
 #
 # `since`: año en que empezaste (los años de experiencia se calculan solos).
-# `state`: daily = uso diario · comfortable = con soltura · learning = aprendiendo.
+# `state`: daily = uso diario · comfortable = con soltura · intermediate = intermedio ·
+#          basic = básico.
 # `provisional: true`: el `since` es una estimación sin confirmar. La web NO enseña los
 # años de las habilidades provisionales (solo su estado) hasta que borres esa línea.
 #
-# Los `state` salen de tus antiguos porcentajes (>=75 % → daily, 50-55 % → comfortable,
-# <=35 % → learning); el único `since` firme es el de Lua (servidores FiveM desde 2018).
-# Confirma o corrige cada habilidad y quita `provisional` al hacerlo.
+# Los `state` de Lua, PHP, Java, C#, Python, Angular, Next.js, SQL y PostgreSQL los fijaste
+# tú. Los de HTML, CSS y JavaScript siguen saliendo de tus antiguos porcentajes (>=75 % →
+# daily, 50 % → comfortable): confírmalos. El único `since` firme es el de Lua (servidores
+# FiveM desde 2022); el resto son estimaciones.
 - id: lua
   name: Lua
   category: backend
-  since: 2018
-  state: daily
-
-- id: php
-  name: PHP
-  category: backend
   since: 2022
   state: comfortable
+
+- id: csharp
+  name: C#
+  category: backend
+  since: 2023
+  state: daily
   provisional: true
 
 - id: java
   name: Java
   category: backend
   since: 2020
-  state: comfortable
+  state: intermediate
+  provisional: true
+
+- id: php
+  name: PHP
+  category: backend
+  since: 2022
+  state: intermediate
   provisional: true
 
 - id: python
   name: Python
   category: backend
   since: 2021
-  state: learning
-  provisional: true
-
-- id: csharp
-  name: C#
-  category: backend
-  since: 2021
-  state: learning
+  state: basic
   provisional: true
 
 - id: html
   name: HTML
   category: frontend
-  since: 2018
+  since: 2019
   state: daily
   provisional: true
 
 - id: css
   name: CSS
   category: frontend
-  since: 2018
+  since: 2019
   state: comfortable
   provisional: true
 
@@ -63,16 +65,30 @@
   state: daily
   provisional: true
 
+- id: nextjs
+  name: Next.js
+  category: frontend
+  since: 2024
+  state: intermediate
+  provisional: true
+
 - id: angular
   name: Angular
   category: frontend
   since: 2022
-  state: learning
+  state: basic
   provisional: true
 
 - id: sql
   name: SQL
   category: data
   since: 2020
-  state: learning
+  state: daily
+  provisional: true
+
+- id: postgresql
+  name: PostgreSQL
+  category: data
+  since: 2025
+  state: intermediate
   provisional: true

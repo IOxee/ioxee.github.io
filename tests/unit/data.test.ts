@@ -77,6 +77,18 @@ describe('src/data/projects.yaml', () => {
 	});
 });
 
+describe('display order of projects and languages', () => {
+	const repeated = (items: readonly { order: number }[]): number[] =>
+		items
+			.map((item) => item.order)
+			.filter((order, index, all) => all.indexOf(order) !== index);
+
+	it('has no repeated order within a collection', () => {
+		expect(repeated(load('projects.yaml', projectSchema))).toEqual([]);
+		expect(repeated(load('languages.yaml', languageSchema))).toEqual([]);
+	});
+});
+
 describe('src/data/languages.yaml', () => {
 	it('has no duplicate ids', () => {
 		expect(duplicateIds(load('languages.yaml', languageSchema))).toEqual(

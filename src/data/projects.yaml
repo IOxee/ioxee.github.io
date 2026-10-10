@@ -10,6 +10,7 @@
       - Bootstrap 5.3
       - MVC
   repo: https://github.com/IOxee/DelawareTelegraph
+  order: 1
 
 - id: trellord-connector
   name: Trellord Connector
@@ -20,6 +21,7 @@
       - Trello API
       - Discord webhooks
   repo: https://github.com/IOxee/TrellordConnector
+  order: 2
 
 - id: animal-crossing-api-wrapper
   name: Animal Crossing API Wrapper
@@ -31,3 +33,4 @@
       - TypeScript
       - SCSS
   repo: https://github.com/IOxee/Animal_Crossing_API_Wrapper
+  order: 3

@@ -5,13 +5,15 @@
       ca: Català
       en: Catalan
   level: native
+  order: 1
 
 - id: es
   name:
       es: Español
       ca: Castellà
       en: Spanish
-  level: high
+  level: native
+  order: 2
 
 - id: en
   name:
@@ -19,3 +21,4 @@
       ca: Anglès
       en: English
   level: medium
+  order: 3

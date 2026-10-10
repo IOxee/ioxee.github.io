@@ -57,9 +57,9 @@
   role:
       es: Servidores GTAV
   summary:
-      es: Programación, mantenimiento y optimización de los servidores FiveM (GTAV Roleplay).
-  start: '2018'
-  end: null
+      es: Programación, mantenimiento y optimización de los servidores FiveM (GTAV Roleplay). Desde 2024 solo lo retomo de forma ocasional.
+  start: '2022'
+  end: '2024'
 
 - id: tecnico-en-casa
   kind: work
