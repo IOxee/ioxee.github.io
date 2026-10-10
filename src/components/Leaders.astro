@@ -1,0 +1,66 @@
+---
+interface Item {
+	label: string;
+	value: string;
+	/** Si lo hay, el valor es un enlace. */
+	href?: string;
+}
+
+interface Props {
+	items: readonly Item[];
+}
+
+const { items } = Astro.props;
+---
+
+<dl class="leaders">
+	{items.map((item) => (
+		<div class="row">
+			<dt>{item.label}</dt>
+			<dd>
+				{item.href ? <a href={item.href}>{item.value}</a> : item.value}
+			</dd>
+		</div>
+	))}
+</dl>
+
+<style>
+	.leaders {
+		display: grid;
+		gap: var(--space-2);
+		margin: 0;
+	}
+
+	/* Si el valor no cabe junto al rótulo pasa entero a la línea de abajo, en vez de partirse. */
+	.row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		column-gap: var(--space-2);
+	}
+
+	/* Rótulo en cursiva, como los pies de campo de un formulario, y puntos guía hasta el valor. */
+	.row dt {
+		display: flex;
+		flex: 1 1 auto;
+		align-items: baseline;
+		gap: var(--space-2);
+		font-size: var(--text-sm);
+		font-style: italic;
+		color: var(--ink-muted);
+	}
+
+	.row dt::after {
+		content: '';
+		flex: 1;
+		border-bottom: 2px dotted var(--rule);
+		translate: 0 -0.2em;
+	}
+
+	.row dd {
+		margin: 0 0 0 auto;
+		font-weight: 700;
+		text-align: right;
+		overflow-wrap: anywhere;
+	}
+</style>

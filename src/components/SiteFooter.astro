@@ -1,0 +1,31 @@
+---
+import { yearRange } from '../lib/age';
+import type { Locale } from '../lib/i18n';
+import { t } from '../lib/ui';
+
+interface Props {
+	name: string;
+	/** Primer año del copyright. El rango hasta hoy se calcula al compilar. */
+	startYear: number;
+	locale: Locale;
+}
+
+const { name, startYear, locale } = Astro.props;
+---
+
+<footer class="footer">
+	<p>
+		© {yearRange(startYear)} {name}. {t(locale, 'footer.rights')}.
+	</p>
+</footer>
+
+<style>
+	.footer {
+		width: min(100% - 2 * var(--gutter), var(--page-width));
+		margin: 0 auto;
+		padding-block: var(--space-4) var(--space-5);
+		font-size: var(--text-sm);
+		border-top: 1px solid
+			color-mix(in oklch, var(--on-desk) 22%, transparent);
+	}
+</style>

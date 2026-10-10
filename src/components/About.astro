@@ -1,0 +1,117 @@
+---
+import { localize } from '../lib/i18n';
+import type { Locale } from '../lib/i18n';
+import type { Profile } from '../lib/schemas';
+import { t } from '../lib/ui';
+import Leaders from './Leaders.astro';
+import Sheet from './Sheet.astro';
+
+interface Props {
+	profile: Profile;
+	locale: Locale;
+}
+
+const { profile, locale } = Astro.props;
+
+const paragraphs = localize(profile.about, locale);
+const company = profile.links.company;
+const facts = [
+	{
+		label: t(locale, 'about.nationality'),
+		value: localize(profile.nationality, locale),
+	},
+	{
+		label: t(locale, 'about.occupation'),
+		value: localize(profile.occupation, locale),
+		// El sitio v1 enlazaba la empresa desde este texto: aquí no se pierde ese enlace.
+		...(company ? { href: company } : {}),
+	},
+];
+---
+
+<Sheet as="section" tilt={0.3} labelledby="about-title">
+	<div class="layout">
+		<div class="text">
+			<h2 id="about-title" class="title">
+				{t(locale, 'section.about')}
+			</h2>
+			{paragraphs.map((paragraph) => (
+				<p>{paragraph}</p>
+			))}
+		</div>
+
+		<div class="facts">
+			<Leaders items={facts} />
+			<a class="cv" href={profile.cv} download>
+				{t(locale, 'about.cv')}
+			</a>
+		</div>
+	</div>
+</Sheet>
+
+<style>
+	.layout {
+		display: grid;
+		gap: var(--space-5) var(--space-6);
+	}
+
+	.text {
+		display: grid;
+		gap: var(--space-3);
+		align-content: start;
+	}
+
+	.title {
+		margin-bottom: var(--space-1);
+		font-size: var(--text-h2);
+	}
+
+	.facts {
+		display: grid;
+		gap: var(--space-4);
+		align-content: start;
+	}
+
+	/* El botón del CV es un papel más: borde de tinta y un relieve de cartón. */
+	.cv {
+		justify-self: start;
+		display: inline-flex;
+		align-items: center;
+		min-height: 2.75rem;
+		padding: 0.5rem 1.1rem;
+		font-family: var(--font-display);
+		font-weight: 700;
+		color: var(--ink);
+		text-decoration: none;
+		background: var(--paper-shade);
+		border: 2px solid var(--ink);
+		border-radius: 0.2rem;
+		box-shadow: 0 3px 0 oklch(0% 0 0 / 0.35);
+		transition:
+			translate 120ms ease-out,
+			box-shadow 120ms ease-out;
+	}
+
+	/* Su `box-shadow` propio anularía el halo del foco global: se repite con el halo incluido. */
+	.cv:focus-visible {
+		box-shadow:
+			0 3px 0 oklch(0% 0 0 / 0.35),
+			0 0 0 7px var(--on-desk);
+	}
+
+	.cv:active {
+		translate: 0 2px;
+		box-shadow: 0 1px 0 oklch(0% 0 0 / 0.35);
+	}
+
+	@media (min-width: 60rem) {
+		.layout {
+			grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+		}
+
+		/* La ficha de datos queda a la altura del primer párrafo, no del título. */
+		.facts {
+			padding-top: var(--space-6);
+		}
+	}
+</style>

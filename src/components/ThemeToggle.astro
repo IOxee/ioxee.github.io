@@ -1,0 +1,118 @@
+---
+import type { Locale } from '../lib/i18n';
+import { t } from '../lib/ui';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+<button type="button" class="toggle" data-theme-toggle>
+	<svg
+		class="icon"
+		viewBox="0 0 24 24"
+		width="20"
+		height="20"
+		fill="none"
+		stroke="currentColor"
+		stroke-width="2"
+		stroke-linecap="round"
+		stroke-linejoin="round"
+		aria-hidden="true"
+		focusable="false"
+	>
+		<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"></path>
+	</svg>
+	{/* El texto es la acción que ocurrirá; el CSS enseña uno u otro según el tema, sin esperar a JS. */}
+	<span class="to-night">{t(locale, 'theme.toNight')}</span>
+	<span class="to-day">{t(locale, 'theme.toDay')}</span>
+</button>
+
+<script>
+	const root = document.documentElement;
+
+	document
+		.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]')
+		.forEach((button) => {
+			button.addEventListener('click', () => {
+				const next = root.dataset.theme === 'night' ? 'day' : 'night';
+				root.dataset.theme = next;
+
+				try {
+					// La clave lleva prefijo: todos los proyectos de ioxee.github.io comparten origen.
+					localStorage.setItem('ioxee:theme', next);
+				} catch {
+					// Sin almacenamiento: el cambio dura solo esta visita.
+				}
+			});
+		});
+</script>
+
+<style>
+	.toggle {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		min-height: 2.75rem;
+		padding: 0.5rem 0.7rem;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--text-sm);
+		color: var(--ink);
+		cursor: pointer;
+		background: var(--paper);
+		border: 2px solid var(--ink);
+		border-radius: 0.2rem;
+		box-shadow: 0 3px 0 oklch(0% 0 0 / 0.35);
+		transition:
+			translate 120ms ease-out,
+			box-shadow 120ms ease-out;
+	}
+
+	/* Este `box-shadow` propio anularía el halo del foco global: se repite aquí con el halo incluido. */
+	.toggle:focus-visible {
+		box-shadow:
+			0 3px 0 oklch(0% 0 0 / 0.35),
+			0 0 0 7px var(--on-desk);
+	}
+
+	.toggle:active {
+		translate: 0 2px;
+		box-shadow: 0 1px 0 oklch(0% 0 0 / 0.35);
+	}
+
+	:global([data-theme='day']) .to-day,
+	:global([data-theme='night']) .to-night {
+		display: none;
+	}
+
+	/* En móvil el botón es solo el icono; el texto sigue ahí para los lectores de pantalla. */
+	.to-night,
+	.to-day {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	@media (min-width: 40rem) {
+		.toggle {
+			padding-inline: 0.95rem;
+		}
+
+		.to-night,
+		.to-day {
+			position: static;
+			width: auto;
+			height: auto;
+			margin: 0;
+			overflow: visible;
+			clip-path: none;
+		}
+	}
+</style>

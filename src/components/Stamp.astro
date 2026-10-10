@@ -1,0 +1,70 @@
+---
+interface Props {
+	text: string;
+	tilt?: number;
+	/** Cae sobre el papel una sola vez al cargar. Es el único movimiento no pedido de la página. */
+	animate?: boolean;
+}
+
+const { text, tilt = -8, animate = false } = Astro.props;
+---
+
+{/* Es adorno: lo que dice ya consta en el contenido, así que los lectores de pantalla lo omiten. */}
+<p
+	class="stamp"
+	style={`--tilt: ${tilt}deg`}
+	data-animate={animate}
+	aria-hidden="true"
+>
+	{text}
+</p>
+
+<style>
+	.stamp {
+		display: inline-block;
+		margin: 0;
+		padding: 0.45em 0.8em 0.4em;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: clamp(1rem, 0.7rem + 1.4vw, 1.75rem);
+		line-height: 1;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		white-space: nowrap;
+		color: var(--stamp);
+		border: 4px double currentColor;
+		border-radius: 0.35rem;
+		opacity: 0.92;
+		transform: rotate(var(--tilt));
+		/* Tinta sobre papel: se mezcla con lo que hay debajo y tiene el borde irregular. */
+		mix-blend-mode: multiply;
+		filter: url(#ink-rough);
+	}
+
+	.stamp[data-animate='true'] {
+		animation: stamp-down var(--duration-stamp) var(--ease-stamp) 700ms both;
+	}
+
+	/* Sin movimiento no hay caída: el sello ya está estampado, sin esperar al retardo de la animación. */
+	@media (prefers-reduced-motion: reduce) {
+		.stamp[data-animate='true'] {
+			animation: none;
+		}
+	}
+
+	@keyframes stamp-down {
+		from {
+			opacity: 0;
+			transform: rotate(calc(var(--tilt) - 7deg)) scale(1.9);
+		}
+
+		55% {
+			opacity: 0.95;
+		}
+
+		to {
+			opacity: 0.92;
+			transform: rotate(var(--tilt)) scale(1);
+		}
+	}
+</style>

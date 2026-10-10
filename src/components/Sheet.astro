@@ -1,0 +1,87 @@
+---
+interface Props {
+	as?: 'section' | 'article' | 'div';
+	/** Giro en grados: cada hoja cae un poco distinta, como papeles sobre una mesa. */
+	tilt?: number;
+	/** Borde izquierdo con muescas de troquel, como una cartilla. */
+	perforated?: boolean;
+	/** Id del título, para `section` y `article`. */
+	labelledby?: string;
+}
+
+const {
+	as: Tag = 'div',
+	tilt = 0,
+	perforated = false,
+	labelledby,
+} = Astro.props;
+---
+
+<Tag
+	class:list={['sheet', { 'sheet--perforated': perforated }]}
+	style={`--tilt: ${tilt}deg`}
+	aria-labelledby={labelledby}
+>
+	<div class="paper">
+		<slot />
+	</div>
+</Tag>
+
+<style>
+	/* La sombra va en el contenedor: `filter` respeta la forma recortada de las muescas. */
+	.sheet {
+		position: relative;
+		color: var(--ink);
+		transform: rotate(var(--tilt));
+		filter: var(--shadow-paper);
+	}
+
+	.paper {
+		position: relative;
+		padding: var(--space-4) var(--space-4) var(--space-5);
+		background-color: var(--paper);
+		background-image: linear-gradient(
+			165deg,
+			oklch(100% 0 0 / 0.22),
+			transparent 45%,
+			oklch(0% 0 0 / 0.1)
+		);
+	}
+
+	/* Grano por encima del papel. `multiply` oscurece el papel y no toca la tinta. */
+	.paper::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		background-image: var(--grain);
+		mix-blend-mode: multiply;
+		opacity: 0.15;
+	}
+
+	.sheet--perforated .paper {
+		padding-left: calc(var(--space-4) + 1.1rem);
+		mask:
+			radial-gradient(circle at 0 50%, #0000 0.42rem, #000 0.44rem) 0 0 /
+				1.1rem 1.75rem repeat-y,
+			linear-gradient(#000 0 0) 1.1rem 0 / calc(100% - 1.1rem) 100%
+				no-repeat;
+	}
+
+	/* En modo de contraste forzado el grano ensucia el texto: se quita. */
+	@media (forced-colors: active) {
+		.paper::after {
+			display: none;
+		}
+	}
+
+	@media (min-width: 48rem) {
+		.paper {
+			padding: var(--space-5) var(--space-5) var(--space-6);
+		}
+
+		.sheet--perforated .paper {
+			padding-left: calc(var(--space-5) + 1.1rem);
+		}
+	}
+</style>

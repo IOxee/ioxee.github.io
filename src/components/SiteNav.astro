@@ -1,0 +1,176 @@
+---
+import type { Locale } from '../lib/i18n';
+import { SECTION_IDS } from '../lib/sections';
+import { t } from '../lib/ui';
+import ThemeToggle from './ThemeToggle.astro';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+// El orden coincide con el de las secciones en la página: el script lo da por hecho.
+const links = [
+	{ id: SECTION_IDS.about, label: t(locale, 'nav.about') },
+	{ id: SECTION_IDS.resume, label: t(locale, 'nav.resume') },
+	{ id: SECTION_IDS.projects, label: t(locale, 'nav.projects') },
+	{ id: SECTION_IDS.contact, label: t(locale, 'nav.contact') },
+];
+---
+
+<header class="bar">
+	<div class="inner">
+		<nav aria-label={t(locale, 'nav.label')} data-site-nav>
+			<ul class="links" role="list">
+				{links.map((link) => (
+					<li>
+						<a href={`#${link.id}`}>{link.label}</a>
+					</li>
+				))}
+			</ul>
+		</nav>
+		<div class="tools">
+			<ThemeToggle locale={locale} />
+		</div>
+	</div>
+</header>
+
+<script>
+	const links = new Map<string, HTMLAnchorElement>();
+	document
+		.querySelectorAll<HTMLAnchorElement>('[data-site-nav] a[href^="#"]')
+		.forEach((link) => links.set(link.hash.slice(1), link));
+
+	const sections = [...links.keys()]
+		.map((id) => document.getElementById(id))
+		.filter((section): section is HTMLElement => section !== null);
+
+	// Una única regla decide la sección actual, así no hay dos escritores que se pisen:
+	// la última cuya parte superior ya pasó el 35 % de la ventana; ninguna si seguimos en la
+	// cartilla (arriba del todo); y la última sección al llegar al final de la página.
+	function update() {
+		const line = window.innerHeight * 0.35;
+		const atBottom =
+			window.innerHeight + window.scrollY >=
+			document.documentElement.scrollHeight - 2;
+
+		let current: string | null = null;
+		if (atBottom) {
+			current = sections.at(-1)?.id ?? null;
+		} else {
+			for (const section of sections) {
+				if (section.getBoundingClientRect().top <= line)
+					current = section.id;
+			}
+		}
+
+		links.forEach((link, id) => {
+			if (id === current) link.setAttribute('aria-current', 'location');
+			else link.removeAttribute('aria-current');
+		});
+	}
+
+	let queued = false;
+	const schedule = () => {
+		if (queued) return;
+		queued = true;
+		requestAnimationFrame(() => {
+			queued = false;
+			update();
+		});
+	};
+
+	window.addEventListener('scroll', schedule, { passive: true });
+	window.addEventListener('resize', schedule);
+	update();
+</script>
+
+<style>
+	.bar {
+		background: var(--desk);
+	}
+
+	/* Una sola fila: los enlaces se reparten en las líneas que necesiten junto al botón. */
+	.inner {
+		display: flex;
+		flex-wrap: nowrap;
+		gap: var(--space-3);
+		align-items: center;
+		justify-content: space-between;
+		width: min(100% - 2 * var(--gutter), var(--page-width));
+		margin-inline: auto;
+		padding-block: var(--space-3);
+	}
+
+	nav {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.tools {
+		flex: none;
+	}
+
+	.links {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0 var(--space-3);
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.links a {
+		display: inline-flex;
+		align-items: center;
+		min-height: 2.75rem;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--text-base);
+		color: var(--on-desk);
+		text-decoration: none;
+		border-bottom: 3px solid transparent;
+	}
+
+	.links a:hover {
+		border-bottom-color: color-mix(
+			in oklch,
+			var(--on-desk) 55%,
+			transparent
+		);
+	}
+
+	/* La sección actual se marca con un subrayado de cinta: no depende solo del color. */
+	.links a[aria-current] {
+		border-bottom-color: var(--tape);
+	}
+
+	/* Con espacio de sobra la barra acompaña al scroll; en móvil se queda arriba y no tapa nada. */
+	@media (min-width: 48rem) {
+		.links {
+			column-gap: var(--space-4);
+		}
+
+		.links a {
+			font-size: var(--text-lg);
+		}
+
+		.bar {
+			position: sticky;
+			top: 0;
+			z-index: 5;
+			border-bottom: 1px solid
+				color-mix(in oklch, var(--on-desk) 16%, transparent);
+		}
+	}
+
+	/* En modo de contraste forzado los colores de borde se igualan: el subrayado pasa a ser de texto. */
+	@media (forced-colors: active) {
+		.links a[aria-current] {
+			text-decoration: underline;
+			text-decoration-thickness: 3px;
+			text-underline-offset: 0.3em;
+		}
+	}
+</style>

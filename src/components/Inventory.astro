@@ -1,0 +1,143 @@
+---
+import type { Locale } from '../lib/i18n';
+import type { SkillGroup } from '../lib/skills';
+import { formatYears, t } from '../lib/ui';
+import Sheet from './Sheet.astro';
+
+interface Props {
+	groups: readonly SkillGroup[];
+	locale: Locale;
+}
+
+const { groups, locale } = Astro.props;
+---
+
+<Sheet as="section" tilt={-0.35} labelledby="inventory-title">
+	<h2 id="inventory-title" class="title">
+		{t(locale, 'section.skills')}
+	</h2>
+
+	{groups.map((group) => (
+		<div
+			class="group"
+			role="group"
+			aria-labelledby={`inventory-${group.category}`}
+		>
+			<h3 id={`inventory-${group.category}`} class="category">
+				{t(locale, `skill.category.${group.category}`)}
+			</h3>
+			<ul class="list" role="list">
+				{group.skills.map((skill) => (
+					<li class="skill">
+						<span class="name">{skill.name}</span>
+						<span class="leader" aria-hidden="true" />
+						{/* Mientras `since` esté sin confirmar no se publican años inventados. */}
+						{!skill.provisional && (
+							<span class="years">
+								{formatYears(skill.years, locale)}
+							</span>
+						)}
+						<span class="state" data-level={skill.state}>
+							<span class="box" aria-hidden="true" />
+							{t(locale, `skill.state.${skill.state}`)}
+						</span>
+					</li>
+				))}
+			</ul>
+		</div>
+	))}
+</Sheet>
+
+<style>
+	.title {
+		margin-bottom: var(--space-4);
+		font-size: var(--text-h2);
+	}
+
+	.group + .group {
+		margin-top: var(--space-4);
+	}
+
+	.category {
+		padding-bottom: var(--space-1);
+		font-size: var(--text-h3);
+		border-bottom: 2px solid var(--ink);
+	}
+
+	.list {
+		margin: var(--space-2) 0 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.skill {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0 var(--space-2);
+		padding-block: 0.2rem;
+	}
+
+	.name {
+		font-weight: 700;
+	}
+
+	.leader {
+		flex: 1 1 1rem;
+		min-width: 1rem;
+		border-bottom: 2px dotted var(--rule);
+		translate: 0 -0.2em;
+	}
+
+	.years {
+		min-width: 4.5rem;
+		font-size: var(--text-sm);
+		color: var(--ink-muted);
+		text-align: right;
+	}
+
+	.state {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		min-width: 8rem;
+		font-size: var(--text-sm);
+	}
+
+	/* Casilla de cartilla: llena, a medias o vacía. El texto lo dice igual: no depende de la forma. */
+	.box {
+		width: 0.95rem;
+		height: 0.95rem;
+		flex: none;
+		border: 2px solid var(--ink);
+		background: linear-gradient(
+			to top,
+			var(--ink) var(--fill, 0%),
+			transparent var(--fill, 0%)
+		);
+	}
+
+	[data-level='daily'] {
+		--fill: 100%;
+	}
+
+	[data-level='comfortable'] {
+		--fill: 75%;
+	}
+
+	[data-level='intermediate'] {
+		--fill: 50%;
+	}
+
+	[data-level='basic'] {
+		--fill: 25%;
+	}
+
+	/* En pantallas estrechas se quitan las columnas de ancho fijo: nombre, puntos y estado caben en una línea. */
+	@media (max-width: 30rem) {
+		.years,
+		.state {
+			min-width: 0;
+		}
+	}
+</style>

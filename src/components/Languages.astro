@@ -1,0 +1,34 @@
+---
+import { localize } from '../lib/i18n';
+import type { Locale } from '../lib/i18n';
+import type { Language } from '../lib/schemas';
+import { t } from '../lib/ui';
+import Leaders from './Leaders.astro';
+import Sheet from './Sheet.astro';
+
+interface Props {
+	languages: readonly Language[];
+	locale: Locale;
+}
+
+const { languages, locale } = Astro.props;
+
+const items = languages.map((language) => ({
+	label: localize(language.name, locale),
+	value: t(locale, `language.level.${language.level}`),
+}));
+---
+
+<Sheet as="section" tilt={-0.3} labelledby="languages-title">
+	<h2 id="languages-title" class="title">
+		{t(locale, 'section.languages')}
+	</h2>
+	<Leaders items={items} />
+</Sheet>
+
+<style>
+	.title {
+		margin-bottom: var(--space-3);
+		font-size: var(--text-h2);
+	}
+</style>

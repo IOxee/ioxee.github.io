@@ -1,0 +1,129 @@
+---
+import '@fontsource/stardos-stencil/700.css';
+import '@fontsource/courier-prime/400.css';
+import '@fontsource/courier-prime/400-italic.css';
+import '@fontsource/courier-prime/700.css';
+import '../styles/tokens.css';
+import '../styles/base.css';
+// Las fuentes que se ven al cargar se precargan: sin eso, el cambio de la tipografía de reserva
+// reordenaba el texto del carné y el CLS en móvil llegaba a 0,13.
+import stardos700 from '@fontsource/stardos-stencil/files/stardos-stencil-latin-700-normal.woff2?url';
+import courier400 from '@fontsource/courier-prime/files/courier-prime-latin-400-normal.woff2?url';
+import courier700 from '@fontsource/courier-prime/files/courier-prime-latin-700-normal.woff2?url';
+import type { Locale } from '../lib/i18n';
+import { themeCss } from '../lib/theme';
+import { t } from '../lib/ui';
+
+interface Props {
+	title: string;
+	description: string;
+	locale?: Locale;
+	noindex?: boolean;
+}
+
+const { title, description, locale = 'es', noindex = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang={locale} data-theme="day">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		{[stardos700, courier400, courier700].map((href) => (
+			<link
+				rel="preload"
+				as="font"
+				type="font/woff2"
+				href={href}
+				crossorigin
+			/>
+		))}
+		{noindex && <meta name="robots" content="noindex" />}
+		<style is:inline set:html={themeCss()}></style>
+		<noscript>
+			<style>
+				[data-theme-toggle] {
+					display: none;
+				}
+			</style>
+		</noscript>
+		<script is:inline>
+			// Fija el tema antes de pintar para que no haya parpadeo.
+			(function () {
+				var root = document.documentElement;
+				var theme = null;
+				try {
+					theme = localStorage.getItem('ioxee:theme');
+				} catch (error) {
+					// Sin almacenamiento (modo privado): se usa la preferencia del sistema.
+				}
+				if (theme !== 'day' && theme !== 'night') {
+					theme = matchMedia('(prefers-color-scheme: dark)').matches
+						? 'night'
+						: 'day';
+				}
+				root.dataset.theme = theme;
+			})();
+		</script>
+	</head>
+	<body>
+		<a class="skip-link" href="#contenido">
+			{t(locale, 'a11y.skipToContent')}
+		</a>
+		<slot />
+
+		{/* Filtro que irregulariza el borde de los sellos para que parezcan tinta y no vector. */}
+		<svg
+			width="0"
+			height="0"
+			aria-hidden="true"
+			focusable="false"
+			style="position: absolute; overflow: hidden"
+		>
+			<filter
+				id="ink-rough"
+				x="-10%"
+				y="-10%"
+				width="120%"
+				height="120%"
+				color-interpolation-filters="sRGB"
+			>
+				<feTurbulence
+					type="fractalNoise"
+					baseFrequency="0.04"
+					numOctaves="2"
+					seed="7"
+					result="warp"
+				></feTurbulence>
+				<feDisplacementMap
+					in="SourceGraphic"
+					in2="warp"
+					scale="3"
+					xChannelSelector="R"
+					yChannelSelector="G"
+					result="warped"
+				></feDisplacementMap>
+				<feTurbulence
+					type="fractalNoise"
+					baseFrequency="0.9"
+					numOctaves="1"
+					seed="3"
+					result="speck"
+				></feTurbulence>
+				<feColorMatrix
+					in="speck"
+					type="matrix"
+					values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 1.9"
+					result="holes"
+				></feColorMatrix>
+				<feComposite
+					in="warped"
+					in2="holes"
+					operator="in"
+				></feComposite>
+			</filter>
+		</svg>
+	</body>
+</html>
