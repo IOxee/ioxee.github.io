@@ -1,0 +1,81 @@
+# Experiencia y formación, migradas 1:1 del sitio v1 (solo en español).
+# Fechas: 'AAAA' o 'AAAA-MM' (entre comillas). `end: null` = en curso.
+# El orden de visualización lo decide sortExperience(), no el orden de este archivo.
+# Pendiente (Fase 7): lo actualizará el importador de LinkedIn sin pisar los textos.
+- id: fractal-game-studios
+  kind: work
+  organization: Fractal Game Studios
+  role:
+      es: Co-Chief Executive Officer
+  summary:
+      es: Es una innovadora empresa de desarrollo de videojuegos, iniciada por entusiastas modders y destacada por su enfoque en la comunidad y la creación de contenido interactivo y herramientas para juegos.
+  start: '2022'
+  end: null
+
+- id: techtiva-contech
+  kind: work
+  organization: Techtiva Contech
+  role:
+      es: Programador Full-Stack
+  summary:
+      es: Programador de aplicaciones web y desktop.
+  start: '2023'
+  end: null
+
+- id: cfgs-daw
+  kind: education
+  organization: CFGS DAW
+  role:
+      es: Estudiante
+  summary:
+      es: Estudiante de desarrollo de aplicaciones web.
+  start: '2022'
+  end: '2023'
+
+- id: tecnico-informatico-2022
+  kind: work
+  role:
+      es: Técnico Informático
+  summary:
+      es: Mantenimiento a empresas, sistema de seguridad y teletrabajo.
+  start: '2022-02'
+  end: '2022-07'
+
+- id: cfgs-dam
+  kind: education
+  organization: CFGS DAM
+  role:
+      es: Estudiante
+  summary:
+      es: Estudiante de desarrollo de aplicaciones multiplataforma.
+  start: '2020'
+  end: '2022'
+
+- id: servidores-fivem
+  kind: work
+  organization: Desarrollo Servidores FiveM
+  role:
+      es: Servidores GTAV
+  summary:
+      es: Programación, mantenimiento y optimización de los servidores FiveM (GTAV Roleplay).
+  start: '2018'
+  end: null
+
+- id: tecnico-en-casa
+  kind: work
+  role:
+      es: Técnico Informático en Casa
+  summary:
+      es: Montajes de ordenadores y instalación de software.
+  start: '2019'
+  end: '2020'
+
+- id: cfgm-smr
+  kind: education
+  organization: CFGM SMR
+  role:
+      es: Estudiante
+  summary:
+      es: Estudiante de sistemas microinformáticos y redes.
+  start: '2018'
+  end: '2020'

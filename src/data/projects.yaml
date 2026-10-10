@@ -1,0 +1,33 @@
+# Proyectos personales, en el orden en que se muestran.
+# El stack sale de la descripción del sitio v1 y de los lenguajes de cada repositorio.
+# Las imágenes se añaden en la Fase 5 (assets optimizados con astro:assets).
+- id: delaware-telegraph
+  name: Delaware Telegraph
+  summary:
+      es: Es una web estilo blog con gestión de usuario y de noticias hecha en PHP tradicional, Bootstrap 5.3 y arquitectura MVC.
+  stack:
+      - PHP
+      - Bootstrap 5.3
+      - MVC
+  repo: https://github.com/IOxee/DelawareTelegraph
+
+- id: trellord-connector
+  name: Trellord Connector
+  summary:
+      es: Es una herramienta de conexión entre la API de Trello y Discord, envía cualquier detección de cambios en Trello a un canal de Discord y permite tener múltiples proyectos.
+  stack:
+      - JavaScript
+      - Trello API
+      - Discord webhooks
+  repo: https://github.com/IOxee/TrellordConnector
+
+- id: animal-crossing-api-wrapper
+  name: Animal Crossing API Wrapper
+  summary:
+      es: Usando Ionic 6 y Angular 14 para obtener los datos de la API pública de Animal Crossing.
+  stack:
+      - Ionic 6
+      - Angular 14
+      - TypeScript
+      - SCSS
+  repo: https://github.com/IOxee/Animal_Crossing_API_Wrapper

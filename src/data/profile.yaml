@@ -1,0 +1,24 @@
+# Datos personales y texto de "Sobre mí".
+# `about` es un BORRADOR en tono profesional: revisar y corregir.
+- id: main
+  name: Isidro Rosell
+  headline:
+      es: Programador Full-Stack
+  birthDate: '2002-04-14'
+  nationality:
+      es: Española
+  location:
+      es: Cataluña, España
+  occupation:
+      es: Co-Founder de Fractal Game Studios
+  about:
+      es:
+          - Soy programador full-stack y vivo en Lleida. Desarrollo aplicaciones web y de escritorio en Techtiva Contech desde 2023 y co-dirijo Fractal Game Studios, donde creamos recursos y herramientas de programación para servidores roleplay (GTA V, DayZ, Project Zomboid).
+          - Mi recorrido une sistemas y desarrollo. He trabajado como técnico informático y en soporte remoto, y desde 2018 programo, mantengo y optimizo servidores FiveM. Me interesan el diseño web y el desarrollo de videojuegos.
+          - Fuera del código, me atraen los juegos y series de supervivencia zombi, de ahí la estética de esta web.
+  links:
+      github: https://github.com/IOxee
+      linkedin: https://linkedin.com/in/ioxee/
+      email: IOxee@proton.me
+      company: https://fractalgamestudios.es/
+  cv: /assets/documents/curriculum.pdf

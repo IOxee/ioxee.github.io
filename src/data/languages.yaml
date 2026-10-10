@@ -1,0 +1,21 @@
+# Idiomas, en el orden en que se muestran. level: native | high | medium | basic
+- id: ca
+  name:
+      es: Catalán
+      ca: Català
+      en: Catalan
+  level: native
+
+- id: es
+  name:
+      es: Español
+      ca: Castellà
+      en: Spanish
+  level: high
+
+- id: en
+  name:
+      es: Inglés
+      ca: Anglès
+      en: English
+  level: medium
