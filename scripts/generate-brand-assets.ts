@@ -2,7 +2,7 @@
  * Genera el favicon y el icono de Apple a partir de la paleta del sitio, para que los iconos
  * no se queden con colores viejos si cambia el diseño.
  *
- * Uso: `npm run assets:brand` (Node 22.18 o superior, que ejecuta TypeScript sin compilar).
+ * Uso: `npm run assets:brand` (Node 22.19 o superior, que ejecuta TypeScript sin compilar).
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import sharp from 'sharp';

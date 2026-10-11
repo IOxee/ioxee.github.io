@@ -2,7 +2,7 @@
  * Genera `public/og.jpg` (1200×630, la imagen que se ve al compartir el enlace) fotografiando la
  * cartilla del propio sitio ya compilado. Así la imagen siempre coincide con el diseño real.
  *
- * Uso: `npm run build && npm run assets:og` (Node 22.18 o superior).
+ * Uso: `npm run build && npm run assets:og` (Node 22.19 o superior).
  */
 import { writeFileSync } from 'node:fs';
 import { chromium } from '@playwright/test';

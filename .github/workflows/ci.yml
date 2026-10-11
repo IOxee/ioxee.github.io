@@ -28,3 +28,28 @@ jobs:
             - run: npm run test:coverage
             - run: npm run build
             - run: npm run test:dist
+
+    # Pruebas en navegador sobre el sitio compilado: accesibilidad, foco, tema, CSP, contraste y
+    # Lighthouse. Las capturas de `test:visual` dependen de cada sistema y no se lanzan aquí.
+    e2e:
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@v7
+            - uses: actions/setup-node@v7
+              with:
+                  node-version: 24
+                  cache: npm
+            - run: npm ci
+            - run: npx playwright install --with-deps chromium firefox
+            - run: npm run build
+            - run: npm run test:e2e
+            - run: npm run test:lighthouse
+            - uses: actions/upload-artifact@v7
+              if: failure()
+              with:
+                  name: playwright-report
+                  path: |
+                      playwright-report/
+                      test-results/
+                  retention-days: 7

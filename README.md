@@ -6,7 +6,7 @@ El diseño es una cartilla de racionamiento de juego de supervivencia zombi: el 
 
 ## Empezar
 
-Hace falta Node 22.18 o superior: los scripts (`assets:*`, `import:linkedin`, `fetch:linkedin`) y sus tests ejecutan TypeScript directamente.
+Hace falta Node 22.19 o superior: los scripts (`assets:*`, `import:linkedin`, `fetch:linkedin`) y sus tests ejecutan TypeScript directamente, y Lighthouse pide esa versión.
 
 ```bash
 npm install
@@ -26,6 +26,9 @@ El servidor de desarrollo queda en <http://localhost:4321>.
 | `npm test`                | Tests unitarios y de los datos.                                              |
 | `npm run test:coverage`   | Lo mismo, exigiendo un 80 % de cobertura por archivo en `src/lib/`.          |
 | `npm run test:dist`       | Tests sobre el HTML compilado (CSP, SEO, enlaces). Necesita `npm run build`. |
+| `npm run test:e2e`        | Pruebas en navegador (Chromium y Firefox). Necesita `npm run build`.         |
+| `npm run test:lighthouse` | Lighthouse en móvil y escritorio. Necesita `npm run build`.                  |
+| `npm run test:visual`     | Compara capturas con las de referencia. Ver «Pruebas en navegador».          |
 | `npm run format`          | Da formato con Prettier. `format:check` solo comprueba.                      |
 | `npm run assets:brand`    | Regenera el favicon («IO») y el icono de Apple en `public/`.                 |
 | `npm run assets:og`       | Regenera `public/og.jpg`, la imagen al compartir. Necesita `npm run build`.  |
@@ -51,6 +54,33 @@ Cosas que conviene saber:
 - La edad y el año del copyright se calculan al compilar. Por eso el despliegue se repite a diario.
 - La captura de cada proyecto es `src/assets/projects/<id>.png`, donde `<id>` es el `id` del YAML. Su texto alternativo va en `imageAlt`.
 - El sitio se publica solo en español. El catalán y el inglés están configurados: se activan añadiendo `ca:` y `en:` a los textos y las traducciones de `src/lib/ui.ts`; mientras falten, se muestra el español.
+
+## Pruebas en navegador
+
+Además de los tests unitarios y de los del HTML compilado, `tests/e2e/` usa [Playwright](https://playwright.dev) sobre el sitio ya compilado y servido con `astro preview` (la CSP solo existe en el build). La primera vez hay que bajar los navegadores y compilar:
+
+```bash
+npx playwright install chromium firefox
+npm run build
+npm run test:e2e
+```
+
+| Archivo              | Qué vigila                                                                                                                            |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `a11y.spec.ts`       | axe con las reglas WCAG hasta la 2.2 AA, en día y noche, en móvil y escritorio, y en la página 404.                                   |
+| `layout.spec.ts`     | Sin desbordamiento horizontal de 320 a 1920 px, sin saltos al cargar (CLS; solo en Chromium, Firefox no lo mide), fuentes e imágenes. |
+| `keyboard.spec.ts`   | Foco visible de dos tonos en todo lo enfocable, enlace para saltar al contenido, botón de tema con Enter y Espacio, menú activo.      |
+| `theme.spec.ts`      | Tema del sistema y elección guardada, la página sin JavaScript, movimiento reducido y colores forzados.                               |
+| `contrast.spec.ts`   | Contraste real de cada renglón de texto sobre el fondo ya pintado (con el grano y los degradados), en día y noche.                    |
+| `csp.spec.ts`        | La CSP no se incumple al usar el sitio, y de verdad bloquea un script en línea y una imagen de otro origen.                           |
+| `lighthouse.spec.ts` | Rendimiento de 0,9 o más, y ninguna auditoría de accesibilidad, buenas prácticas o SEO fallida, en móvil y escritorio.                |
+| `visual.spec.ts`     | Capturas de página completa en seis anchos (320 a 1920 px) en día y tres en noche, comparadas con las de referencia.                  |
+
+Se ejecutan en el CI en cada pull request, menos las capturas. Lighthouse tiene una excepción explicada en el propio test: no puede leer `robots.txt` porque la CSP se lo impide (el archivo es válido y lo comprueba `test:dist`).
+
+### Capturas de referencia
+
+Las comparaciones visuales (`npm run test:visual`) no se versionan: pesan unos 12 MB por juego y el suavizado del texto cambia de un sistema a otro. Se usan así: antes de tocar el CSS o un componente, `npm run test:visual:update` guarda cómo se ve ahora; después de tocarlo, `npm run test:visual` dice qué anchos han cambiado y deja las diferencias en `test-results/`. Si el cambio es el que querías, se vuelven a generar. En las capturas se ocultan el grano, las imágenes, la edad y el pie, que pesan mucho o cambian solos.
 
 ## Sincronizar con LinkedIn
 
@@ -111,6 +141,7 @@ src/
 tests/
   unit/         Config de Astro y datos.
   build/        El HTML ya compilado (necesita `npm run build`).
+  e2e/          Pruebas en navegador con Playwright.
 scripts/        Generadores de favicon e imagen para compartir, e importador de LinkedIn.
 ```
 

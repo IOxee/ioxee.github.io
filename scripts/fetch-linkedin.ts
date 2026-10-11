@@ -5,7 +5,7 @@
  *
  *   LINKEDIN_ACCESS_TOKEN=… node scripts/fetch-linkedin.ts <instantanea.json>
  *
- * Node 22.18 o superior.
+ * Node 22.19 o superior.
  */
 import { writeFileSync } from 'node:fs';
 import { fetchSnapshotDomain } from '../src/lib/linkedin-api.ts';

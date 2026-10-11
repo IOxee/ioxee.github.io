@@ -7,7 +7,7 @@
  *   npm run import:linkedin -- --positions P.csv --education E.csv
  *   npm run import:linkedin -- --json instantanea.json      (la que deja `fetch-linkedin`)
  *
- * Node 22.18 o superior.
+ * Node 22.19 o superior.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';

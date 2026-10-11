@@ -3,6 +3,13 @@
 /dist/
 /.astro/
 
+# salidas de Playwright, y las capturas de referencia de `test:visual`: pesan unos 12 MB por
+# juego y dependen de cada sistema, así que se generan en local con `npm run test:visual:update`
+/test-results/
+/playwright-report/
+/blob-report/
+/tests/e2e/*-snapshots/
+
 # cobertura y caches de herramientas
 coverage/
 *.tsbuildinfo
