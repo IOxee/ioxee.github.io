@@ -42,9 +42,11 @@ const facts = [
 
 		<div class="facts">
 			<Leaders items={facts} />
-			<a class="cv" href={profile.cv} download>
-				{t(locale, 'about.cv')}
-			</a>
+			{profile.cv && (
+				<a class="cv" href={profile.cv} download>
+					{t(locale, 'about.cv')}
+				</a>
+			)}
 		</div>
 	</div>
 </Sheet>

@@ -9,15 +9,20 @@ on:
         - cron: '0 5 * * *'
     workflow_dispatch:
 
-# Permite clonar el repo y crear el despliegue de Pages
+# Por defecto solo lectura: los jobs que instalan dependencias y compilan no necesitan más.
+# Publicar en Pages (`pages` e `id-token`) lo permite únicamente el job `deploy`.
 permissions:
     contents: read
-    pages: write
-    id-token: write
+
+# Un despliegue por vez: el push y el cron diario no se pisan, y el que ya está en curso termina.
+concurrency:
+    group: pages
+    cancel-in-progress: false
 
 jobs:
     # Nada se publica si los tipos o los tests (incluida la validación de los datos) fallan:
     # `withastro/action` solo compila, y un YAML mal formado no rompe el build por sí solo.
+    # Se compila aquí también para comprobar el HTML resultante (CSP, SEO, enlaces).
     verify:
         runs-on: ubuntu-latest
         timeout-minutes: 10
@@ -32,6 +37,8 @@ jobs:
             - run: npm ci
             - run: npm run check
             - run: npm run test:coverage
+            - run: npm run build
+            - run: npm run test:dist
 
     build:
         needs: verify
@@ -45,6 +52,9 @@ jobs:
     deploy:
         needs: build
         runs-on: ubuntu-latest
+        permissions:
+            pages: write
+            id-token: write
         environment:
             name: github-pages
             url: ${{ steps.deployment.outputs.page_url }}

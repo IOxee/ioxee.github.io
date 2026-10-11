@@ -1,5 +1,7 @@
 ---
+import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
+import avatar from '../assets/avatar.png';
 import Base from '../layouts/Base.astro';
 import { sortExperience } from '../lib/experience';
 import type { Locale } from '../lib/i18n';
@@ -7,6 +9,7 @@ import { pickImage } from '../lib/images';
 import { sortByOrder } from '../lib/order';
 import { partialDateKey } from '../lib/partial-date';
 import { SECTION_IDS } from '../lib/sections';
+import { absoluteUrl, personSeoFrom, siteJsonLd } from '../lib/seo';
 import { groupSkills } from '../lib/skills';
 import { fill } from '../lib/text';
 import { t } from '../lib/ui';
@@ -47,9 +50,8 @@ const issuedYear = Math.floor(
 	) / 100,
 );
 
-const groups = groupSkills(
-	(await getCollection('skills')).map((entry) => entry.data),
-);
+const skills = (await getCollection('skills')).map((entry) => entry.data);
+const groups = groupSkills(skills);
 // `getCollection` no conserva el orden del archivo: proyectos e idiomas se ordenan por `order`.
 const projects = sortByOrder(
 	(await getCollection('projects')).map((entry) => entry.data),
@@ -67,9 +69,30 @@ const projectImage = (id: string) => pickImage(projectImages, id).default;
 
 const title = fill(t(locale, 'meta.title'), { name: profile.name });
 const description = fill(t(locale, 'meta.description'), { name: profile.name });
+const imageAlt = fill(t(locale, 'meta.imageAlt'), { name: profile.name });
+// En los datos estructurados la imagen es la de la persona; la de compartir va en las metas de Base.
+const portrait = await getImage({ src: avatar, width: 512, format: 'webp' });
+const jsonLd = siteJsonLd(
+	personSeoFrom({
+		profile,
+		experience,
+		skills,
+		locale,
+		url: absoluteUrl(Astro.url.pathname, Astro.site),
+		image: absoluteUrl(portrait.src, Astro.site),
+	}),
+	locale,
+);
 ---
 
-<Base title={title} description={description} locale={locale}>
+<Base
+	title={title}
+	description={description}
+	siteName={profile.name}
+	imageAlt={imageAlt}
+	jsonLd={jsonLd}
+	locale={locale}
+>
 	<SiteNav locale={locale} />
 
 	<main id="contenido" class="page">

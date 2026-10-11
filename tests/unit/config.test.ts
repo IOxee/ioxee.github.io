@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import config from '../../astro.config.mjs';
 import { DEFAULT_LOCALE, LOCALES } from '../../src/lib/i18n';
@@ -10,5 +12,84 @@ describe('astro.config.mjs i18n', () => {
 
 	it('uses the same default locale as src/lib/i18n.ts', () => {
 		expect(config.i18n?.defaultLocale).toBe(DEFAULT_LOCALE);
+	});
+});
+
+describe('astro.config.mjs site', () => {
+	it('is the https origin of the GitHub Pages user site, which canonical and sitemap build on', () => {
+		expect(config.site).toBe('https://ioxee.github.io');
+	});
+
+	it('registers the sitemap integration', () => {
+		const names = (config.integrations ?? [])
+			.flat()
+			.map((item) => (item ? item.name : null));
+
+		expect(names).toContain('@astrojs/sitemap');
+	});
+});
+
+describe('astro.config.mjs security.csp', () => {
+	const csp = config.security?.csp;
+	const policy = typeof csp === 'object' ? csp : undefined;
+	const directives = policy?.directives ?? [];
+
+	it('is enabled with an explicit policy', () => {
+		expect(policy).toBeDefined();
+	});
+
+	it('denies everything by default and only opens what the site uses', () => {
+		expect(directives).toContain("default-src 'none'");
+		expect(directives).toContain("img-src 'self' data:");
+		expect(directives).toContain("font-src 'self'");
+	});
+
+	it('closes the injection routes that no page here needs', () => {
+		expect(directives).toContain("object-src 'none'");
+		expect(directives).toContain("base-uri 'none'");
+		expect(directives).toContain("form-action 'none'");
+	});
+
+	it('does not use directives that a <meta> policy ignores', () => {
+		const names = directives.map((directive) => directive.split(' ')[0]);
+
+		expect(names).not.toContain('frame-ancestors');
+		expect(names).not.toContain('report-uri');
+		expect(names).not.toContain('sandbox');
+	});
+
+	it('allows the inline theme script by its hash, never with unsafe-inline or unsafe-eval', () => {
+		// Como hace el navegador antes de hashear: CRLF → LF.
+		const source = readFileSync(
+			new URL('../../src/scripts/theme-init.js', import.meta.url),
+			'utf8',
+		).replace(/\r\n?/g, '\n');
+		const hash = `sha256-${createHash('sha256').update(source).digest('base64')}`;
+
+		expect(policy?.scriptDirective?.hashes).toEqual([hash]);
+		expect(JSON.stringify(policy?.scriptDirective)).not.toMatch(/unsafe-/);
+		expect(directives.join(';')).not.toMatch(/unsafe-/);
+	});
+
+	it('only lets style attributes be inline (the --tilt of each sheet), not style elements', () => {
+		const resources = policy?.styleDirective?.resources ?? [];
+		const unsafe = resources.filter((entry) =>
+			JSON.stringify(entry).includes('unsafe-'),
+		);
+
+		expect(unsafe).toEqual([
+			{ resource: "'unsafe-inline'", kind: 'attribute' },
+		]);
+		// `'self'` va en `element`: con `style-src-attr` presente, `style-src` ya no rige para nada.
+		expect(resources).toContainEqual({
+			resource: "'self'",
+			kind: 'element',
+		});
+	});
+});
+
+describe('astro.config.mjs markdown', () => {
+	it('turns Shiki off: the site has no markdown, and its inline styles would clash with the CSP', () => {
+		expect(config.markdown?.syntaxHighlight).toBe(false);
 	});
 });

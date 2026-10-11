@@ -20,4 +20,7 @@
       linkedin: https://linkedin.com/in/ioxee/
       email: IOxee@proton.me
       company: https://fractalgamestudios.es/
-  cv: /assets/documents/curriculum.pdf
+  # Sin `cv` la web no enseña «Descargar CV». El anterior se retiró porque llevaba la fecha de
+  # nacimiento, un móvil y el correo personal. Cuando haya uno limpio, ponlo en
+  # `public/assets/documents/` y descomenta:
+  # cv: /assets/documents/curriculum.pdf

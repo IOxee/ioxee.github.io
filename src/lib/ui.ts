@@ -18,9 +18,16 @@ export function translate<K extends string>(
 
 const es = {
 	'a11y.skipToContent': 'Saltar al contenido',
-	'meta.title': '{name} - Portfolio',
+	'meta.title': '{name} - Portfolio de programador full-stack',
 	'meta.description':
-		'Portfolio de {name}, programador full-stack: experiencia, habilidades y proyectos.',
+		'Portfolio de {name}, programador full-stack en Cataluña: experiencia, habilidades y proyectos con C#, SQL y videojuegos.',
+	'meta.imageAlt':
+		'Cartilla de superviviente de {name}, programador full-stack, sobre una mesa de trabajo',
+	'notFound.title': 'Esta página no está en el inventario',
+	'notFound.pageTitle': 'Página no encontrada - {name}',
+	'notFound.description': 'La dirección no existe o se ha movido.',
+	'notFound.stamp': 'Sin registro',
+	'notFound.back': 'Volver al inicio',
 	'nav.label': 'Principal',
 	'nav.about': 'Sobre mí',
 	'nav.resume': 'Experiencia',

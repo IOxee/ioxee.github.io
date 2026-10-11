@@ -112,6 +112,17 @@ a:hover {
 	transform: none;
 }
 
+/* Sin JS el botón de tema no hace nada: `theme-init.js` pone la clase `js` y, sin ella, se oculta. */
+html:not(.js) [data-theme-toggle] {
+	display: none;
+}
+
+/* Contenedor de los filtros SVG: ocupa 0×0 y no debe empujar la maquetación. */
+.ink-defs {
+	position: absolute;
+	overflow: hidden;
+}
+
 /* En modo de contraste forzado el fondo pasa a ser liso: el grano de la mesa solo ensuciaría el texto. */
 @media (forced-colors: active) {
 	body::before {

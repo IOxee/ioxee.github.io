@@ -56,12 +56,14 @@ export const profileSchema = z.object({
 		company: httpsUrl.optional(),
 	}),
 	// Una ruta del propio sitio: `//host/…` y `/\host/…` serían una dirección externa.
+	// Opcional: sin CV la web no enseña el enlace de descarga.
 	cv: z
 		.string()
 		.regex(
 			/^\/(?![/\\])/,
 			'Usa una ruta del sitio, con una sola / al principio',
-		),
+		)
+		.optional(),
 });
 
 /**

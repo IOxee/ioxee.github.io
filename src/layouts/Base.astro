@@ -10,18 +10,48 @@ import '../styles/base.css';
 import stardos700 from '@fontsource/stardos-stencil/files/stardos-stencil-latin-700-normal.woff2?url';
 import courier400 from '@fontsource/courier-prime/files/courier-prime-latin-400-normal.woff2?url';
 import courier700 from '@fontsource/courier-prime/files/courier-prime-latin-700-normal.woff2?url';
+// Texto del script que fija el tema. `astro.config.mjs` calcula su hash para la CSP del mismo
+// archivo.
+import themeInitSource from '../scripts/theme-init.js?raw';
+import { oklchToHex } from '../lib/color';
 import type { Locale } from '../lib/i18n';
-import { themeCss } from '../lib/theme';
+import { OG_IMAGE, OG_LOCALES, absoluteUrl, serializeJsonLd } from '../lib/seo';
+import { PALETTES } from '../lib/theme';
 import { t } from '../lib/ui';
 
 interface Props {
 	title: string;
 	description: string;
+	/** Nombre del sitio al compartir el enlace: sin él las redes enseñan el dominio. */
+	siteName: string;
+	/** Texto alternativo de la imagen que aparece al compartir el enlace. */
+	imageAlt: string;
 	locale?: Locale;
+	/**
+	 * Páginas que no deben aparecer en buscadores ni compartirse (la 404): con `noindex` y sin
+	 * canonical ni etiquetas para redes sociales.
+	 */
 	noindex?: boolean;
+	/** Datos estructurados (schema.org) de la página. */
+	jsonLd?: object;
 }
 
-const { title, description, locale = 'es', noindex = false } = Astro.props;
+const {
+	title,
+	description,
+	siteName,
+	imageAlt,
+	locale = 'es',
+	noindex = false,
+	jsonLd,
+} = Astro.props;
+
+const canonical = absoluteUrl(Astro.url.pathname, Astro.site);
+const image = absoluteUrl(OG_IMAGE.path, Astro.site);
+// El navegador convierte CRLF en LF antes de calcular el hash de un script en línea. Con el
+// archivo en LF (CI) y en CRLF (Windows con autocrlf) el texto y su hash tienen que coincidir.
+// El mismo reemplazo está en `astro.config.mjs`.
+const themeInit = themeInitSource.replace(/\r\n?/g, '\n');
 ---
 
 <!doctype html>
@@ -31,6 +61,47 @@ const { title, description, locale = 'es', noindex = false } = Astro.props;
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<title>{title}</title>
 		<meta name="description" content={description} />
+		{noindex ? (
+			<meta name="robots" content="noindex" />
+		) : (
+			<link rel="canonical" href={canonical} />
+		)}
+		<meta
+			name="theme-color"
+			content={oklchToHex(PALETTES.day.desk)}
+			media="(prefers-color-scheme: light)"
+		/>
+		<meta
+			name="theme-color"
+			content={oklchToHex(PALETTES.night.desk)}
+			media="(prefers-color-scheme: dark)"
+		/>
+		{!noindex && (
+			<>
+				<meta property="og:type" content="website" />
+				<meta property="og:site_name" content={siteName} />
+				<meta property="og:title" content={title} />
+				<meta property="og:description" content={description} />
+				<meta property="og:url" content={canonical} />
+				<meta property="og:locale" content={OG_LOCALES[locale]} />
+				<meta property="og:image" content={image} />
+				<meta property="og:image:type" content={OG_IMAGE.type} />
+				<meta
+					property="og:image:width"
+					content={String(OG_IMAGE.width)}
+				/>
+				<meta
+					property="og:image:height"
+					content={String(OG_IMAGE.height)}
+				/>
+				<meta property="og:image:alt" content={imageAlt} />
+				<meta name="twitter:card" content="summary_large_image" />
+				<meta name="twitter:title" content={title} />
+				<meta name="twitter:description" content={description} />
+				<meta name="twitter:image" content={image} />
+				<meta name="twitter:image:alt" content={imageAlt} />
+			</>
+		)}
 		<link rel="icon" href="/favicon.ico" sizes="32x32" />
 		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
 		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
@@ -43,33 +114,15 @@ const { title, description, locale = 'es', noindex = false } = Astro.props;
 				crossorigin
 			/>
 		))}
-		{noindex && <meta name="robots" content="noindex" />}
-		<style is:inline set:html={themeCss()}></style>
-		<noscript>
-			<style>
-				[data-theme-toggle] {
-					display: none;
-				}
-			</style>
-		</noscript>
-		<script is:inline>
-			// Fija el tema antes de pintar para que no haya parpadeo.
-			(function () {
-				var root = document.documentElement;
-				var theme = null;
-				try {
-					theme = localStorage.getItem('ioxee:theme');
-				} catch (error) {
-					// Sin almacenamiento (modo privado): se usa la preferencia del sistema.
-				}
-				if (theme !== 'day' && theme !== 'night') {
-					theme = matchMedia('(prefers-color-scheme: dark)').matches
-						? 'night'
-						: 'day';
-				}
-				root.dataset.theme = theme;
-			})();
-		</script>
+		<link rel="stylesheet" href="/theme.css" />
+		<script is:inline set:html={themeInit}></script>
+		{jsonLd && (
+			<script
+				is:inline
+				type="application/ld+json"
+				set:html={serializeJsonLd(jsonLd)}
+			></script>
+		)}
 	</head>
 	<body>
 		<a class="skip-link" href="#contenido">
@@ -79,11 +132,11 @@ const { title, description, locale = 'es', noindex = false } = Astro.props;
 
 		{/* Filtro que irregulariza el borde de los sellos para que parezcan tinta y no vector. */}
 		<svg
+			class="ink-defs"
 			width="0"
 			height="0"
 			aria-hidden="true"
 			focusable="false"
-			style="position: absolute; overflow: hidden"
 		>
 			<filter
 				id="ink-rough"

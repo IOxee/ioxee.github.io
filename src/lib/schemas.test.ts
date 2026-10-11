@@ -235,6 +235,12 @@ describe('profileSchema', () => {
 		).toBe(true);
 	});
 
+	it('accepts a profile without a CV, so the download link can be left out', () => {
+		const { cv: _cv, ...withoutCv } = profile;
+
+		expect(accepts(profileSchema, withoutCv)).toBe(true);
+	});
+
 	it('rejects an invalid email', () => {
 		const links = { ...profile.links, email: 'no-es-un-email' };
 

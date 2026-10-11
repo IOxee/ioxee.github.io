@@ -9,8 +9,10 @@ import { chromium } from '@playwright/test';
 import { preview } from 'astro';
 import sharp from 'sharp';
 import { SECTION_IDS } from '../src/lib/sections.ts';
+import { t } from '../src/lib/ui.ts';
 
 const PORT = 4399;
+// Formato de Open Graph. `src/lib/seo.test.ts` comprueba que `OG_IMAGE` coincide con el archivo.
 const WIDTH = 1200;
 const HEIGHT = 630;
 
@@ -25,6 +27,9 @@ try {
 	const page = await browser.newPage({
 		viewport: { width: WIDTH, height: HEIGHT },
 		colorScheme: 'light',
+		// El script inyecta un <style> para esconder lo que no sale en la imagen; la CSP del sitio lo
+		// bloquearía.
+		bypassCSP: true,
 	});
 	await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'networkidle' });
 	await page.evaluate(() => document.fonts.ready);
@@ -36,6 +41,17 @@ try {
 	await page.addStyleTag({
 		content: `.bar, footer, ${otherSections} { display: none !important; } .page { margin-top: 100px !important; }`,
 	});
+	// La edad cambia con los años y el sitio se recompila a diario, pero esta imagen no: sin esa
+	// fila no puede quedarse anticuada.
+	await page.evaluate(
+		(ageLabel) => {
+			for (const row of document.querySelectorAll('dl.leaders .row')) {
+				if (row.querySelector('dt')?.textContent === ageLabel)
+					row.remove();
+			}
+		},
+		t('es', 'card.age'),
+	);
 	// Espera a que el sello termine de caer.
 	await page.waitForTimeout(1600);
 

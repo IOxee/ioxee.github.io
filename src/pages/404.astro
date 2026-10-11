@@ -1,0 +1,59 @@
+---
+import { getCollection } from 'astro:content';
+import Sheet from '../components/Sheet.astro';
+import Stamp from '../components/Stamp.astro';
+import Base from '../layouts/Base.astro';
+import { fill } from '../lib/text';
+import { t } from '../lib/ui';
+
+// GitHub Pages sirve esta página para cualquier dirección que no existe. El sitio solo está en
+// español por ahora, así que no hay forma de saber el idioma de quien llega.
+const locale = 'es';
+
+const [profileEntry] = await getCollection('profile');
+if (!profileEntry) throw new Error('Falta el perfil en src/data/profile.yaml');
+const { name } = profileEntry.data;
+---
+
+<Base
+	title={fill(t(locale, 'notFound.pageTitle'), { name })}
+	description={t(locale, 'notFound.description')}
+	siteName={name}
+	imageAlt={fill(t(locale, 'meta.imageAlt'), { name })}
+	locale={locale}
+	noindex
+>
+	<main id="contenido" class="missing">
+		<Sheet as="section" tilt={-0.6} perforated labelledby="missing-title">
+			<div class="stamp">
+				<Stamp text={t(locale, 'notFound.stamp')} tilt={-6} animate />
+			</div>
+			<h1 id="missing-title">{t(locale, 'notFound.title')}</h1>
+			<p>{t(locale, 'notFound.description')}</p>
+			<p class="back">
+				<a href="/">{t(locale, 'notFound.back')}</a>
+			</p>
+		</Sheet>
+	</main>
+</Base>
+
+<style>
+	.missing {
+		width: min(100% - 2 * var(--gutter), 38rem);
+		margin: var(--space-7) auto;
+	}
+
+	.stamp {
+		margin-bottom: var(--space-3);
+	}
+
+	h1 {
+		margin-bottom: var(--space-3);
+		font-size: var(--text-h2);
+	}
+
+	.back {
+		margin-top: var(--space-4);
+		font-weight: 700;
+	}
+</style>
