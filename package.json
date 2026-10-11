@@ -5,7 +5,7 @@
 	"type": "module",
 	"description": "Portfolio de Isidro Rosell",
 	"engines": {
-		"node": ">=22.12.0"
+		"node": ">=22.18.0"
 	},
 	"scripts": {
 		"dev": "astro dev",
@@ -18,7 +18,9 @@
 		"test:coverage": "vitest run --coverage",
 		"test:dist": "vitest run --config vitest.dist.config.ts",
 		"assets:brand": "node scripts/generate-brand-assets.ts",
-		"assets:og": "node scripts/generate-og-image.ts"
+		"assets:og": "node scripts/generate-og-image.ts",
+		"import:linkedin": "node scripts/import-linkedin.ts",
+		"fetch:linkedin": "node scripts/fetch-linkedin.ts"
 	},
 	"dependencies": {
 		"@astrojs/sitemap": "^3.7.4",
@@ -32,6 +34,7 @@
 		"@playwright/test": "^1.64.0",
 		"@types/node": "^22.20.5",
 		"@vitest/coverage-v8": "^4.1.11",
+		"csv-parse": "^7.0.3",
 		"node-html-parser": "^9.0.4",
 		"prettier": "^3.9.10",
 		"prettier-plugin-astro": "^1.1.1",

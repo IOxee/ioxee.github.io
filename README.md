@@ -6,7 +6,7 @@ El diseño es una cartilla de racionamiento de juego de supervivencia zombi: el 
 
 ## Empezar
 
-Para compilar basta Node 22.12; los scripts `assets:*` ejecutan TypeScript directamente y necesitan Node 22.18 o superior.
+Hace falta Node 22.18 o superior: los scripts (`assets:*`, `import:linkedin`, `fetch:linkedin`) y sus tests ejecutan TypeScript directamente.
 
 ```bash
 npm install
@@ -17,18 +17,20 @@ El servidor de desarrollo queda en <http://localhost:4321>.
 
 ## Comandos
 
-| Comando                 | Qué hace                                                                     |
-| ----------------------- | ---------------------------------------------------------------------------- |
-| `npm run dev`           | Servidor de desarrollo.                                                      |
-| `npm run build`         | Compila el sitio en `dist/`.                                                 |
-| `npm run preview`       | Sirve `dist/`. Es la forma de probar la CSP, que en `dev` no se aplica.      |
-| `npm run check`         | Comprueba los tipos de TypeScript y de los `.astro`.                         |
-| `npm test`              | Tests unitarios y de los datos.                                              |
-| `npm run test:coverage` | Lo mismo, exigiendo un 80 % de cobertura por archivo en `src/lib/`.          |
-| `npm run test:dist`     | Tests sobre el HTML compilado (CSP, SEO, enlaces). Necesita `npm run build`. |
-| `npm run format`        | Da formato con Prettier. `format:check` solo comprueba.                      |
-| `npm run assets:brand`  | Regenera el favicon («IO») y el icono de Apple en `public/`.                 |
-| `npm run assets:og`     | Regenera `public/og.jpg`, la imagen al compartir. Necesita `npm run build`.  |
+| Comando                   | Qué hace                                                                     |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| `npm run dev`             | Servidor de desarrollo.                                                      |
+| `npm run build`           | Compila el sitio en `dist/`.                                                 |
+| `npm run preview`         | Sirve `dist/`. Es la forma de probar la CSP, que en `dev` no se aplica.      |
+| `npm run check`           | Comprueba los tipos de TypeScript y de los `.astro`.                         |
+| `npm test`                | Tests unitarios y de los datos.                                              |
+| `npm run test:coverage`   | Lo mismo, exigiendo un 80 % de cobertura por archivo en `src/lib/`.          |
+| `npm run test:dist`       | Tests sobre el HTML compilado (CSP, SEO, enlaces). Necesita `npm run build`. |
+| `npm run format`          | Da formato con Prettier. `format:check` solo comprueba.                      |
+| `npm run assets:brand`    | Regenera el favicon («IO») y el icono de Apple en `public/`.                 |
+| `npm run assets:og`       | Regenera `public/og.jpg`, la imagen al compartir. Necesita `npm run build`.  |
+| `npm run import:linkedin` | Pone al día `experience.yaml` con el export de LinkedIn. Ver más abajo.      |
+| `npm run fetch:linkedin`  | Descarga de la API de LinkedIn una instantánea en JSON (necesita el token).  |
 
 ## Cambiar el contenido
 
@@ -50,6 +52,51 @@ Cosas que conviene saber:
 - La captura de cada proyecto es `src/assets/projects/<id>.png`, donde `<id>` es el `id` del YAML. Su texto alternativo va en `imageAlt`.
 - El sitio se publica solo en español. El catalán y el inglés están configurados: se activan añadiendo `ca:` y `en:` a los textos y las traducciones de `src/lib/ui.ts`; mientras falten, se muestra el español.
 
+## Sincronizar con LinkedIn
+
+`experience.yaml` se puede poner al día desde LinkedIn. El importador **mueve las fechas que difieren y añade los registros que faltan**; nunca reescribe un texto que ya esté escrito ni borra nada, y sin `--write` solo enseña lo que haría. Empareja por nombre de empresa (o de centro y título, en la formación) y por fecha de inicio, así que dos puestos en la misma empresa siguen siendo dos. Los registros nuevos llevan el texto tal como viene de LinkedIn y una nota que pide revisarlo.
+
+### Con el export de LinkedIn
+
+1. En LinkedIn, «Obtener una copia de tus datos» (Configuración y privacidad → Privacidad de los datos). Basta con pedir las posiciones y la formación.
+2. Descomprime el archivo y ejecuta, primero en simulación y luego escribiendo:
+
+```bash
+npm run import:linkedin -- ruta/de/la/carpeta
+npm run import:linkedin -- ruta/de/la/carpeta --write
+```
+
+Busca `Positions.csv` y `Education.csv` en esa carpeta (`--positions` y `--education` aceptan rutas sueltas, y `--update-only` evita crear registros nuevos). Las filas que no se pueden leer, como una fecha rara, se listan al final en lugar de descartarse en silencio, y un texto que parezca incluir un correo, un teléfono o un enlace se marca para que lo quites antes de publicar. La simulación valida el resultado igual que `--write`, así que un dato que rompa el esquema se ve antes de escribir.
+
+Una fecha con menos precisión que la de la web (`2022` frente a `2022-09`) no la sustituye, y un puesto nuevo en una empresa donde ya trabajaste, con más de dos años de diferencia, se añade como registro aparte en lugar de pisar el anterior.
+
+### Con la API, de forma automática (opcional)
+
+Solo para miembros de la UE, el EEE o Suiza: usa la Member Data Portability API de LinkedIn, que devuelve las mismas columnas que el export.
+
+1. En LinkedIn Developers crea una app con la página de empresa «Member Data Portability (Member) Default Company» y pide el producto «Member Data Portability API (Member)».
+2. Genera un token con el permiso `r_dma_portability_self_serve` (OAuth Token Tools del portal).
+3. Guárdalo como secreto del repositorio con el nombre `LINKEDIN_ACCESS_TOKEN` (Settings → Secrets and variables → Actions).
+4. En Settings → Actions → General activa «Allow GitHub Actions to create and approve pull requests».
+
+El workflow [`linkedin-sync.yml`](.github/workflows/linkedin-sync.yml) corre el día 1 de cada mes y a mano (Actions → Sync LinkedIn → Run workflow). Descarga los datos, los aplica, comprueba que la web sigue compilando y pasando los tests y, si algo cambia, abre un pull request. Sin el secreto no hace nada. Va aparte del despliegue: un fallo aquí, por ejemplo con el token caducado, no impide publicar. Como el pull request lo crea el propio workflow, GitHub no lanza `ci.yml` sobre él; esas mismas comprobaciones ya se han pasado dentro del workflow.
+
+Para probarlo en local, en dos pasos (el primero es el único que ve el token):
+
+```bash
+LINKEDIN_ACCESS_TOKEN=… npm run fetch:linkedin -- instantanea.json
+npm run import:linkedin -- --json instantanea.json
+```
+
+Lo que conviene saber:
+
+- Tras dar el consentimiento, LinkedIn tarda en preparar los datos: al principio contesta 404 y el importador avisa de que no hay posiciones.
+- Según quienes lo han usado, el token dura aproximadamente un año y no se renueva solo (el portal puede enseñar un plazo menor). Apunta la fecha de caducidad.
+- El token solo llega al paso que llama a la API, que carga únicamente el cliente de la API. El trabajo que ejecuta las dependencias de npm es de solo lectura, y el que tiene permiso de escritura no ejecuta npm. Un token con espacios o saltos de línea se rechaza antes de enviarlo, sin repetirlo en el error.
+- Si ya hay un pull request abierto de la rama `chore/linkedin-sync`, el workflow no lo toca, por si lleva correcciones tuyas: revísalo o ciérralo.
+- La rama, el pull request y el registro del workflow son públicos desde que se crean, antes de que revises el texto que viene de LinkedIn.
+- El cliente de la API se probó con respuestas simuladas, con el formato publicado por LinkedIn y el que usan otros proyectos. No se ha probado contra una cuenta real: la primera vez, lánzalo a mano y revisa el pull request.
+
 ## Estructura
 
 ```text
@@ -64,7 +111,7 @@ src/
 tests/
   unit/         Config de Astro y datos.
   build/        El HTML ya compilado (necesita `npm run build`).
-scripts/        Generadores de favicon e imagen para compartir.
+scripts/        Generadores de favicon e imagen para compartir, e importador de LinkedIn.
 ```
 
 ## Seguridad

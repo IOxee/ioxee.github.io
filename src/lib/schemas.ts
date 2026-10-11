@@ -1,5 +1,6 @@
 import { z } from 'astro/zod';
-import { PARTIAL_DATE, partialDateKey } from './partial-date';
+// Con extensión: el script `import-linkedin` ejecuta este archivo directamente con Node.
+import { PARTIAL_DATE, partialDateKey } from './partial-date.ts';
 
 export const SKILL_CATEGORIES = ['backend', 'frontend', 'data'] as const;
 /** De mayor a menor uso; el orden define cómo se ordenan las habilidades dentro de un grupo. */

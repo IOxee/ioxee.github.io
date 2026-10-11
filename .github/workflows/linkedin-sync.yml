@@ -1,0 +1,148 @@
+name: Sync LinkedIn
+
+# Trae la experiencia y la formación de LinkedIn y, si algo cambia, abre un pull request.
+# Es opcional: sin el secreto LINKEDIN_ACCESS_TOKEN no hace nada. Va aparte del despliegue, así que
+# un fallo aquí (por ejemplo, el token caducado) nunca impide publicar la web.
+# Cómo se configura: README, apartado «Sincronizar con LinkedIn».
+#
+# Tres trabajos, para que cada secreto y cada permiso lleguen solo a lo que los necesita:
+#   check   mira si hay token; no ejecuta nada del proyecto.
+#   sync    solo lectura: baja los datos (con el token), los aplica, comprueba que la web sigue
+#           compilando y pasa los tests. Ejecuta las dependencias de npm, pero sin permiso de
+#           escritura en el repositorio y sin el token (salvo el paso que llama a la API).
+#   propose permiso de escritura, sin npm: sube el archivo resultante y abre el pull request.
+# Las acciones van fijadas por el SHA de su commit; el comentario dice a qué versión corresponde.
+
+on:
+    schedule:
+        - cron: '0 6 1 * *'
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: linkedin-sync
+    cancel-in-progress: false
+
+jobs:
+    check:
+        runs-on: ubuntu-latest
+        timeout-minutes: 2
+        outputs:
+            present: ${{ steps.token.outputs.present }}
+        steps:
+            - name: Comprobar el token
+              id: token
+              env:
+                  LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+              run: |
+                  if [ -n "$LINKEDIN_ACCESS_TOKEN" ]; then
+                      echo "present=true" >> "$GITHUB_OUTPUT"
+                  else
+                      echo "present=false" >> "$GITHUB_OUTPUT"
+                      echo "::notice::No hay secreto LINKEDIN_ACCESS_TOKEN: no hay nada que sincronizar."
+                  fi
+
+    sync:
+        needs: check
+        if: needs.check.outputs.present == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+        outputs:
+            changed: ${{ steps.diff.outputs.changed }}
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  # Siempre la rama principal, aunque el workflow se lance a mano desde otra.
+                  ref: ${{ github.event.repository.default_branch || 'main' }}
+                  # Sin credenciales de escritura en el disco mientras corre código de npm.
+                  persist-credentials: false
+
+            - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+              with:
+                  node-version: 24
+                  cache: npm
+
+            - run: npm ci --ignore-scripts
+
+            # El token solo existe en este paso, que carga únicamente el cliente de la API.
+            - name: Traer los datos de LinkedIn
+              env:
+                  LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
+              run: node scripts/fetch-linkedin.ts "$RUNNER_TEMP/linkedin.json"
+
+            - name: Aplicar los cambios a experience.yaml
+              run: node scripts/import-linkedin.ts --json "$RUNNER_TEMP/linkedin.json" --write
+
+            # Lo mismo que ci.yml: este pull request lo crea el workflow y GitHub no lanza ci.yml sobre él.
+            - name: Comprobar que la web sigue en pie con los datos nuevos
+              run: |
+                  npm run format:check
+                  npm run check
+                  npm run test:coverage
+                  npm run build
+                  npm run test:dist
+
+            - name: Ver si hay cambios
+              id: diff
+              run: |
+                  if git diff --quiet -- src/data/experience.yaml; then
+                      echo "changed=false" >> "$GITHUB_OUTPUT"
+                      echo "LinkedIn y la web ya coinciden: no hay nada que proponer."
+                  else
+                      echo "changed=true" >> "$GITHUB_OUTPUT"
+                  fi
+
+            - if: steps.diff.outputs.changed == 'true'
+              uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+              with:
+                  name: experience-yaml
+                  path: src/data/experience.yaml
+                  retention-days: 7
+                  if-no-files-found: error
+
+    propose:
+        needs: sync
+        if: needs.sync.outputs.changed == 'true'
+        runs-on: ubuntu-latest
+        timeout-minutes: 5
+        permissions:
+            contents: write
+            pull-requests: write
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+              with:
+                  ref: ${{ github.event.repository.default_branch || 'main' }}
+
+            - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+              with:
+                  name: experience-yaml
+                  path: ${{ runner.temp }}/linkedin
+
+            - name: Abrir el pull request
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  BASE_BRANCH: ${{ github.event.repository.default_branch || 'main' }}
+                  BRANCH: chore/linkedin-sync
+              run: |
+                  # Si ya hay uno abierto no se toca: la rama podría llevar correcciones a mano.
+                  if [ "$(gh pr list --head "$BRANCH" --state open --json number --jq length)" != "0" ]; then
+                      echo "::notice::Ya hay un pull request abierto de $BRANCH: revísalo o ciérralo antes de la próxima sincronización."
+                      exit 0
+                  fi
+
+                  cp "$RUNNER_TEMP/linkedin/experience.yaml" src/data/experience.yaml
+
+                  git config user.name "github-actions[bot]"
+                  git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                  # La rama puede quedar de un pull request anterior ya cerrado.
+                  git fetch origin "$BRANCH" || true
+                  git switch -C "$BRANCH"
+                  git add src/data/experience.yaml
+                  git commit -m "chore: sync the experience from LinkedIn"
+                  git push --force-with-lease origin "$BRANCH"
+
+                  gh pr create --base "$BASE_BRANCH" --head "$BRANCH" \
+                      --title "Sincronizar la experiencia con LinkedIn" \
+                      --body "Generado por el workflow \`Sync LinkedIn\`. Cambia las fechas que difieren y añade los registros que faltan; no reescribe ningún texto ya escrito. Los registros nuevos llevan el texto tal como viene de LinkedIn: revísalo antes de aceptar. Este pull request, su rama y el registro del workflow son públicos desde el momento en que se crean."
