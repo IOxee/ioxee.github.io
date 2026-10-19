@@ -49,7 +49,7 @@ describe('oklchToHex', () => {
 	});
 
 	it('converts a neutral grey through the sRGB transfer curve', () => {
-		// L = 0.5 → luz lineal 0.125 → 1.055 · 0.125^(1/2.4) − 0.055 = 0.3886 → 99/255 = 0x63.
+		// L = 0.5 → linear light 0.125 → 1.055 · 0.125^(1/2.4) − 0.055 = 0.3886 → 99/255 = 0x63.
 		expect(oklchToHex('oklch(0.5 0 0)')).toBe('#636363');
 	});
 
@@ -88,7 +88,7 @@ describe('contrastRatio', () => {
 	});
 
 	it('matches a hand-computed mid grey against white', () => {
-		// L = 0.5 en un gris neutro → luminancia relativa 0.5³ = 0.125 → (1 + 0.05) / (0.125 + 0.05).
+		// L = 0.5 on a neutral gray → relative luminance 0.5³ = 0.125 → (1 + 0.05) / (0.125 + 0.05).
 		expect(contrastRatio('oklch(0.5 0 0)', 'oklch(100% 0 0)')).toBeCloseTo(
 			6,
 			1,

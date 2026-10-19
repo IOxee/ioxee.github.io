@@ -6,11 +6,11 @@ type Dictionaries<K extends string> = {
 	en?: Partial<Record<K, string>>;
 };
 
-/** Texto de interfaz en `locale`, o en español si ese idioma aún no lo traduce. */
+/** Interface text in `locale`, or in Spanish if that language does not translate it yet. */
 export function translate<K extends string>(
 	dictionaries: Dictionaries<K>,
 	locale: Locale,
-	// `NoInfer`: las claves válidas las fijan los diccionarios, no el argumento.
+	// `NoInfer`: the valid keys are fixed by the dictionaries, not by the argument.
 	key: NoInfer<K>,
 ): string {
 	return dictionaries[locale]?.[key] ?? dictionaries.es[key];
@@ -73,6 +73,7 @@ const es = {
 	'skill.category.backend': 'Backend',
 	'skill.category.frontend': 'Frontend',
 	'skill.category.data': 'Datos',
+	'skill.category.desktop': 'Escritorio',
 	'skill.state.daily': 'Uso diario',
 	'skill.state.comfortable': 'Con soltura',
 	'skill.state.intermediate': 'Intermedio',
@@ -83,6 +84,8 @@ const es = {
 	'language.level.basic': 'Básico',
 	'mission.repo': 'Ver repositorio',
 	'mission.repoLabel': 'Ver repositorio de {name}',
+	'project.document': 'Ver documento (PDF)',
+	'project.documentLabel': 'Ver documento (PDF): {name}',
 	'contact.email': 'Correo',
 	'contact.github': 'GitHub',
 	'contact.linkedin': 'LinkedIn',
@@ -92,9 +95,9 @@ const es = {
 
 export type UiKey = keyof typeof es;
 
-// Las traducciones se tipan como completas: una clave sin traducir es un error al compilar, no un
-// texto en español dentro de una página en inglés. Lo que sí cae al español es el contenido de los
-// YAML (`localize`), que se traduce a su ritmo.
+// Translations are typed as complete: an untranslated key is a compile error, not
+// Spanish text inside an English page. What does fall back to Spanish is the content of the
+// YAML files (`localize`), which is translated at its own pace.
 const en: Record<UiKey, string> = {
 	'a11y.skipToContent': 'Skip to content',
 	'meta.title': '{name} - Full-stack developer portfolio',
@@ -152,6 +155,7 @@ const en: Record<UiKey, string> = {
 	'skill.category.backend': 'Backend',
 	'skill.category.frontend': 'Frontend',
 	'skill.category.data': 'Data',
+	'skill.category.desktop': 'Desktop',
 	'skill.state.daily': 'Daily use',
 	'skill.state.comfortable': 'Comfortable',
 	'skill.state.intermediate': 'Intermediate',
@@ -162,6 +166,8 @@ const en: Record<UiKey, string> = {
 	'language.level.basic': 'Basic',
 	'mission.repo': 'View repository',
 	'mission.repoLabel': 'View repository: {name}',
+	'project.document': 'View document (PDF)',
+	'project.documentLabel': 'View document (PDF): {name}',
 	'contact.email': 'Email',
 	'contact.github': 'GitHub',
 	'contact.linkedin': 'LinkedIn',
@@ -226,6 +232,7 @@ const ca: Record<UiKey, string> = {
 	'skill.category.backend': 'Backend',
 	'skill.category.frontend': 'Frontend',
 	'skill.category.data': 'Dades',
+	'skill.category.desktop': 'Escriptori',
 	'skill.state.daily': 'Ús diari',
 	'skill.state.comfortable': 'Amb soltesa',
 	'skill.state.intermediate': 'Intermedi',
@@ -236,6 +243,8 @@ const ca: Record<UiKey, string> = {
 	'language.level.basic': 'Bàsic',
 	'mission.repo': 'Veure el repositori',
 	'mission.repoLabel': 'Veure el repositori de {name}',
+	'project.document': 'Veure el document (PDF)',
+	'project.documentLabel': 'Veure el document (PDF): {name}',
 	'contact.email': 'Correu',
 	'contact.github': 'GitHub',
 	'contact.linkedin': 'LinkedIn',
@@ -247,6 +256,17 @@ export const dictionaries: Dictionaries<UiKey> = { es, ca, en };
 
 export const t = (locale: Locale, key: UiKey): string =>
 	translate(dictionaries, locale, key);
+
+/** Translated name of a skill category; one without a translation shows its id as words ("game-dev" → "Game dev"). */
+export function categoryLabel(locale: Locale, category: string): string {
+	const key = `skill.category.${category}`;
+	if (Object.hasOwn(dictionaries[locale] ?? {}, key)) {
+		return t(locale, key as UiKey);
+	}
+
+	const words = category.replaceAll('-', ' ');
+	return words.charAt(0).toUpperCase() + words.slice(1);
+}
 
 const YEARS = {
 	es: {

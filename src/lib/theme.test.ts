@@ -38,7 +38,7 @@ describe.each(THEMES)('palette %s', (theme) => {
 		).toBeGreaterThanOrEqual(3);
 	});
 
-	// Las hojas blancas de la carpeta son otro papel: lo que se lee en ellas tiene su propio contraste.
+	// The white sheets of the folder are another paper: what is read on them has its own contrast.
 	it('keeps the ink, the muted ink and the links readable on the document sheets', () => {
 		expect(
 			contrastRatio(palette.ink, palette.sheet),
@@ -63,9 +63,9 @@ describe.each(THEMES)('palette %s', (theme) => {
 		).toBeGreaterThanOrEqual(3);
 	});
 
-	// El foco es de dos tonos: aro de tinta (visible sobre el papel) y halo `onDesk` (visible
-	// sobre la mesa). Un único color no puede tener 3:1 contra ambos a la vez; por eso estos
-	// dos contrastes, junto al de `ink`/`paper`, son los que lo garantizan.
+	// The focus is two-tone: an ink ring (visible on the paper) and an `onDesk` halo (visible
+	// on the desk). A single color cannot have 3:1 against both at once; that is why these
+	// two contrasts, together with that of `ink`/`paper`, are the ones that guarantee it.
 	it('keeps text and the focus halo that sit on the desk at AA contrast (4.5:1)', () => {
 		expect(
 			contrastRatio(palette.onDesk, palette.desk),

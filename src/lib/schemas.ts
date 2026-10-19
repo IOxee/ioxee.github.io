@@ -1,9 +1,15 @@
 import { z } from 'astro/zod';
-// Con extensión: el script `import-linkedin` ejecuta este archivo directamente con Node.
+// With extension: the `import-linkedin` script runs this file directly with Node.
 import { PARTIAL_DATE, partialDateKey } from './partial-date.ts';
 
-export const SKILL_CATEGORIES = ['backend', 'frontend', 'data'] as const;
-/** De mayor a menor uso; el orden define cómo se ordenan las habilidades dentro de un grupo. */
+/** Categories shown first, in this order. Any other category is allowed and goes after them, alphabetically. */
+export const PREFERRED_SKILL_CATEGORIES = [
+	'backend',
+	'frontend',
+	'data',
+	'desktop',
+] as const;
+/** From most to least used; the order defines how skills are sorted within a group. */
 export const SKILL_STATES = [
 	'daily',
 	'comfortable',
@@ -21,13 +27,13 @@ const id = z
 		'Usa kebab-case: minúsculas, números y guiones',
 	);
 const partialDate = z.string().regex(PARTIAL_DATE, 'Usa AAAA o AAAA-MM');
-// Posición al mostrar la lista. Es explícita porque el almacén de contenido no conserva el orden del archivo.
+// Position when displaying the list. It is explicit because the content store does not keep the file's order.
 const order = z.number().int().min(1);
 
-// Estos enlaces acaban como `href`: solo https, para que ni un dato mal copiado ni un
-// importador automático puedan colar `javascript:`, `file:` o `http:`. Además tiene que estar
-// escrito entero (`https://…`: `https:web.com` sería una ruta del propio sitio) y sin usuario ni
-// contraseña delante del dominio, que despistan sobre a qué web se va.
+// These links end up as `href`: https only, so that neither a badly copied value nor an
+// automatic importer can sneak in `javascript:`, `file:` or `http:`. It also has to be
+// written in full (`https://…`: `https:web.com` would be a path on the site itself) and without a username or
+// password before the domain, which mislead about which site you are going to.
 const httpsUrl = z.url({ protocol: /^https$/ }).refine(
 	(value) => {
 		const url = URL.parse(value);
@@ -69,8 +75,8 @@ export const profileSchema = z.object({
 		email: z.email(),
 		company: httpsUrl.optional(),
 	}),
-	// Una ruta del propio sitio: `//host/…` y `/\host/…` serían una dirección externa.
-	// Opcional: sin CV la web no enseña el enlace de descarga.
+	// A path on the site itself: `//host/…` and `/\host/…` would be an external address.
+	// Optional: without a CV the site does not show the download link.
 	cv: z
 		.string()
 		.regex(
@@ -81,8 +87,8 @@ export const profileSchema = z.object({
 });
 
 /**
- * Un fin anterior al inicio es un error de datos. Si algún formato ya es inválido se deja
- * pasar: ese fallo lo reporta el campo concreto y comparar fechas rotas lanzaría una excepción.
+ * An end before the start is a data error. If some format is already invalid it is let
+ * through: that failure is reported by the specific field and comparing broken dates would throw an exception.
  */
 const endsAfterStart = (entry: {
 	start: string;
@@ -115,10 +121,10 @@ export const experienceSchema = z
 export const skillSchema = z.object({
 	id,
 	name: nonEmpty,
-	category: z.enum(SKILL_CATEGORIES),
+	category: id,
 	since: z.number().int().min(1990),
 	state: z.enum(SKILL_STATES),
-	/** `true` mientras `since` sea una estimación sin confirmar: la web no debe mostrar sus años. */
+	/** `true` while `since` is an unconfirmed estimate: the site must not show its years. */
 	provisional: z.boolean().optional(),
 });
 
@@ -128,7 +134,7 @@ export const projectSchema = z
 		name: nonEmpty,
 		summary: localizedText,
 		stack: z.array(nonEmpty).min(1),
-		/** Texto alternativo de la captura `src/assets/projects/<id>.png`: es contenido, no adorno. */
+		/** Alt text of the screenshot `src/assets/projects/<id>.png`: it is content, not decoration. */
 		imageAlt: localizedText,
 		repo: httpsUrl,
 		start: partialDate,
@@ -146,7 +152,7 @@ export const projectSchema = z
 		path: ['end'],
 	});
 
-/** Certificaciones y cursos que no son formación reglada. */
+/** Certifications and courses that are not formal education. */
 export const certificationSchema = z
 	.object({
 		id,
@@ -157,9 +163,9 @@ export const certificationSchema = z
 		url: httpsUrl.optional(),
 		summary: localizedText.optional(),
 		/**
-		 * La foto (`src/assets/certifications/<id>.png|jpg|webp`) y el documento (`<id>.pdf`, en la misma
-		 * carpeta) no se declaran aquí: salen solos si existe el archivo. Este texto, si se quiere, sustituye
-		 * al alternativo automático de la foto («Certificado: {nombre}»).
+		 * The photo (`src/assets/certifications/<id>.png|jpg|webp`) and the document (`<id>.pdf`, in the same
+		 * folder) are not declared here: they appear on their own if the file exists. This text, if provided, replaces
+		 * the photo's automatic alt text ("Certificado: {nombre}").
 		 */
 		imageAlt: localizedText.optional(),
 		order,
@@ -167,7 +173,7 @@ export const certificationSchema = z
 	.refine(
 		(entry) =>
 			entry.expires === undefined ||
-			// Si algún formato ya es inválido se deja pasar: lo reporta el campo concreto.
+			// If some format is already invalid it is let through: the specific field reports it.
 			!PARTIAL_DATE.test(entry.issued) ||
 			!PARTIAL_DATE.test(entry.expires) ||
 			partialDateKey(entry.expires, 'end') >=

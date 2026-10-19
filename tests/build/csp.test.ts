@@ -29,9 +29,9 @@ describe.each(PAGES)('CSP de %s', (path) => {
 		expect(sources).not.toContain("'unsafe-eval'");
 	});
 
-	// Astro pone la meta al final del <head>, así que hoy el script del tema corre antes de que la
-	// política exista: el hash no se aplica todavía. Se exige igualmente para que, si la meta pasa a
-	// ir primero, el script siga funcionando.
+	// Astro puts the meta at the end of the <head>, so today the theme script runs before the
+	// policy exists: the hash does not apply yet. It is required anyway so that, if the meta ends up
+	// going first, the script keeps working.
 	it('lleva el hash de cada script en línea que se ejecuta, y su texto en LF', () => {
 		const scripts = page
 			.querySelectorAll('script')
@@ -45,8 +45,8 @@ describe.each(PAGES)('CSP de %s', (path) => {
 		}
 	});
 
-	// Una meta solo gobierna lo que viene después de ella. Lo que la precede no se vigila, así que
-	// se fija exactamente qué es, para que no crezca sin que alguien lo decida.
+	// A meta only governs what comes after it. What precedes it is not watched, so exactly what
+	// it is gets pinned down, so that it does not grow without someone deciding it.
 	it('lo único que va antes de la meta, que no lo gobierna, es contenido estático conocido', () => {
 		const themeInit = readFileSync(
 			new URL('../../src/scripts/theme-init.js', import.meta.url),
@@ -74,7 +74,7 @@ describe.each(PAGES)('CSP de %s', (path) => {
 						'icon',
 						'apple-touch-icon',
 						'canonical',
-						// Las páginas de los otros idiomas (hreflang): enlaces, no recursos que se carguen.
+						// The pages of the other languages (hreflang): links, not resources that get loaded.
 						'alternate',
 						'preload',
 					].includes(rel ?? '') ||

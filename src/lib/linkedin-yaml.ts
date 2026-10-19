@@ -4,7 +4,7 @@ import { type ExperienceEntry, experienceSchema } from './schemas.ts';
 
 const NOT_A_LIST = 'experience.yaml debe ser una lista de registros';
 
-/** Una fecha como el resto del archivo: entre comillas simples; «en curso» es `null`. */
+/** A date like the rest of the file: in single quotes; "ongoing" is `null`. */
 function dateNode(date: string | null): Scalar | null {
 	if (date === null) return null;
 
@@ -43,9 +43,9 @@ export function readExperience(yamlText: string): ExperienceEntry[] {
 }
 
 /**
- * Aplica un plan de fusión al texto de `experience.yaml` sin tocar el resto: los comentarios, las
- * líneas en blanco y los textos de los registros siguen como estaban. Los registros nuevos van al
- * final con una nota que pide revisar el texto que viene de LinkedIn.
+ * Applies a merge plan to the text of `experience.yaml` without touching the rest: comments,
+ * blank lines and the records' texts stay as they were. New records go at the
+ * end with a note asking to review the text that comes from LinkedIn.
  */
 export function applyPlan(
 	yamlText: string,
@@ -53,8 +53,8 @@ export function applyPlan(
 	importedOn: string,
 ): string {
 	const document = parseDocument(yamlText);
-	// Como `unknown`: los nodos de un documento leído están tipados con más detalle del que hace
-	// falta para añadir y cambiar valores.
+	// As `unknown`: the nodes of a parsed document are typed in more detail than is
+	// needed to add and change values.
 	const contents: unknown = document.contents;
 	if (!isSeq(contents)) throw new Error(NOT_A_LIST);
 	const list = contents;
@@ -75,7 +75,7 @@ export function applyPlan(
 	}
 
 	for (const added of plan.additions) {
-		// Un objeto siempre se convierte en un mapa.
+		// An object is always converted into a map.
 		const node = document.createNode(added) as YAMLMap;
 		node.set('start', dateNode(added.start));
 		node.set('end', dateNode(added.end));
@@ -84,9 +84,9 @@ export function applyPlan(
 		list.add(node);
 	}
 
-	// Mismo estilo que el archivo: sangrado de 4 y sin partir las líneas largas. Sin esto, `yaml`
-	// reescribiría también los registros que no cambian y el diff del PR sería ilegible.
-	// Comillas simples, como las deja Prettier: así el siguiente `format:check` no protesta.
+	// Same style as the file: 4-space indent and no wrapping of long lines. Without this, `yaml`
+	// would also rewrite the records that do not change and the PR diff would be unreadable.
+	// Single quotes, as Prettier leaves them: so the next `format:check` does not complain.
 	const output = document.toString({
 		indent: 4,
 		lineWidth: 0,

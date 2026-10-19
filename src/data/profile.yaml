@@ -1,5 +1,5 @@
-# Datos personales y texto de "Sobre mí".
-# `about` es un BORRADOR en tono profesional: revisar y corregir.
+# Personal data and the text of "About me".
+# `about` is a DRAFT in a professional tone: review and correct.
 - id: main
   name: Isidro Rosell
   headline:
@@ -20,7 +20,7 @@
       linkedin: https://linkedin.com/in/ioxee/
       email: IOxee@proton.me
       company: https://fractalgamestudios.es/
-  # Sin `cv` la web no enseña «Descargar CV». El anterior se retiró porque llevaba la fecha de
-  # nacimiento, un móvil y el correo personal. Cuando haya uno limpio, ponlo en
-  # `public/assets/documents/` y descomenta:
+  # Without `cv` the site does not show "Descargar CV". The previous one was withdrawn because it carried the date of
+  # birth, a mobile number and the personal email. When there is a clean one, put it in
+  # `public/assets/documents/` and uncomment:
   # cv: /assets/documents/curriculum.pdf

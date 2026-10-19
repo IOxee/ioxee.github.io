@@ -26,7 +26,7 @@ interface Props {
 
 const { sheet, page, plan, title, data, locale } = Astro.props;
 
-// Cada hoja cae un poco distinta en la vista de lista. En la carpeta, apiladas, van rectas.
+// Each sheet lands slightly differently in the list view. In the folder, stacked, they are straight.
 const TILTS = [0.3, -0.35, 0.2, -0.25, 0.4, -0.15];
 const tilt = TILTS[page % TILTS.length] ?? 0;
 const headingId = `${sheet.id}-title`;
@@ -61,9 +61,9 @@ const certificationShots =
 			)
 		: [];
 
-// Los idiomas viajan en la última hoja de habilidades.
+// Languages travel on the last skills sheet.
 const lastSkills = plan.filter((entry) => entry.kind === 'skills').at(-1);
-// Las dos páginas de un proyecto (la principal y la de sus detalles) son del mismo proyecto.
+// The two pages of a project (the main one and its details) belong to the same project.
 const project =
 	sheet.kind === 'project' || sheet.kind === 'project-details'
 		? data.projects[sheet.items[0] ?? 0]
@@ -280,7 +280,7 @@ const project =
 						project.stack.join(', '),
 					].join(' · ')}
 				</p>
-				<p>
+				<p class="doc-links">
 					<a
 						href={project.repo}
 						aria-label={fill(t(locale, 'mission.repoLabel'), {
@@ -289,6 +289,23 @@ const project =
 					>
 						{t(locale, 'mission.repo')}
 					</a>
+					{project.document && (
+						<a
+							href={project.document}
+							target="_blank"
+							rel="noopener noreferrer"
+							data-viewer="pdf"
+							data-viewer-title={project.name}
+							aria-label={fill(
+								t(locale, 'project.documentLabel'),
+								{
+									name: project.name,
+								},
+							)}
+						>
+							{t(locale, 'project.document')}
+						</a>
+					)}
 				</p>
 			</>
 		)}

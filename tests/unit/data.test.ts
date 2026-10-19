@@ -14,15 +14,15 @@ import {
 
 const DATA_DIR = new URL('../../src/data/', import.meta.url);
 
-// Mismas opciones que usa el loader `file()` de Astro, para que el test y el build
-// interpreten igual los YAML (p. ej. una fecha sin comillas es un `Date` en ambos).
+// Same options the Astro `file()` loader uses, so the test and the build
+// interpret the YAML files the same way (e.g. an unquoted date is a `Date` in both).
 const YAML_OPTIONS: ParseOptions & DocumentOptions & SchemaOptions = {
 	schema: 'core',
 	customTags: ['timestamp'],
 	merge: true,
 };
 
-// El esquema ya valida formas, enlaces https y fin >= inicio; aquí solo lo que cruza registros.
+// The schema already validates shapes, https links and end >= start; here only what crosses records.
 const load = <T>(file: string, schema: z.ZodType<T>): T[] =>
 	z
 		.array(schema)
@@ -101,7 +101,7 @@ describe('project screenshots', () => {
 });
 
 describe('src/data/certifications.yaml', () => {
-	// Puede estar vacío: sin certificaciones la carpeta no tiene esa sección.
+	// May be empty: without certifications the folder has no such section.
 	it('is a valid list, possibly empty, with no duplicate ids', () => {
 		const certifications = load('certifications.yaml', certificationSchema);
 

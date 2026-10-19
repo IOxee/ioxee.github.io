@@ -26,20 +26,20 @@ export interface MergePlan {
 	updates: EntryUpdate[];
 	additions: NewEntry[];
 	unchanged: string[];
-	/** Registros de la web que LinkedIn no tiene. No se tocan ni se borran. */
+	/** Site records that LinkedIn does not have. They are neither touched nor deleted. */
 	onlyOnSite: string[];
 }
 
 export interface MergeOptions {
 	addNew?: boolean;
 	/**
-	 * Tipos de registro de los que LinkedIn ha dado datos. Los demás no se comparan ni se listan
-	 * como «solo en la web», pero sus ids siguen contando para que los nuevos no los repitan.
+	 * Record types LinkedIn has provided data for. The others are neither compared nor listed
+	 * as "only on the web", but their ids still count so that new ones do not repeat them.
 	 */
 	kinds?: readonly ExperienceEntry['kind'][];
 }
 
-/** Más años de diferencia entre dos inicios y es otra etapa en la misma organización. */
+/** More years than this between two starts and it is a different stage at the same organization. */
 const MAX_START_GAP_YEARS = 2;
 
 export function slugify(text: string): string {
@@ -54,8 +54,8 @@ export function slugify(text: string): string {
 }
 
 /**
- * Clave para comparar nombres sin fijarse en mayúsculas, acentos, espacios ni símbolos. Vale para
- * cualquier alfabeto: «slugify» solo conserva el latino y juntaría organizaciones distintas.
+ * Key for comparing names ignoring case, accents, spaces and symbols. It works for
+ * any alphabet: "slugify" only keeps Latin and would merge different organizations.
  */
 const nameKey = (text: string): string =>
 	text
@@ -65,8 +65,8 @@ const nameKey = (text: string): string =>
 		.replace(/[^\p{L}\p{N}]+/gu, '');
 
 /**
- * `true` si LinkedIn no aporta nada que la web no sepa: la misma fecha, o un año cuando la web
- * ya tiene ese año con mes (`2022` frente a `2022-09`).
+ * `true` if LinkedIn adds nothing the site does not already know: the same date, or a year when the site
+ * already has that year with a month (`2022` versus `2022-09`).
  */
 const addsNothing = (site: string | null, linkedin: string | null): boolean =>
 	site === linkedin ||
@@ -81,9 +81,9 @@ interface Pairing {
 }
 
 /**
- * Empareja cada registro de LinkedIn con, como mucho, uno de la web: mismo tipo y mismo nombre
- * (o título, en la formación). Cuando una organización aparece varias veces gana el par con el
- * inicio más cercano, así que dos puestos en la misma empresa siguen siendo dos.
+ * Pairs each LinkedIn record with at most one site record: same type and same name
+ * (or title, in education). When an organization appears several times the pair with the
+ * closest start wins, so two positions at the same company remain two.
  */
 function pairEntries(
 	site: readonly ExperienceEntry[],
@@ -116,7 +116,7 @@ function pairEntries(
 		});
 	});
 
-	// El mejor par primero, sin depender del orden en que LinkedIn lista las posiciones.
+	// The best pair first, regardless of the order in which LinkedIn lists the positions.
 	pairings.sort(
 		(a, b) =>
 			a.distance - b.distance ||
@@ -190,7 +190,7 @@ export function planMerge(
 				kind: entry.kind,
 				organization: entry.organization,
 				role: { es: entry.role },
-				// El esquema exige resumen: sin descripción en LinkedIn, el rol hace de resumen.
+				// The schema requires a summary: with no LinkedIn description, the role serves as the summary.
 				summary: { es: entry.summary ?? entry.role },
 				start: entry.start,
 				end: entry.end,

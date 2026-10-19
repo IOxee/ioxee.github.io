@@ -8,10 +8,10 @@ import {
 	positionOfPage,
 } from './book';
 
-// Doce páginas: la portada (0) y once de contenido (1..11). Las hojas son:
-//   0: portada | reverso de la portada     3: p5 | p6     6: p11 | (en blanco)
-//   1: p1 | p2                              4: p7 | p8
-//   2: p3 | p4                              5: p9 | p10
+// Twelve pages: the cover (0) and eleven of content (1..11). The sheets are:
+//   0: cover | back of the cover     3: p5 | p6     6: p11 | (blank)
+//   1: p1 | p2                       4: p7 | p8
+//   2: p3 | p4                       5: p9 | p10
 const PAGES = 12;
 
 describe('isBackPage', () => {

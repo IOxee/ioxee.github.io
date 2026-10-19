@@ -100,10 +100,16 @@ describe('skillSchema', () => {
 		);
 	});
 
-	it('rejects an unknown category or state', () => {
-		expect(accepts(skillSchema, { ...skill, category: 'games' })).toBe(
-			false,
-		);
+	it('accepts any kebab-case category', () => {
+		for (const category of ['games', 'game-dev', 'devops2']) {
+			expect(accepts(skillSchema, { ...skill, category })).toBe(true);
+		}
+	});
+
+	it('rejects a malformed category or an unknown state', () => {
+		for (const category of ['', 'Game Dev', 'game_dev']) {
+			expect(accepts(skillSchema, { ...skill, category })).toBe(false);
+		}
 		expect(accepts(skillSchema, { ...skill, state: 'expert' })).toBe(false);
 	});
 });
@@ -365,10 +371,10 @@ describe('certificationSchema', () => {
 		'http://example.com/verify',
 		'//example.com/verify',
 		'not a url',
-		// Una página https los toma como rutas del propio sitio, no como otra web.
+		// An https page takes them as paths on the site itself, not as another website.
 		'https:example.com/verify',
 		'https:/example.com/verify',
-		// Usuario y contraseña en el enlace: se ven en la barra y despistan sobre a qué web se va.
+		// Username and password in the link: they show in the address bar and mislead about which site you are going to.
 		'https://user:pass@example.com/verify',
 	])(
 		'rejects the verification link %j, which is not an https address',

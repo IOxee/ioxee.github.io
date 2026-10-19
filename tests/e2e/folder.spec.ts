@@ -15,9 +15,9 @@ const SCREENS = [
 ] as const;
 
 /**
- * Impide que la carpeta termine de colocar las hojas por su cuenta, para ver el giro a medias que se
- * ve mientras se desplaza. La carpeta mueve el scroll con `window.scrollTo`; la prueba, con el del
- * elemento raíz, que sigue funcionando.
+ * Prevents the folder from finishing placing the sheets on its own, to see the half turn that is
+ * visible while scrolling. The folder moves the scroll with `window.scrollTo`; the test, with that of
+ * the root element, which keeps working.
  */
 async function freezeSettling(page: Page): Promise<void> {
 	await page.evaluate(() => {
@@ -177,8 +177,8 @@ test.describe('la carpeta', () => {
 			);
 			await expect(page).toHaveURL(new RegExp(`${anchor}$`));
 
-			// El navegador hace su propio scroll hasta el ancla: la carpeta no puede quedarse con una
-			// hoja a medio girar. El progreso acaba siendo un punto de lectura exacto.
+			// The browser does its own scroll to the anchor: the folder cannot be left with a
+			// half-turned sheet. The progress ends up being an exact reading point.
 			const { parallax } = await folderGeometry(page);
 			if (parallax) {
 				await expect
@@ -322,8 +322,8 @@ test.describe('la carpeta no pierde el hilo', () => {
 			[1440, true],
 		] as const) {
 			await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
-			// Se espera a que la carpeta haya cambiado de maqueta y a que el scroll se asiente: un
-			// sondeo daría por buena la lectura de antes del cambio.
+			// Waits for the folder to have changed layout and for the scroll to settle: a
+			// poll would accept the reading from before the change.
 			await page.waitForFunction(
 				(open) => matchMedia('(min-width: 60rem)').matches === open,
 				wide,
@@ -411,8 +411,8 @@ test.describe('la carpeta no pierde el hilo', () => {
 		await settle(page);
 		await page.mouse.move(720, 450);
 
-		// Cien píxeles es lo que mueve un toque de una rueda normal: una fracción pequeña de la hoja,
-		// que con una parada «la más cercana» volvía atrás.
+		// A hundred pixels is what a tick of a normal wheel moves: a small fraction of the sheet,
+		// which with a "nearest" snap stop went back.
 		for (const [delta, expected] of [
 			[100, 1],
 			[100, 2],
@@ -499,7 +499,7 @@ test.describe('la carpeta no pierde el hilo', () => {
 		await page.goto('/');
 		await settle(page);
 
-		// Un lector de pantalla los activa aunque no se vean: aquí, con un clic de programa.
+		// A screen reader activates them even if they are not visible: here, with a programmatic click.
 		await page.locator('[data-turn="next"]').dispatchEvent('click');
 		await expect.poll(() => currentPage(page)).toBe(1);
 		await page.locator('[data-turn="prev"]').dispatchEvent('click');

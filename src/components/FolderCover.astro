@@ -51,14 +51,14 @@ const photoAlt = fill(t(locale, 'card.photoAlt'), { name });
 		</svg>
 	</figure>
 
-	{/* El sello es adorno para los lectores de pantalla: el nombre de verdad es el h1 de la carpeta. */}
+	{/* The stamp is decoration for screen readers: the real name is the folder's h1. */}
 	<div class="cover-stamp">
 		<Stamp text={name} tilt={-5} animate />
 	</div>
 
 	<p class="cover-headline">{headline}</p>
 
-	{/* Invita a bajar: el scroll es lo que abre la carpeta. Es adorno; la ayuda para lectores de pantalla va en la carpeta. */}
+	{/* Invites to scroll down: scrolling is what opens the folder. It is decoration; the help for screen readers lives in the folder. */}
 	<p class="cover-scroll" aria-hidden="true">
 		<span>{t(locale, 'folder.scrollHint')}</span>
 		<svg

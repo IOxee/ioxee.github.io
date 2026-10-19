@@ -22,8 +22,8 @@ test.describe('maquetación', () => {
 			page,
 			browserName,
 		}) => {
-			// Sin esto pasaría en Firefox sin medir nada: ahí `PerformanceObserver` ignora
-			// `layout-shift` y el contador se quedaría en 0.
+			// Without this it would pass in Firefox without measuring anything: there `PerformanceObserver` ignores
+			// `layout-shift` and the counter would stay at 0.
 			test.skip(
 				browserName !== 'chromium',
 				'Firefox no implementa layout-shift.',
@@ -34,7 +34,7 @@ test.describe('maquetación', () => {
 			await page.goto('/');
 			await settle(page);
 
-			// Margen mínimo; hoy sale 0. Las fuentes se precargan justo para que sea así.
+			// Minimum margin; today it comes out 0. The fonts are preloaded precisely so that it is that way.
 			expect(await page.evaluate(() => window.__cls)).toBeLessThan(0.01);
 		});
 	}
@@ -57,11 +57,11 @@ test.describe('maquetación', () => {
 			]),
 		);
 
-		// Que haya imágenes que comprobar: sin esto, quitarlas todas dejaría la prueba en verde.
+		// That there are images to check: without this, removing them all would leave the test green.
 		expect(await page.locator('img').count()).toBeGreaterThan(0);
 
-		// Las capturas de los proyectos son perezosas: no se piden hasta que se acercan, así que se
-		// recorre la página antes de mirar si cargaron.
+		// The project screenshots are lazy: they are not requested until they get close, so the page
+		// is scrolled through before looking at whether they loaded.
 		await page.evaluate(async () => {
 			for (const image of document.images) {
 				image.scrollIntoView({ behavior: 'instant', block: 'center' });

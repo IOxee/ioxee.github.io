@@ -4,7 +4,7 @@ import { describe, expect, it } from 'vitest';
 import config from '../../astro.config.mjs';
 import { DEFAULT_LOCALE, LOCALES } from '../../src/lib/i18n';
 
-// Los idiomas viven en dos sitios (la config de Astro y `src/lib/i18n.ts`); este test los mantiene en sync.
+// The languages live in two places (the Astro config and `src/lib/i18n.ts`); this test keeps them in sync.
 describe('astro.config.mjs i18n', () => {
 	it('declares exactly the locales of src/lib/i18n.ts', () => {
 		expect(config.i18n?.locales).toEqual([...LOCALES]);
@@ -69,7 +69,7 @@ describe('astro.config.mjs security.csp', () => {
 	});
 
 	it('allows the inline theme script by its hash, never with unsafe-inline or unsafe-eval', () => {
-		// Como hace el navegador antes de hashear: CRLF → LF.
+		// As the browser does before hashing: CRLF → LF.
 		const source = readFileSync(
 			new URL('../../src/scripts/theme-init.js', import.meta.url),
 			'utf8',
@@ -90,7 +90,7 @@ describe('astro.config.mjs security.csp', () => {
 		expect(unsafe).toEqual([
 			{ resource: "'unsafe-inline'", kind: 'attribute' },
 		]);
-		// `'self'` va en `element`: con `style-src-attr` presente, `style-src` ya no rige para nada.
+		// `'self'` goes in `element`: with `style-src-attr` present, `style-src` no longer governs anything.
 		expect(resources).toContainEqual({
 			resource: "'self'",
 			kind: 'element',

@@ -25,7 +25,7 @@ const { locale } = Astro.props;
 	>
 		<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z"></path>
 	</svg>
-	{/* El texto es la acción que ocurrirá; el CSS enseña uno u otro según el tema, sin esperar a JS. */}
+	{/* The text is the action that will happen; the CSS shows one or the other depending on the theme, without waiting for JS. */}
 	<span class="to-night">{t(locale, 'theme.toNight')}</span>
 	<span class="to-day">{t(locale, 'theme.toDay')}</span>
 </button>
@@ -41,10 +41,10 @@ const { locale } = Astro.props;
 				root.dataset.theme = next;
 
 				try {
-					// La clave lleva prefijo: todos los proyectos de ioxee.github.io comparten origen.
+					// The key is prefixed: all ioxee.github.io projects share an origin.
 					localStorage.setItem('ioxee:theme', next);
 				} catch {
-					// Sin almacenamiento: el cambio dura solo esta visita.
+					// No storage: the change lasts only this visit.
 				}
 			});
 		});
@@ -71,7 +71,7 @@ const { locale } = Astro.props;
 			box-shadow 120ms ease-out;
 	}
 
-	/* Este `box-shadow` propio anularía el halo del foco global: se repite aquí con el halo incluido. */
+	/* This own `box-shadow` would override the global focus halo: it is repeated here with the halo included. */
 	.toggle:focus-visible {
 		box-shadow:
 			0 3px 0 oklch(0% 0 0 / 0.35),

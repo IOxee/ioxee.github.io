@@ -1,7 +1,7 @@
-# Experiencia y formación, migradas 1:1 del sitio v1 (solo en español).
-# Fechas: 'AAAA' o 'AAAA-MM' (entre comillas). `end: null` = en curso.
-# El orden de visualización lo decide sortExperience(), no el orden de este archivo.
-# `npm run import:linkedin` mueve las fechas y añade lo que falta desde LinkedIn, sin pisar los textos (README).
+# Experience and education, migrated 1:1 from the v1 site (Spanish only).
+# Dates: 'YYYY' or 'YYYY-MM' (quoted). `end: null` = ongoing.
+# The display order is decided by sortExperience(), not by the order of this file.
+# `npm run import:linkedin` moves the dates and adds what is missing from LinkedIn, without overwriting the texts (README).
 - id: fractal-game-studios
   kind: work
   organization: Fractal Game Studios

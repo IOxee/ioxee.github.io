@@ -1,10 +1,10 @@
 /**
- * Pone al día `src/data/experience.yaml` con lo que hay en LinkedIn: mueve las fechas que han cambiado y añade los
- * registros que faltan. Nunca reescribe un texto ya escrito ni borra nada. Sin `--write` solo enseña lo que haría.
+ * Brings `src/data/experience.yaml` up to date with what is on LinkedIn: it moves the dates that changed and adds the
+ * missing records. It never rewrites text that is already written and never deletes anything. Without `--write` it only shows what it would do.
  *
- *   npm run import:linkedin -- <carpeta del export>        (con Positions.csv y/o Education.csv)
+ *   npm run import:linkedin -- <export folder>        (with Positions.csv and/or Education.csv)
  *   npm run import:linkedin -- --positions P.csv --education E.csv
- *   npm run import:linkedin -- --json instantanea.json      (la que deja `fetch-linkedin`)
+ *   npm run import:linkedin -- --json snapshot.json      (the one `fetch-linkedin` leaves)
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -62,7 +62,7 @@ const parseCli = (): Cli =>
 		},
 	});
 
-/** Lee un CSV si existe. Una ruta dada a mano que no existe es un error; una por defecto, no. */
+/** Reads a CSV if it exists. A hand-given path that does not exist is an error; a default one is not. */
 function readCsv(
 	path: string | undefined,
 	explicit: boolean,
@@ -145,15 +145,15 @@ function main(): void {
 		kinds.push('education');
 	}
 
-	// Solo se compara lo que LinkedIn ha dado: sin Education.csv, la formación no es «solo de la web».
+	// Only what LinkedIn provided is compared: without Education.csv, education is not "web-only".
 	const plan = planMerge(
 		site,
 		results.flatMap((result) => result.entries),
 		{ addNew: !values['update-only'], kinds },
 	);
 
-	// Se calcula y se valida siempre, también en la simulación: así lo que se enseña es lo que se
-	// escribiría, y un dato que rompe el esquema se ve antes de pedir `--write`.
+	// It is always computed and validated, also in the simulation: this way what is shown is what would be
+	// written, and data that breaks the schema shows up before asking for `--write`.
 	const updated = applyPlan(
 		original,
 		plan,

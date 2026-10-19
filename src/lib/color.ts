@@ -6,7 +6,7 @@ export interface Oklch {
 
 type LinearRgb = readonly [number, number, number];
 
-// `oklch(L C H)` opaco; L en porcentaje o en 0-1, H en grados con `deg` opcional.
+// Opaque `oklch(L C H)`; L as a percentage or 0-1, H in degrees with an optional `deg`.
 const OKLCH =
 	/^oklch\(\s*(\d*\.?\d+)(%?)\s+(\d*\.?\d+)\s+(\d*\.?\d+)(?:deg)?\s*\)$/i;
 
@@ -27,7 +27,7 @@ export function parseOklch(css: string): Oklch {
 	};
 }
 
-// OKLCH → OKLab → sRGB lineal (matrices de Björn Ottosson).
+// OKLCH → OKLab → linear sRGB (Björn Ottosson's matrices).
 function toLinearSrgb({ l, c, h }: Oklch): LinearRgb {
 	const hue = (h * Math.PI) / 180;
 	const a = c * Math.cos(hue);
@@ -46,7 +46,7 @@ function toLinearSrgb({ l, c, h }: Oklch): LinearRgb {
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
-/** Los colores fuera de gamut sRGB se recortan canal a canal. */
+/** Colors outside the sRGB gamut are clipped channel by channel. */
 function relativeLuminance(color: Oklch): number {
 	const [r, g, b] = toLinearSrgb(color);
 

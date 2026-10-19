@@ -5,11 +5,11 @@ import type { SectionId } from '../lib/sections';
 interface Props {
 	kind: SheetKind;
 	section: SectionId;
-	/** Es la primera página de su sección: lleva el id del ancla. */
+	/** It is the first page of its section: it carries the anchor id. */
 	anchor?: boolean;
 	title: string;
 	labelledby: string;
-	/** Es la que se ve al cargar. El resto las coloca el script. */
+	/** It is the one seen on load. The script places the rest. */
 	current?: boolean;
 	face?: 'front' | 'back';
 	tilt?: number;
@@ -29,7 +29,7 @@ const {
 const variant = kind === 'cover' ? 'cover' : 'sheet';
 ---
 
-{/* El estado inicial va en el HTML para que el primer pintado ya sea el bueno; el script hace el resto. */}
+{/* The initial state goes in the HTML so the first paint is already the right one; the script does the rest. */}
 <section
 	class:list={['page', `page--${variant}`, `page--${face}`]}
 	id={anchor ? section : undefined}
@@ -44,6 +44,6 @@ const variant = kind === 'cover' ? 'cover' : 'sheet';
 	style={`--tilt: ${tilt}deg`}
 >
 	<slot />
-	{/* El número sale solo, contando páginas de contenido: la portada no lleva. */}
+	{/* The number appears on its own, counting content pages: the cover has none. */}
 	{variant === 'sheet' && <p class="folio" aria-hidden="true" />}
 </section>

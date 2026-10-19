@@ -37,13 +37,13 @@ test.describe('política de contenido (CSP)', () => {
 		await page.goto('/');
 		await settle(page);
 
-		// Un script en línea se ejecuta al insertarlo, así que si se permitiera ya habría corrido.
+		// An inline script runs when inserted, so if it were allowed it would already have run.
 		const ran = await page.evaluate(() => {
 			const script = document.createElement('script');
 			script.textContent = 'window.__pwned = true';
 			document.head.append(script);
 
-			// La imagen se pide en segundo plano: su violación llega después.
+			// The image is requested in the background: its violation arrives later.
 			new Image().src = 'https://example.com/pixel.png';
 
 			return (

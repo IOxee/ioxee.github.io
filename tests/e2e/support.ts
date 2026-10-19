@@ -23,11 +23,11 @@ declare global {
 export const VIEWPORT_HEIGHT = 900;
 
 export interface FolderGeometry {
-	/** `true` si la carpeta está fija y el scroll gira las hojas; si no, gira sola. */
+	/** `true` if the folder is pinned and the scroll turns the sheets; otherwise it turns on its own. */
 	parallax: boolean;
 	positions: number;
 	step: number;
-	/** Scroll al que la carpeta queda fija (el punto de lectura 0). */
+	/** Scroll at which the folder gets pinned (reading point 0). */
 	base: number;
 }
 
@@ -58,8 +58,8 @@ export function visiblePages(page: Page): Promise<number[]> {
 }
 
 /**
- * Lleva el scroll al punto de lectura `position` y espera a que la carpeta haya llegado: a que el
- * progreso sea justo ese y a que las hojas se hayan quedado quietas.
+ * Takes the scroll to reading point `position` and waits for the folder to have arrived: for the
+ * progress to be exactly that and for the sheets to have come to rest.
  */
 export async function showPosition(
 	page: Page,
@@ -85,13 +85,13 @@ export async function showPosition(
 }
 
 /**
- * Deja la página quieta: fuentes cargadas y todas las animaciones terminadas (el sello que cae al
- * cargar es la única que hay). Sin esto, una medida o una captura cogerían el sello a medio caer.
+ * Leaves the page still: fonts loaded and all animations finished (the stamp that drops on
+ * load is the only one). Without this, a measurement or a screenshot would catch the stamp halfway down.
  */
 export async function settle(page: Page): Promise<void> {
 	await page.evaluate(async () => {
 		await document.fonts.ready;
-		// Las que no acaban nunca (la flecha que invita a bajar) no se esperan: no terminarían.
+		// Those that never end (the arrow inviting you to scroll down) are not waited for: they would never finish.
 		await Promise.all(
 			document
 				.getAnimations()
@@ -106,8 +106,8 @@ export async function settle(page: Page): Promise<void> {
 }
 
 /**
- * Cuenta el cambio de maquetación acumulado (CLS) desde antes de que la página empiece a cargar.
- * Hay que llamarlo antes de `page.goto`.
+ * Counts the accumulated layout shift (CLS) from before the page starts loading.
+ * It has to be called before `page.goto`.
  */
 export async function trackLayoutShift(page: Page): Promise<void> {
 	await page.addInitScript(() => {
@@ -125,10 +125,10 @@ export async function trackLayoutShift(page: Page): Promise<void> {
 }
 
 /**
- * Anota el tema que ya tiene la página en el instante en que se crea el `<body>`, es decir, antes
- * de que pinte nada. Un script del tema que llegara tarde dejaría ahí el valor por defecto y la
- * página parpadearía, aunque al final del todo el tema fuera el correcto. Hay que llamarlo antes
- * de `page.goto`; el valor queda en `window.__themeAtBody`.
+ * Records the theme the page already has at the moment its `<body>` is created, that is, before
+ * anything is painted. A theme script that arrived late would leave the default value there and the
+ * page would flicker, even if in the end the theme was the right one. It has to be called before
+ * `page.goto`; the value is left in `window.__themeAtBody`.
  */
 export async function trackThemeAtBody(page: Page): Promise<void> {
 	await page.addInitScript(() => {

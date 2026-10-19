@@ -1,8 +1,8 @@
 import { partialDateKey } from './partial-date';
 
 /**
- * Orden de visualización explícito (`order`, de menor a mayor). El almacén de contenido de
- * Astro no conserva el orden del archivo YAML, así que no se puede depender de él.
+ * Explicit display order (`order`, ascending). Astro's content store does not keep the order of
+ * the YAML file, so it cannot be relied on.
  */
 export function sortByOrder<T extends { id: string; order: number }>(
 	items: readonly T[],
@@ -13,9 +13,9 @@ export function sortByOrder<T extends { id: string; order: number }>(
 }
 
 /**
- * Del más reciente al más antiguo, como en un currículum: lo que sigue en marcha primero; luego,
- * lo que acabó más tarde; a igual fin, lo que empezó más tarde; y, por último, el id, para que el
- * orden no dependa de cómo se cargaron los datos.
+ * Most recent to oldest, as in a résumé: what is still going first; then,
+ * what ended latest; on equal end, what started latest; and, last, the id, so the
+ * order does not depend on how the data was loaded.
  */
 export function sortNewestFirst<
 	T extends { id: string; start: string; end: string | null },
@@ -25,7 +25,7 @@ export function sortNewestFirst<
 
 	return [...items].sort(
 		(a, b) =>
-			// Dos en marcha dan `Infinity - Infinity`, que es `NaN`: cuenta como empate.
+			// Two ongoing ones give `Infinity - Infinity`, which is `NaN`: it counts as a tie.
 			endKey(b.end) - endKey(a.end) ||
 			0 ||
 			partialDateKey(b.start, 'start') -

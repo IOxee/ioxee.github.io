@@ -4,7 +4,7 @@ import { parse } from 'yaml';
 import { SECTION_IDS } from '../../src/lib/sections';
 import { PAGES, distHas, isExternal, parsePage, readDist } from './support';
 
-/** Servicios del sitio v1 que no deben volver: mapa, fuentes de iconos, jQuery y analítica de terceros. */
+/** V1 site services that must not come back: map, icon fonts, jQuery and third-party analytics. */
 const LEGACY = [
 	'maps.googleapis',
 	'kit.fontawesome',
@@ -58,7 +58,7 @@ describe.each(PAGES)('contenido de %s', (path) => {
 		expect(
 			page.querySelectorAll('dialog[data-viewer-dialog]'),
 		).toHaveLength(1);
-		// Cerrado no lleva ningún enlace: uno sin `href` se vería como un enlace roto (Lighthouse y buscadores).
+		// Closed, the dialog contains no link: one without `href` would look like a broken link (Lighthouse and search engines).
 		expect(
 			page.querySelectorAll('dialog[data-viewer-dialog] a'),
 		).toHaveLength(0);
@@ -164,7 +164,7 @@ describe('la carpeta de la página principal', () => {
 
 		expect(cover?.getAttribute('data-kind')).toBe('cover');
 		expect(cover?.id).toBe('home');
-		// El h1 va fuera de las hojas para que la página tenga título con cualquier hoja a la vista.
+		// The h1 lives outside the sheets so the page has a title whichever sheet is in view.
 		expect(
 			page.getElementById(cover?.getAttribute('aria-labelledby') ?? '')
 				?.tagName,
@@ -182,7 +182,7 @@ describe('la carpeta de la página principal', () => {
 	});
 
 	it('reparte las páginas en hojas de doble cara: la portada sola y luego de dos en dos', () => {
-		// La portada sola y, después, una hoja por cada dos páginas: ninguna página queda fuera ni repetida.
+		// The cover alone and, after it, one sheet for every two pages: no page is left out or repeated.
 		expect(leaves).toHaveLength(1 + Math.ceil((pages.length - 1) / 2));
 		expect(
 			leaves.reduce(

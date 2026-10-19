@@ -14,9 +14,9 @@ type Equal<A, B> =
 		: false;
 
 /**
- * Comprobación solo de tipos (la valida `astro check`, no Vitest): cada colección debe
- * conservar exactamente el tipo de su esquema Zod. Si `content.config.ts` lo pierde,
- * `data` pasa a ser `unknown` y esta asignación deja de compilar.
+ * Type-only check (validated by `astro check`, not Vitest): each collection must
+ * keep exactly the type of its Zod schema. If `content.config.ts` loses it,
+ * `data` becomes `unknown` and this assignment stops compiling.
  */
 export const collectionTypesMatchTheirSchemas: [
 	Equal<CollectionEntry<'profile'>['data'], Profile>,

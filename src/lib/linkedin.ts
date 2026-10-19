@@ -10,19 +10,19 @@ export interface ImportedEntry {
 	start: string;
 	end: string | null;
 	/**
-	 * Otros nombres con los que la web puede llamar a lo mismo: en la formación, el título (la web
-	 * pone «CFGS DAW» donde LinkedIn pone el centro).
+	 * Other names the site may use for the same thing: in education, the title (the site
+	 * says "CFGS DAW" where LinkedIn says the school).
 	 */
 	aliases: readonly string[];
 }
 
 export interface ImportResult {
 	entries: ImportedEntry[];
-	/** Filas que no se pudieron importar, y por qué. Nunca se descartan en silencio. */
+	/** Rows that could not be imported, and why. They are never silently dropped. */
 	skipped: string[];
 }
 
-/** Rol de una formación sin título, que es como la web ya llama a estos registros. */
+/** Role of an education entry without a title, which is how the site already names these records. */
 const DEFAULT_EDUCATION_ROLE = 'Estudiante';
 
 export interface Snapshot {
@@ -87,7 +87,7 @@ const YEAR = /^(\d{4})$/;
 const YEAR_MONTH = /^(\d{4})[-/](\d{1,2})$/;
 const MONTH_YEAR = /^(\d{1,2})[-/](\d{4})$/;
 const MONTH_NAME_YEAR = /^([a-zñçáéíóú]+)\.?\s+(?:de\s+)?(\d{4})$/i;
-/** Lo que algunas exportaciones ponen como fin de lo que sigue en curso. */
+/** What some exports put as the end date of what is still ongoing. */
 const STILL_GOING = /^(?:present|actualidad|actualitat|actual|actualmente)$/i;
 
 const unsupported = (text: string): RangeError =>
@@ -107,8 +107,8 @@ function monthFromName(word: string): number | null {
 const pad = (month: number): string => String(month).padStart(2, '0');
 
 /**
- * Fecha de LinkedIn («Mar 2022», «2005», «03/2022»…) como fecha parcial de la web (`AAAA-MM` o
- * `AAAA`). Vacía → `null`. Una fecha que no se entiende falla: adivinarla pondría datos falsos.
+ * A LinkedIn date ("Mar 2022", "2005", "03/2022"…) as a partial site date (`YYYY-MM` or
+ * `YYYY`). Empty → `null`. A date that is not understood fails: guessing it would put in false data.
  */
 export function parseLinkedinDate(text: string): string | null {
 	const value = text.trim();
@@ -137,8 +137,8 @@ export function parseLinkedinDate(text: string): string | null {
 }
 
 /**
- * Filas de un CSV de LinkedIn. `requiredColumn` identifica la cabecera: algunos archivos llevan
- * notas antes de ella y se saltan. Si no aparece, no es el archivo que se esperaba.
+ * Rows of a LinkedIn CSV. `requiredColumn` identifies the header: some files carry
+ * notes before it and those are skipped. If it does not appear, it is not the expected file.
  */
 export function parseLinkedinCsv(
 	text: string,
@@ -149,7 +149,7 @@ export function parseLinkedinCsv(
 		trim: true,
 		skip_empty_lines: true,
 		relax_column_count: true,
-		// Una comilla suelta en un campo sin comillas (`5" screens`) no debe tumbar todo el archivo.
+		// A stray quote in an unquoted field (`5" screens`) must not bring down the whole file.
 		relax_quotes: true,
 	});
 
@@ -171,9 +171,9 @@ export function parseLinkedinCsv(
 }
 
 /**
- * Texto de una celda en una sola línea y sin caracteres de control. Estos textos acaban en
- * `experience.yaml`, en un pull request y en el registro del workflow: un salto de línea o una
- * secuencia de escape no deben poder empezar una línea nueva ahí.
+ * Text of a cell on a single line and without control characters. These texts end up in
+ * `experience.yaml`, in a pull request and in the workflow log: a line break or an escape
+ * sequence must not be able to start a new line there.
  */
 const field = (row: LinkedinRow, column: string): string =>
 	(row[column] ?? '').replace(/[\p{Cc}\p{Zl}\p{Zp}]+/gu, ' ').trim();

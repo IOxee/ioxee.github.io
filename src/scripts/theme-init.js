@@ -1,14 +1,14 @@
-// Fija el tema antes de pintar, sin parpadeo. `Base.astro` lo incrusta en línea y `astro.config.mjs` calcula su hash
-// para la CSP de este mismo archivo.
+// Sets the theme before painting, with no flash. `Base.astro` inlines it and `astro.config.mjs` computes its hash
+// for the CSP from this same file.
 (function () {
 	var root = document.documentElement;
 	var theme = null;
-	// Marca que hay JS: sin esta clase el CSS esconde el botón de tema, que no haría nada.
+	// Marks that JS is available: without this class the CSS hides the theme button, which would do nothing.
 	root.classList.add('js');
 	try {
 		theme = localStorage.getItem('ioxee:theme');
 	} catch (error) {
-		// Sin almacenamiento (modo privado): se usa la preferencia del sistema.
+		// No storage (private mode): the system preference is used.
 	}
 	if (theme !== 'day' && theme !== 'night') {
 		theme = matchMedia('(prefers-color-scheme: dark)').matches

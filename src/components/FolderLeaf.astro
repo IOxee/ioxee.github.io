@@ -1,13 +1,13 @@
 ---
 interface Props {
-	/** Posición de la hoja en la carpeta: 0 es la portada. */
+	/** Position of the sheet in the folder: 0 is the cover. */
 	index: number;
 }
 
 const { index } = Astro.props;
 ---
 
-{/* Una hoja física: la cara de delante y la de detrás. Las páginas son las que llevan el contenido. */}
+{/* A physical sheet: the front face and the back face. The pages are the ones that carry the content. */}
 <div
 	class:list={['leaf', { 'leaf--cover': index === 0 }]}
 	data-leaf
@@ -15,7 +15,7 @@ const { index } = Astro.props;
 >
 	<slot name="front" />
 	<slot name="back">
-		{/* Sin nada que mostrar: el interior de la tapa o el reverso en blanco de la última hoja. */}
+		{/* Nothing to show: the inside of the cover or the blank back of the last sheet. */}
 		<div class="page page--back page--blank" aria-hidden="true"></div>
 	</slot>
 </div>

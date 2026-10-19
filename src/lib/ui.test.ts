@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dictionaries, formatYears, t, translate } from './ui';
+import { categoryLabel, dictionaries, formatYears, t, translate } from './ui';
 
 const placeholders = (text: string): string[] =>
 	[...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1] ?? '').sort();
@@ -59,10 +59,11 @@ describe('dictionaries', () => {
 	});
 
 	it('keeps the text a link shows inside the label it is read with', () => {
-		// El nombre accesible de un enlace tiene que contener lo que se ve (WCAG 2.5.3).
+		// The accessible name of a link has to contain what is visible (WCAG 2.5.3).
 		const pairs = [
 			['cert.verify', 'cert.verifyLabel'],
 			['cert.document', 'cert.documentLabel'],
+			['project.document', 'project.documentLabel'],
 			['mission.repo', 'mission.repoLabel'],
 		] as const;
 
@@ -111,6 +112,7 @@ describe('t', () => {
 			'cert.imageAlt',
 			'cert.imageLabel',
 			'cert.documentLabel',
+			'project.documentLabel',
 		] as const;
 
 		for (const key of keys) {
@@ -122,6 +124,18 @@ describe('t', () => {
 		expect(t('es', 'skill.state.comfortable')).toBe('Con soltura');
 		expect(t('es', 'skill.state.intermediate')).toBe('Intermedio');
 		expect(t('es', 'skill.state.basic')).toBe('Básico');
+	});
+});
+
+describe('categoryLabel', () => {
+	it('uses the translation when the category has one', () => {
+		expect(categoryLabel('es', 'data')).toBe('Datos');
+		expect(categoryLabel('en', 'desktop')).toBe('Desktop');
+	});
+
+	it('shows the id as words when the category has no translation', () => {
+		expect(categoryLabel('es', 'game-dev')).toBe('Game dev');
+		expect(categoryLabel('en', 'devops')).toBe('Devops');
 	});
 });
 

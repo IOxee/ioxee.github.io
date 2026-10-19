@@ -1,8 +1,8 @@
 /**
- * Descarga de la API de LinkedIn las posiciones y los estudios a un JSON. Es lo único que ve el token
- * (LINKEDIN_ACCESS_TOKEN) y solo carga el cliente de la API; `import-linkedin` lee ese JSON después, sin el token.
+ * Downloads positions and education from the LinkedIn API into a JSON file. It is the only thing that sees the token
+ * (LINKEDIN_ACCESS_TOKEN) and it only loads the API client; `import-linkedin` reads that JSON afterwards, without the token.
  *
- *   LINKEDIN_ACCESS_TOKEN=… node scripts/fetch-linkedin.ts <instantanea.json>
+ *   LINKEDIN_ACCESS_TOKEN=… node scripts/fetch-linkedin.ts <snapshot.json>
  */
 import { writeFileSync } from 'node:fs';
 import { fetchSnapshotDomain } from '../src/lib/linkedin-api.ts';
@@ -22,7 +22,7 @@ async function main(): Promise<void> {
 	const positions = await fetchSnapshotDomain('POSITIONS', token);
 	const education = await fetchSnapshotDomain('EDUCATION', token);
 
-	// Solo para quien la ejecuta: son datos personales aunque sean los de un perfil público.
+	// Only for whoever runs it: it is personal data even though it comes from a public profile.
 	writeFileSync(
 		output,
 		`${JSON.stringify({ positions, education }, null, 2)}\n`,

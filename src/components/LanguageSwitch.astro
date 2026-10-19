@@ -10,9 +10,9 @@ const { locale } = Astro.props;
 ---
 
 {/*
-	Tres idiomas, no un interruptor. Son enlaces a la misma página en cada idioma (una web estática no cambia de
-	idioma en el sitio): funcionan sin JavaScript y los buscadores los siguen. El nombre accesible es el idioma escrito
-	en sí mismo, con su `lang`.
+	Three languages, not a switch. They are links to the same page in each language (a static site does not change
+	language in place): they work without JavaScript and search engines follow them. The accessible name is the language written
+	in itself, with its `lang`.
 */}
 <div
 	class="lang"
@@ -40,8 +40,8 @@ const { locale } = Astro.props;
 </div>
 
 <script>
-	// Al cambiar de idioma se conserva la hoja que se está leyendo: la carpeta deja su sección en el
-	// ancla de la dirección (`#resume`…), que es la misma en los tres idiomas.
+	// When switching language, the sheet being read is kept: the folder leaves its section in the
+	// address anchor (`#resume`…), which is the same in the three languages.
 	const group = document.querySelector('[data-lang-switch]');
 	const links = group?.querySelectorAll<HTMLAnchorElement>('a') ?? [];
 
@@ -75,7 +75,7 @@ const { locale } = Astro.props;
 		align-items: center;
 		justify-content: center;
 		min-width: 2.5rem;
-		/* Alto del botón del tema: 2.75rem menos sus dos bordes de 2px. */
+		/* Height of the theme button: 2.75rem minus its two 2px borders. */
 		min-height: calc(2.75rem - 4px);
 		padding-inline: 0.4rem;
 		font-family: var(--font-display);
@@ -94,7 +94,7 @@ const { locale } = Astro.props;
 		background: var(--ink);
 	}
 
-	/* El halo del foco de la tecla Tab tiene que quedar por encima de los vecinos. */
+	/* The Tab-key focus halo has to sit above its neighbours. */
 	a:focus-visible {
 		z-index: 1;
 	}

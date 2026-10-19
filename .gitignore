@@ -1,10 +1,10 @@
-# dependencias y salida de build (ancladas a la raíz para no ignorar carpetas homónimas)
+# dependencies and build output (anchored to the root so same-named folders are not ignored)
 /node_modules/
 /dist/
 /.astro/
 
-# salidas de Playwright, y las capturas de referencia de `test:visual`: pesan unos 12 MB por
-# juego y dependen de cada sistema, así que se generan en local con `npm run test:visual:update`
+# Playwright output, and the `test:visual` reference screenshots: they weigh about 12 MB per
+# set and depend on each system, so they are generated locally with `npm run test:visual:update`
 /test-results/
 /playwright-report/
 /blob-report/

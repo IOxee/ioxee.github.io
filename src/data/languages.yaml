@@ -1,4 +1,4 @@
-# Idiomas, en el orden en que se muestran. level: native | high | medium | basic
+# Languages, in the order they are shown. level: native | high | medium | basic
 - id: ca
   name:
       es: Catalán

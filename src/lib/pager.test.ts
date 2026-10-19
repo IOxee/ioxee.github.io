@@ -223,7 +223,7 @@ describe('scrollProgress', () => {
 
 describe('settleTarget', () => {
 	it('lets one wheel notch pass a sheet instead of springing back', () => {
-		// Un toque de la rueda (100 px) en una pantalla de 1080 (paso de 540): menos de la quinta parte.
+		// One wheel tick (100 px) on a 1080 screen (step of 540): less than a fifth.
 		const notch = 100 / 540;
 
 		expect(settleTarget(notch, 0, 11)).toBe(1);

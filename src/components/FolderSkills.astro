@@ -3,12 +3,12 @@ import { localize } from '../lib/i18n';
 import type { Locale } from '../lib/i18n';
 import type { Language } from '../lib/schemas';
 import type { SkillGroup } from '../lib/skills';
-import { formatYears, t } from '../lib/ui';
+import { categoryLabel, formatYears, t } from '../lib/ui';
 import Leaders from './Leaders.astro';
 
 interface Props {
 	groups: readonly SkillGroup[];
-	/** Los idiomas, solo en la última hoja de habilidades; en las demás, vacío. */
+	/** Languages, only on the last skills sheet; empty on the others. */
 	languages: readonly Language[];
 	locale: Locale;
 	headingId: string;
@@ -34,14 +34,14 @@ const spoken = languages.map((language) => ({
 		aria-labelledby={`skills-${group.category}`}
 	>
 		<h3 id={`skills-${group.category}`} class="doc-role category">
-			{t(locale, `skill.category.${group.category}`)}
+			{categoryLabel(locale, group.category)}
 		</h3>
 		<ul class="list" role="list">
 			{group.skills.map((skill) => (
 				<li class="skill">
 					<span class="name">{skill.name}</span>
 					<span class="leader" aria-hidden="true" />
-					{/* Mientras `since` esté sin confirmar no se publican años inventados. */}
+					{/* While `since` is unconfirmed no made-up years are published. */}
 					{!skill.provisional && (
 						<span class="years">
 							{formatYears(skill.years, locale)}
@@ -115,7 +115,7 @@ const spoken = languages.map((language) => ({
 		font-size: var(--text-sm);
 	}
 
-	/* Casilla: llena, a medias o vacía. El texto lo dice igual: no depende de la forma. */
+	/* Box: full, half or empty. The text says the same: it does not depend on the shape. */
 	.box {
 		width: 0.95rem;
 		height: 0.95rem;

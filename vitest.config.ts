@@ -8,7 +8,7 @@ export default defineConfig({
 			provider: 'v8',
 			include: ['src/lib/**/*.ts'],
 			exclude: ['src/lib/**/*.test.ts'],
-			// `perFile`: un archivo sin tests no se esconde detrás de la media de los demás.
+			// `perFile`: a file without tests is not hidden behind the average of the others.
 			thresholds: {
 				perFile: true,
 				statements: 80,

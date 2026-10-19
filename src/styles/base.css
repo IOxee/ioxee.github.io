@@ -7,7 +7,7 @@
 html {
 	-webkit-text-size-adjust: 100%;
 	scroll-behavior: smooth;
-	/* La barra de navegación está siempre arriba: lo que se enfoca o a lo que lleva un ancla no queda debajo. */
+	/* The navigation bar is always on top: whatever receives focus or is the target of an anchor does not end up underneath. */
 	scroll-padding-top: var(--bar-h);
 }
 
@@ -21,7 +21,7 @@ body {
 	background-color: var(--desk);
 }
 
-/* La mesa: un charco de luz arriba y grano. Va en un pseudoelemento fijo para que no se repinte al hacer scroll. */
+/* The desk: a pool of light at the top and grain. It lives on a fixed pseudo-element so it does not repaint on scroll. */
 body::before {
 	content: '';
 	position: fixed;
@@ -70,8 +70,8 @@ a:hover {
 }
 
 /*
- * Foco de dos tonos: aro de tinta (se ve sobre el papel) y halo claro (se ve sobre la mesa).
- * Ningún color único alcanza 3:1 contra ambos fondos, por eso son dos.
+ * Two-tone focus: an ink ring (visible on the paper) and a light halo (visible on the desk).
+ * No single color reaches 3:1 against both backgrounds, hence two.
  */
 :focus-visible {
 	outline: 3px solid var(--ink);
@@ -113,7 +113,7 @@ a:hover {
 	transform: none;
 }
 
-/* Sin JS el botón de tema no hace nada: `theme-init.js` pone la clase `js` y, sin ella, se oculta. */
+/* Without JS the theme button does nothing: `theme-init.js` adds the `js` class and, without it, the button is hidden. */
 html:not(.js) [data-theme-toggle] {
 	display: none;
 }

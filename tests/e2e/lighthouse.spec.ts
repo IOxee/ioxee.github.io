@@ -13,13 +13,13 @@ const PERFORMANCE_MINIMUM = 0.9;
 const STRICT = ['accessibility', 'best-practices', 'seo'] as const;
 
 /**
- * Auditorías que fallan por una causa conocida y que no es un fallo del sitio. Cada una explica
- * por qué; si la causa desaparece, hay que quitarla de aquí.
+ * Audits that fail for a known cause which is not a site fault. Each one explains
+ * why; if the cause goes away, it has to be removed from here.
  */
 const KNOWN: Record<string, string> = {
-	// Lighthouse lee robots.txt desde dentro de la página, y la CSP (`default-src 'none'`, que
-	// cierra también `connect-src`) se lo impide. El archivo es válido: lo comprueba
-	// `tests/build/seo.test.ts` y no hay motivo para abrir la CSP solo para esta auditoría.
+	// Lighthouse reads robots.txt from inside the page, and the CSP (`default-src 'none'`, which
+	// also closes `connect-src`) prevents it. The file is valid: `tests/build/seo.test.ts` checks it
+	// and there is no reason to open the CSP just for this audit.
 	'robots-txt': 'la CSP impide que Lighthouse descargue el archivo',
 };
 
@@ -52,7 +52,7 @@ async function audit(
 		const result = await lighthouse(
 			url,
 			{
-				// Por IPv4, que es donde escucha el puerto de depuración (`localhost` puede ir por IPv6).
+				// Over IPv4, which is where the debugging port listens (`localhost` may go over IPv6).
 				hostname: '127.0.0.1',
 				port,
 				output: 'json',
@@ -68,7 +68,7 @@ async function audit(
 			(lhr.categories[category]?.auditRefs ?? [])
 				.filter((ref) => ref.weight > 0 && !(ref.id in KNOWN))
 				.map((ref) => ({ category, audit: lhr.audits[ref.id] }))
-				// Una auditoría que dio error no tiene nota (`null`): no cuenta como aprobada.
+				// An audit that errored has no score (`null`): it does not count as passed.
 				.filter(
 					({ audit }) =>
 						audit &&
@@ -98,7 +98,7 @@ async function audit(
 }
 
 test.describe('Lighthouse', { tag: '@lighthouse' }, () => {
-	// Una detrás de otra: dos auditorías a la vez se robarían CPU y torcerían la nota de rendimiento.
+	// One after another: two audits at once would steal CPU from each other and skew the performance score.
 	test.describe.configure({ mode: 'serial' });
 	test.setTimeout(120_000);
 

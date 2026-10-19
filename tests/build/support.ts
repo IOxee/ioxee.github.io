@@ -17,7 +17,7 @@ if (!existsSync(new URL('index.html', DIST))) {
 	);
 }
 
-// Las rutas del sitio empiezan por `/`, que en una URL relativa saldría de `dist/`.
+// Site paths start with `/`, which in a relative URL would escape `dist/`.
 const inDist = (path: string): URL => new URL(path.replace(/^\//, ''), DIST);
 
 export const readDist = (path: string): string =>
@@ -50,8 +50,8 @@ export function cspOf(page: HTMLElement): Csp {
 }
 
 /**
- * La fuente CSP de un texto en línea: `'sha256-…'`. El navegador convierte CRLF en LF al analizar
- * el HTML antes de hashear, así que aquí se hace lo mismo.
+ * The CSP source for an inline text: `'sha256-…'`. The browser turns CRLF into LF when parsing
+ * the HTML before hashing, so the same is done here.
  */
 export const cspHash = (text: string): string =>
 	`'sha256-${createHash('sha256')
@@ -59,8 +59,8 @@ export const cspHash = (text: string): string =>
 		.digest('base64')}'`;
 
 /**
- * Un `<script>` sin `src` que el navegador ejecuta. Los de datos, con un tipo que no es
- * JavaScript (como el JSON-LD), no cuentan.
+ * A `<script>` without `src` that the browser executes. Data ones, with a type that is not
+ * JavaScript (such as JSON-LD), do not count.
  */
 export const isExecutableInlineScript = (script: HTMLElement): boolean => {
 	const type = script.getAttribute('type');

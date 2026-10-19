@@ -13,6 +13,10 @@ export interface CertificationView extends Certification {
 	document?: string | undefined;
 }
 
+export interface ProjectView extends Project {
+	document?: string | undefined;
+}
+
 export interface ContactLink {
 	label: string;
 	value: string;
@@ -26,6 +30,6 @@ export interface FolderData {
 	skillGroups: readonly SkillGroup[];
 	languages: readonly Language[];
 	certifications: readonly CertificationView[];
-	projects: readonly Project[];
+	projects: readonly ProjectView[];
 	contact: readonly ContactLink[];
 }

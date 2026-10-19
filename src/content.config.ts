@@ -9,11 +9,11 @@ import {
 	skillSchema,
 } from './lib/schemas';
 
-// Una violación del esquema hace fallar el build, pero un YAML mal formado o una entrada sin `id` solo se registra
-// y deja la colección vacía o incompleta: por eso `tests/unit/data.test.ts` corre antes de cada despliegue.
+// A schema violation fails the build, but a malformed YAML or an entry without an `id` is only logged
+// and leaves the collection empty or incomplete: that is why `tests/unit/data.test.ts` runs before every deploy.
 //
-// Las llamadas son explícitas a propósito: con un helper genérico `entry.data` pasa a `unknown`
-// (lo vigila `tests/types/collections.check.ts`).
+// The calls are explicit on purpose: with a generic helper `entry.data` becomes `unknown`
+// (guarded by `tests/types/collections.check.ts`).
 const yaml = (name: string) => file(`src/data/${name}.yaml`);
 
 export const collections = {

@@ -3,8 +3,8 @@ import AxeBuilder from '@axe-core/playwright';
 import { type Page, expect, test } from '@playwright/test';
 import { VIEWPORT_HEIGHT, settle } from './support';
 
-// El visor solo existe si alguna certificación tiene foto o documento: sin adjuntos, estas pruebas
-// no tienen nada que probar y se saltan (el resto de la suite sigue protegiendo lo demás).
+// The viewer only exists if some certification has a photo or a document: without attachments, these tests
+// have nothing to test and are skipped (the rest of the suite keeps protecting everything else).
 const FILES = new URL('../../src/assets/certifications/', import.meta.url);
 const attached = existsSync(FILES)
 	? readdirSync(FILES).filter((name) => !name.startsWith('.'))
@@ -12,9 +12,15 @@ const attached = existsSync(FILES)
 const hasImage = attached.some((name) => /\.(png|jpe?g|webp)$/.test(name));
 const hasPdf = attached.some((name) => name.endsWith('.pdf'));
 
+// A project can carry a document too (src/assets/projects/<id>.pdf); its tests are skipped without one.
+const PROJECT_FILES = new URL('../../src/assets/projects/', import.meta.url);
+const hasProjectPdf =
+	existsSync(PROJECT_FILES) &&
+	readdirSync(PROJECT_FILES).some((name) => name.endsWith('.pdf'));
+
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
-/** Dice al navegador si trae visor de PDF: el Chromium sin ventana de las pruebas no lo trae. */
+/** Tells the browser whether it has a PDF viewer: the headless Chromium of the tests does not. */
 async function pdfViewer(page: Page, enabled: boolean): Promise<void> {
 	await page.addInitScript((value) => {
 		Object.defineProperty(navigator, 'pdfViewerEnabled', {
@@ -48,7 +54,7 @@ test.describe('el visor de la foto de una certificación', () => {
 		await expect(dialog(page).locator('[data-viewer-title]')).toHaveText(
 			/\S/,
 		);
-		// El script pone la dirección absoluta (la propiedad `href` del enlace).
+		// The script sets the absolute address (the link's `href` property).
 		await expect(dialog(page).locator('img')).toHaveAttribute(
 			'src',
 			new URL(href ?? '', page.url()).href,
@@ -141,7 +147,7 @@ test.describe('el visor de la foto de una certificación', () => {
 		await expect(body).toHaveAttribute('role', 'region');
 		await expect(body).toHaveAttribute('aria-label', /\S/);
 
-		// Con Tab, desde «Cerrar» se llega a esa zona en pocas pulsaciones (el orden exacto varía por navegador).
+		// With Tab, from "Cerrar" that area is reached in a few presses (the exact order varies by browser).
 		await page.locator('[data-viewer-close]').focus();
 		let reached = false;
 		for (let press = 0; press < 4 && !reached; press += 1) {
@@ -247,5 +253,57 @@ test.describe('el visor del documento de una certificación', () => {
 		expect(prevented).toBe(false);
 		await expect(dialog(page)).toBeHidden();
 		await expect(link).toHaveAttribute('target', '_blank');
+	});
+});
+
+test.describe("the viewer for a project's document", () => {
+	test.skip(!hasProjectPdf, 'No project has a document');
+
+	const projectLink = (page: Page) =>
+		page
+			.locator('section[data-kind="project"] a[data-viewer="pdf"]')
+			.first();
+
+	test('opens the PDF in the same viewer as the certifications, titled with the project name', async ({
+		page,
+	}) => {
+		await pdfViewer(page, true);
+		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
+		await page.goto('/#projects');
+		await settle(page);
+		const link = projectLink(page);
+		const href = await link.getAttribute('href');
+		const name = await link.getAttribute('data-viewer-title');
+		expect(href).toMatch(/\.pdf$/);
+		expect(name).toMatch(/\S/);
+
+		// The project may sit on a page that is not being read, so the click is the one a screen reader sends.
+		await link.evaluate((element) => (element as HTMLElement).click());
+
+		await expect(dialog(page)).toBeVisible();
+		await expect(dialog(page).locator('[data-viewer-title]')).toHaveText(
+			name ?? '',
+		);
+		await expect(dialog(page).locator('iframe')).toHaveAttribute(
+			'src',
+			`${new URL(href ?? '', page.url()).href}#navpanes=0&view=FitH`,
+		);
+	});
+
+	test('stays a real link that opens in a new tab, next to the repository link, when the browser has no PDF viewer', async ({
+		page,
+	}) => {
+		await pdfViewer(page, false);
+		await page.goto('/#projects');
+		await settle(page);
+		const link = projectLink(page);
+
+		await expect(link).toHaveAttribute('target', '_blank');
+		await expect(link).toHaveAttribute('rel', /noopener/);
+		await expect(link).not.toHaveAttribute('aria-haspopup', 'dialog');
+		await expect(link).toHaveAttribute('aria-label', /\S.*\S/);
+		const siblings = link.locator('xpath=preceding-sibling::a');
+		await expect(siblings).toHaveCount(1);
+		await expect(siblings.first()).toHaveAttribute('href', /^https:\/\//);
 	});
 });

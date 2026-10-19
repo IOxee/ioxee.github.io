@@ -2,7 +2,7 @@ import { type Page, expect, test } from '@playwright/test';
 import sharp from 'sharp';
 import { SCHEMES, folderGeometry, settle, showPosition } from './support';
 
-// La medida inyecta una hoja de estilo para esconder el texto, y la CSP del sitio lo impediría.
+// The measurement injects a stylesheet to hide the text, and the site's CSP would prevent it.
 test.use({ bypassCSP: true, viewport: { width: 1440, height: 900 } });
 test.skip(
 	({ browserName }) => browserName !== 'chromium',
@@ -23,9 +23,9 @@ interface TextLine {
 type Origin = 'page' | 'viewport';
 
 /**
- * Cada renglón de texto que se ve, con el rectángulo del texto y no el de su caja (que tiene
- * bordes). No cuenta lo que no se ve: lo oculto, lo `inert` (las páginas de la carpeta que no se
- * están leyendo) ni las caras de las hojas que están de espaldas.
+ * Every line of visible text, with the rectangle of the text and not that of its box (which has
+ * borders). What is not visible does not count: hidden, `inert` (the folder pages that are not
+ * being read) or the faces of sheets that are turned away.
  */
 function collectTextLines(page: Page, origin: Origin): Promise<TextLine[]> {
 	return page.evaluate((mode) => {
@@ -34,7 +34,7 @@ function collectTextLines(page: Page, origin: Origin): Promise<TextLine[]> {
 		const context = canvas.getContext('2d', { willReadFrequently: true });
 		if (!context) throw new Error('Sin canvas 2D');
 
-		// Chrome devuelve `oklch(...)` tal cual: se pasa a RGB pintando un píxel.
+		// Chrome returns `oklch(...)` as is: it is converted to RGB by painting one pixel.
 		const toRgb = (color: string): [number, number, number] => {
 			context.clearRect(0, 0, 1, 1);
 			context.fillStyle = color;
@@ -55,7 +55,7 @@ function collectTextLines(page: Page, origin: Origin): Promise<TextLine[]> {
 			const node = walker.currentNode;
 			const parent = node.parentElement;
 			if (!node.textContent?.trim() || !parent) continue;
-			// El sello y el enlace de salto son adorno o solo salen al enfocar; el resto es contenido.
+			// The stamp and the skip link are decoration or only appear on focus; the rest is content.
 			if (
 				parent.closest(
 					'svg, script, style, .visually-hidden, .stamp, .skip-link, [inert]',
@@ -118,8 +118,8 @@ html[data-contrast-probe] *, html[data-contrast-probe] *::before, html[data-cont
 html[data-contrast-probe] .stamp { visibility: hidden !important; }`;
 
 /**
- * Mete la hoja de estilo con `evaluate` y no con `addStyleTag`, que sin JavaScript se queda
- * esperando a un evento que la página nunca recibe.
+ * The stylesheet is inserted with `evaluate` and not `addStyleTag`, which without JavaScript ends up
+ * waiting for an event the page never receives.
  */
 function injectStyle(page: Page, css: string): Promise<void> {
 	return page.evaluate((content) => {
@@ -164,7 +164,7 @@ async function lowContrast(
 				);
 			}
 		}
-		// Un renglón sin un solo píxel que medir (fuera de la captura) no puede darse por bueno.
+		// A line without a single pixel to measure (outside the capture) cannot be taken as passing.
 		if (lights.length === 0) {
 			failures.push(`${line.label}: sin píxeles que medir`);
 			continue;
@@ -172,7 +172,7 @@ async function lowContrast(
 
 		lights.sort((a, b) => a - b);
 		const text = luminance(...line.color);
-		// El peor caso es el fondo más parecido al texto: texto oscuro sobre lo más oscuro del fondo.
+		// The worst case is the background most similar to the text: dark text on the darkest part of the background.
 		const worst =
 			lights[Math.floor(lights.length * (text < 0.2 ? 0.05 : 0.95))] ?? 0;
 		const large = line.size >= 24 || (line.size >= 18.66 && line.bold);
@@ -200,7 +200,7 @@ test.describe('contraste del texto sobre el fondo renderizado', () => {
 			await injectStyle(page, HIDE_TEXT);
 
 			const { parallax, positions } = await folderGeometry(page);
-			// Sin esto se mediría la carpeta sin girar y no se vería ninguna hoja de dentro.
+			// Without this the unturned folder would be measured and no inner sheet would be seen.
 			expect(parallax).toBe(true);
 			expect(positions).toBeGreaterThanOrEqual(5);
 
@@ -230,7 +230,7 @@ test.describe('contraste del texto sobre el fondo renderizado', () => {
 				failures.push(`pie: ${failure}`);
 			}
 
-			// Que haya texto que medir: sin esto, esconder todo dejaría la prueba en verde.
+			// That there is text to measure: without this, hiding everything would leave the test green.
 			expect(measured).toBeGreaterThan(80);
 			expect(failures).toEqual([]);
 		});
@@ -250,8 +250,8 @@ test.describe('contraste en la lista que sale sin JavaScript', () => {
 			await injectStyle(page, HIDE_TEXT);
 
 			const lines = await collectTextLines(page, 'page');
-			// Se mide contra lo que hay y se comprueba que hay algo y que la captura llega al final de la
-			// página: si no, los textos de más abajo no se medirían.
+			// It is measured against what is there, and it is checked that there is something and that the capture reaches the end of
+			// the page: otherwise the texts further down would not be measured.
 			expect(lines.length).toBeGreaterThan(80);
 			const documentHeight = await page.evaluate(
 				() => document.documentElement.scrollHeight,

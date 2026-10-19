@@ -1,16 +1,16 @@
 /**
- * La carpeta como un libro de hojas de doble cara.
+ * The folder as a book of double-sided sheets.
  *
- * Una página es una cara de una hoja. La portada (página 0) es la cara de delante de la primera
- * hoja; su reverso es el interior de la tapa y no lleva nada. Después, cada hoja lleva dos páginas:
- * la de delante (la que se lee a la derecha al abrir la carpeta) y la de detrás (la de la izquierda
- * una vez pasada la hoja).
+ * A page is one face of a sheet. The cover (page 0) is the front face of the first
+ * sheet; its back is the inside of the cover and carries nothing. After that, each sheet carries two pages:
+ * the front one (the one read on the right when the folder is open) and the back one (the one on the left
+ * once the sheet has been turned).
  *
- * Con espacio para dos páginas se ve un «par» (`spread`): el reverso de la hoja pasada a la
- * izquierda y el anverso de la siguiente a la derecha, así que cada giro enseña dos páginas
- * nuevas. En pantallas estrechas se ve una sola página cada vez (`single`).
+ * With room for two pages a "spread" (`spread`) is shown: the back of the turned sheet on the
+ * left and the front of the next one on the right, so each turn reveals two new
+ * pages. On narrow screens only one page is shown at a time (`single`).
  *
- * Una «posición» es un punto de lectura: un par o una página, según la maqueta.
+ * A "position" is a reading point: a spread or a page, depending on the layout.
  */
 
 export type Layout = 'spread' | 'single';
@@ -44,7 +44,7 @@ export function leafPages<T>(pages: readonly T[]): LeafPages<T>[] {
 
 const lastPage = (pages: number): number => Math.max(pages - 1, 0);
 
-/** Cuántos puntos de lectura hay. Con pares, uno más si la última hoja lleva algo por detrás. */
+/** How many reading points there are. With spreads, one more if the last sheet has something on its back. */
 export function positionCount(pages: number, layout: Layout): number {
 	if (pages <= 1) return Math.max(pages, 0);
 
@@ -75,7 +75,7 @@ export function pagesAtPosition(
 	const inside = (page: number) => (page <= lastPage(pages) ? page : null);
 
 	return {
-		// El reverso de la portada es el interior de la tapa: no es una página.
+		// The back of the cover is the inside of the cover: it is not a page.
 		left: at >= 2 ? inside(2 * at - 2) : null,
 		right: inside(2 * at - 1),
 	};

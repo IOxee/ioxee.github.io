@@ -9,7 +9,7 @@ import { sortExperience } from '../lib/experience';
 import { folderTabs, planSheets, sheetTitles } from '../lib/folder';
 import type { FolderData } from '../lib/folder-data';
 import type { Locale } from '../lib/i18n';
-import { pickOptionalAsset, unusableAssets } from '../lib/images';
+import { assertAssetsUsed, pickOptionalAsset } from '../lib/images';
 import { sortByOrder, sortNewestFirst } from '../lib/order';
 import { SECTION_IDS, type SectionId } from '../lib/sections';
 import { absoluteUrl, personSeoFrom, siteJsonLd } from '../lib/seo';
@@ -28,7 +28,7 @@ interface Props {
 
 const { locale } = Astro.props;
 
-/** Primer año del copyright, heredado del sitio v1. */
+/** First year of the copyright, inherited from the v1 site. */
 const COPYRIGHT_FROM = 2019;
 
 const [profileEntry] = await getCollection('profile');
@@ -41,41 +41,55 @@ const experience = sortExperience(
 const skills = (await getCollection('skills')).map((entry) => entry.data);
 const { email, github, linkedin } = profile.links;
 
-// Lo que se adjunta a una certificación (su foto y su documento) va en src/assets/certifications/ y
-// se llama como su `id`. Sin archivo no sale nada: no hay que declarar nada en el YAML.
-const CERTIFICATION_FILES = join(process.cwd(), 'src/assets/certifications');
-const CERTIFICATION_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'pdf'];
+// What is attached to a certification (its photo and its document) goes in src/assets/certifications/ and
+// is named after its `id`. Without a file nothing appears: nothing needs to be declared in the YAML.
+// A project works the same way for its optional document: src/assets/projects/<id>.pdf, next to its screenshot.
+const ATTACHMENT_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'pdf'];
+const attachmentsIn = (folder: string): string[] => {
+	const path = join(process.cwd(), folder);
+
+	return existsSync(path)
+		? readdirSync(path).filter((name) => !name.startsWith('.'))
+		: [];
+};
 const certificationImages = import.meta.glob<{ default: ImageMetadata }>(
 	'../assets/certifications/*.{png,jpg,jpeg,webp}',
 	{ eager: true },
 );
-// `no-inline`: un PDF pequeño se incrustaría como `data:` en el enlace, y los navegadores no abren esos.
+// `no-inline`: a small PDF would be embedded as `data:` in the link, and browsers do not open those.
 const certificationDocuments = import.meta.glob<string>(
 	'../assets/certifications/*.pdf',
 	{ query: '?url&no-inline', import: 'default', eager: true },
 );
+const projectDocuments = import.meta.glob<string>('../assets/projects/*.pdf', {
+	query: '?url&no-inline',
+	import: 'default',
+	eager: true,
+});
 const certificationList = sortByOrder(
 	(await getCollection('certifications')).map((entry) => entry.data),
 );
-
-// Un archivo mal nombrado no se usaría y no diría por qué: mejor que el build avise.
-const attached = existsSync(CERTIFICATION_FILES)
-	? readdirSync(CERTIFICATION_FILES).filter((name) => !name.startsWith('.'))
-	: [];
-const unused = unusableAssets(
-	attached,
-	certificationList.map((entry) => entry.id),
-	CERTIFICATION_EXTENSIONS,
+const projectList = sortNewestFirst(
+	(await getCollection('projects')).map((entry) => entry.data),
 );
-if (unused.length > 0) {
-	throw new Error(
-		`En src/assets/certifications/ hay archivos que no se van a usar: ${unused.join(', ')}. ` +
-			`Cada uno debe llamarse como el id de una certificación de certifications.yaml y acabar en ` +
-			`${CERTIFICATION_EXTENSIONS.map((extension) => `.${extension}`).join(', ')} (en minúsculas).`,
-	);
-}
 
-// `getCollection` no conserva el orden del archivo: lo que lo necesita se ordena por `order`.
+// A misnamed file would go unused and not say why: better for the build to warn.
+assertAssetsUsed({
+	folder: 'src/assets/certifications',
+	files: attachmentsIn('src/assets/certifications'),
+	ids: certificationList.map((entry) => entry.id),
+	extensions: ATTACHMENT_EXTENSIONS,
+	owner: 'una certificación de certifications.yaml',
+});
+assertAssetsUsed({
+	folder: 'src/assets/projects',
+	files: attachmentsIn('src/assets/projects'),
+	ids: projectList.map((entry) => entry.id),
+	extensions: ATTACHMENT_EXTENSIONS,
+	owner: 'un proyecto de projects.yaml',
+});
+
+// `getCollection` does not keep the file's order: whatever needs it is sorted by `order`.
 const data: FolderData = {
 	profile,
 	work: experience.filter((entry) => entry.kind === 'work'),
@@ -89,9 +103,10 @@ const data: FolderData = {
 		image: pickOptionalAsset(certificationImages, entry.id)?.default,
 		document: pickOptionalAsset(certificationDocuments, entry.id),
 	})),
-	projects: sortNewestFirst(
-		(await getCollection('projects')).map((entry) => entry.data),
-	),
+	projects: projectList.map((entry) => ({
+		...entry,
+		document: pickOptionalAsset(projectDocuments, entry.id),
+	})),
 	contact: [
 		{
 			label: t(locale, 'contact.email'),
@@ -158,7 +173,7 @@ const tabs = folderTabs(plan).map(({ section }) => ({
 const title = fill(t(locale, 'meta.title'), { name: profile.name });
 const description = fill(t(locale, 'meta.description'), { name: profile.name });
 const imageAlt = fill(t(locale, 'meta.imageAlt'), { name: profile.name });
-// En los datos estructurados la imagen es la de la persona; la de compartir va en las metas de Base.
+// In the structured data the image is the person's; the sharing one goes in Base's metas.
 const portrait = await getImage({ src: avatar, width: 512, format: 'webp' });
 const jsonLd = siteJsonLd(
 	personSeoFrom({
@@ -193,7 +208,8 @@ const jsonLd = siteJsonLd(
 		locale={locale}
 	/>
 
-	{data.certifications.some((cert) => cert.image || cert.document) && (
+	{(data.certifications.some((cert) => cert.image || cert.document) ||
+		data.projects.some((project) => project.document)) && (
 		<DocumentViewer locale={locale} />
 	)}
 </Base>

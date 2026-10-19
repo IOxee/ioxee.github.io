@@ -2,7 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4173;
 
-/** Se sirve con `astro preview` (hay que compilar antes): la CSP solo existe en el build, no en `astro dev`. */
+/** Served with `astro preview` (build first): the CSP only exists in the build, not in `astro dev`. */
 export default defineConfig({
 	testDir: 'tests/e2e',
 	fullyParallel: true,
@@ -16,8 +16,8 @@ export default defineConfig({
 		trace: 'retain-on-failure',
 	},
 	expect: {
-		// Las capturas varían por sistema (el nombre del archivo lleva la plataforma); un margen
-		// pequeño absorbe el suavizado del texto sin dejar pasar un cambio de maquetación.
+		// Screenshots vary by system (the file name carries the platform); a small margin
+		// absorbs text smoothing without letting a layout change through.
 		toHaveScreenshot: { maxDiffPixelRatio: 0.01, animations: 'disabled' },
 	},
 	webServer: {

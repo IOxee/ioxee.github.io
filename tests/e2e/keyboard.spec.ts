@@ -8,14 +8,14 @@ import {
 	showPosition,
 } from './support';
 
-/** Cuántos Tab como máximo antes de dar la vuelta: hay unos diez elementos enfocables por pantalla. */
+/** At most how many Tabs before wrapping around: there are about ten focusable elements per screen. */
 const MAX_TABS = 40;
 
 /**
- * Desde dónde se recorre el teclado: la portada (menú y carpeta), los proyectos (enlaces a los
- * repositorios, sobre el papel) y el contacto (enlaces de contacto). Cada pantalla tiene otros. A
- * las hojas se llega por su pestaña, como haría quien usa el teclado: el foco queda en la hoja y
- * el Tab sigue desde ahí.
+ * Where the keyboard traversal starts from: the cover (menu and folder), the projects (links to the
+ * repositories, on the paper) and the contact (contact links). Each screen has different ones.
+ * The sheets are reached through their tab, as someone using the keyboard would: focus stays on the sheet and
+ * Tab continues from there.
  */
 const STARTS = [null, '#portfolio', '#contact'] as const;
 
@@ -44,7 +44,7 @@ test.describe('teclado', () => {
 
 				for (let i = 0; i < MAX_TABS; i += 1) {
 					await page.keyboard.press('Tab');
-					// El aro y el halo aparecen con una transición corta: se mide cuando ha terminado.
+					// The ring and the halo appear with a short transition: it is measured once it has finished.
 					await settle(page);
 
 					const info = await page.evaluate(() => {

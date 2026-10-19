@@ -5,9 +5,9 @@ import { fill } from './text';
 export type CertificationStatus = 'valid' | 'expired' | 'no-expiry';
 
 /**
- * Si una certificación sigue vigente a `today`. Una fecha de caducidad sin mes cierra en
- * diciembre, y un mes entero se cuenta como vigente hasta su último día: no caduca antes de
- * tiempo. Se calcula al compilar, así que el despliegue diario la mantiene al día.
+ * Whether a certification is still valid on `today`. An expiry date without a month closes in
+ * December, and a whole month counts as valid through its last day: it does not expire early.
+ * It is computed at build time, so the daily deploy keeps it up to date.
  */
 export function certificationStatus(
 	certification: { readonly expires?: string | undefined },

@@ -139,7 +139,7 @@ test.describe('cambiar de idioma', () => {
 		await expect(page.locator('html')).toHaveAttribute('lang', 'ca');
 
 		await page.locator('[data-lang-switch] a[hreflang="es"]').click();
-		// La raíz, sin prefijo: el idioma principal. El servidor de pruebas puede ser localhost o 127.0.0.1.
+		// The root, without a prefix: the main language. The test server may be localhost or 127.0.0.1.
 		await expect(page).toHaveURL(/^https?:\/\/[^/]+\/#resume$/);
 		await expect(page.locator('html')).toHaveAttribute('lang', 'es');
 	});

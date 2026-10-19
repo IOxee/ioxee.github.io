@@ -20,10 +20,10 @@ const png = (svg: string, size: number): Promise<Buffer> =>
 		.png()
 		.toBuffer();
 
-/** ICO con imágenes PNG dentro: lo entienden todos los navegadores actuales y evita una librería. */
+/** ICO with PNG images inside: every current browser understands it and it avoids a library. */
 function ico(images: readonly { size: number; data: Buffer }[]): Buffer {
 	const header = Buffer.alloc(6);
-	header.writeUInt16LE(1, 2); // tipo: icono
+	header.writeUInt16LE(1, 2); // type: icon
 	header.writeUInt16LE(images.length, 4);
 
 	let offset = 6 + images.length * 16;
@@ -31,8 +31,8 @@ function ico(images: readonly { size: number; data: Buffer }[]): Buffer {
 		const entry = Buffer.alloc(16);
 		entry.writeUInt8(size, 0);
 		entry.writeUInt8(size, 1);
-		entry.writeUInt16LE(1, 4); // planos de color
-		entry.writeUInt16LE(32, 6); // bits por píxel
+		entry.writeUInt16LE(1, 4); // color planes
+		entry.writeUInt16LE(32, 6); // bits per pixel
 		entry.writeUInt32LE(data.length, 8);
 		entry.writeUInt32LE(offset, 12);
 		offset += data.length;

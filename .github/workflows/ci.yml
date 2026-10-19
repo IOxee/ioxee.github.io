@@ -28,8 +28,8 @@ jobs:
             - run: npm run build
             - run: npm run test:dist
 
-    # Pruebas en navegador sobre el sitio compilado: accesibilidad, foco, tema, CSP, contraste y
-    # Lighthouse. Las capturas de `test:visual` dependen de cada sistema y no se lanzan aquí.
+    # Browser tests against the built site: accessibility, focus, theme, CSP, contrast and
+    # Lighthouse. The `test:visual` screenshots depend on the system and are not run here.
     e2e:
         runs-on: ubuntu-latest
         timeout-minutes: 15

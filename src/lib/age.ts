@@ -18,7 +18,7 @@ function parseIsoDate(value: string): CalendarDate {
 	const month = Number(match[2]);
 	const day = Number(match[3]);
 
-	// `Date` normaliza fechas imposibles (30 de febrero → 2 de marzo); si cambia algo, no existía.
+	// `Date` normalizes impossible dates (30 February → 2 March); if anything changes, the date did not exist.
 	const calendar = new Date(year, month - 1, day);
 	const exists =
 		calendar.getFullYear() === year &&
@@ -31,7 +31,7 @@ function parseIsoDate(value: string): CalendarDate {
 	return { year, month, day };
 }
 
-/** Quien nació un 29 de febrero cumple el 1 de marzo en los años no bisiestos. */
+/** Someone born on 29 February has their birthday on 1 March in non-leap years. */
 export function calculateAge(
 	birthDate: string,
 	today: Date = new Date(),
@@ -52,7 +52,7 @@ export function calculateAge(
 	return age;
 }
 
-/** Rango para el copyright: `2019 - 2026`, o solo el año si aún no ha pasado ninguno. */
+/** Range for the copyright: `2019 - 2026`, or just the year if none has passed yet. */
 export function yearRange(startYear: number, today: Date = new Date()): string {
 	const currentYear = today.getFullYear();
 

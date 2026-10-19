@@ -1,6 +1,6 @@
 /**
- * Las decisiones del script de la carpeta que no dependen del navegador: qué página toca, qué se
- * anuncia, qué hace un gesto. Están aquí para poder probarlas sin pintar nada.
+ * The folder script's decisions that do not depend on the browser: which page comes next, what is
+ * announced, what a gesture does. They live here so they can be tested without painting anything.
  */
 import {
 	type Layout,
@@ -49,7 +49,7 @@ export function readingStatus(
 	return fill(templates.one, { page: String(page), total: content, title });
 }
 
-/** La página que se pidió (con una pestaña o un ancla), si se ve ahí aunque sea la de la izquierda; si no, la de la derecha. */
+/** The requested page (with a tab or an anchor), if it is visible there even as the left one; otherwise, the right one. */
 export function pageForPosition(
 	position: number,
 	preferred: number | null,
@@ -64,15 +64,15 @@ export function pageForPosition(
 }
 
 /**
- * El progreso que se pinta. Con movimiento reducido no hay giros a medias: la hoja salta entera a
- * mitad de camino, igual que cambia la página que se lee.
+ * The progress that gets painted. With reduced motion there are no half turns: the sheet jumps whole
+ * halfway through, just as the page being read changes.
  */
 export const shownProgress = (progress: number, reduced: boolean): number =>
 	reduced ? Math.round(progress) : progress;
 
 /**
- * A qué página lleva la dirección. Sin ancla es la portada (así «Atrás» hasta el inicio vuelve a
- * ella); con un ancla que no es una sección de la carpeta, a ninguna.
+ * Which page the address leads to. Without an anchor it is the cover (so "Back" all the way to the start returns
+ * to it); with an anchor that is not a section of the folder, none.
  */
 export const pageForHash = (
 	hash: string,

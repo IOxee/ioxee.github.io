@@ -1,7 +1,7 @@
 /**
- * Anclas de las secciones de la página. Son las del sitio v1 (`#about-me`, `#resume`, …):
- * mantenerlas hace que los enlaces antiguos, por ejemplo desde un CV o LinkedIn, sigan llegando.
- * El orden es el de la carpeta: el de las pestañas y el de las hojas.
+ * Anchors of the page sections. They are those of the v1 site (`#about-me`, `#resume`, …):
+ * keeping them means old links, from a CV or LinkedIn for example, still arrive.
+ * The order is the folder's: that of the tabs and that of the sheets.
  */
 export const SECTION_IDS = {
 	home: 'home',

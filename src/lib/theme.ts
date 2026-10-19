@@ -2,30 +2,30 @@ export const THEMES = ['day', 'night'] as const;
 
 export type ThemeId = (typeof THEMES)[number];
 
-/** Todos los colores son `oklch()` opacos: `color.ts` mide su contraste y los tests lo exigen. */
+/** All colors are opaque `oklch()`: `color.ts` measures their contrast and the tests require it. */
 export interface PaletteTokens {
 	readonly desk: string;
 	readonly paper: string;
 	readonly paperShade: string;
 	readonly ink: string;
 	readonly inkMuted: string;
-	/** Líneas decorativas (pautas, puntos guía). No lleva texto, así que no exige contraste. */
+	/** Decorative lines (rules, guide dots). It carries no text, so it does not require contrast. */
 	readonly rule: string;
 	readonly stamp: string;
 	readonly accent: string;
 	readonly tape: string;
-	/** Texto y halo de foco que quedan directamente sobre la mesa. */
+	/** Text and focus halo that sit directly on the desk. */
 	readonly onDesk: string;
 	readonly folder: string;
 	readonly folderShade: string;
 	readonly sheet: string;
-	/** Cantos y sombras de la pila de hojas. Decorativo: no lleva texto, no exige contraste. */
+	/** Edges and shadows of the stack of sheets. Decorative: it carries no text, so it needs no contrast. */
 	readonly sheetEdge: string;
 }
 
 /**
- * Multicopista: papel kraft, tinta violeta de copia (el morado de la ilustración) y cinta
- * amarilla. De día el papel está a plena luz; de noche, bajo una lámpara y sobre una mesa oscura.
+ * Mimeograph: kraft paper, violet copy ink (the purple of the illustration) and yellow
+ * tape. By day the paper is in full light; at night, under a lamp and on a dark desk.
  */
 export const PALETTES: Record<ThemeId, PaletteTokens> = {
 	day: {
@@ -65,7 +65,7 @@ export const PALETTES: Record<ThemeId, PaletteTokens> = {
 const kebab = (token: string): string =>
 	token.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
 
-/** Se selecciona con `data-theme` en `<html>`, que un script del `<head>` fija antes de pintar. */
+/** Selected with `data-theme` on `<html>`, which a `<head>` script sets before painting. */
 export function themeCss(): string {
 	return THEMES.map((theme) => {
 		const tokens = Object.entries(PALETTES[theme])

@@ -1,11 +1,16 @@
-# Proyectos personales. Se muestran del más reciente al más antiguo según `start` y `end`
-# ('AAAA' o 'AAAA-MM'; `end: null` si sigue en marcha): el orden del archivo no cuenta.
-# La captura de cada uno es src/assets/projects/<id>.png, y su texto alternativo va en `imageAlt`.
-# Un proyecto con `details` lleva una segunda página: el reto, los puntos y una frase de cierre.
+# Personal projects. They are shown from most recent to oldest according to `start` and `end`
+# ('YYYY' or 'YYYY-MM'; `end: null` if still going): the file order does not count.
+# Each one's screenshot is src/assets/projects/<id>.png, and its alt text goes in `imageAlt`.
+# A project can also have a PDF: leave src/assets/projects/<id>.pdf next to the screenshot and a
+# "Ver documento (PDF)" link appears beside the repository link. Lowercase extension, one PDF per
+# project; if a file name matches no project id, the build warns.
+# A project with `details` carries a second page: the challenge, the points and a closing sentence.
 - id: cubezon
   name: Cubezon
   summary:
       es: 'Marketplace tipo e‑commerce conectado a un servidor de Minecraft: las tiendas de los jugadores venden objetos reales del juego en una web, el comprador paga con dinero del juego y recoge el pedido en una taquilla del servidor.'
+      ca: 'Marketplace tipus e-commerce connectat a un servidor de Minecraft: les botigues dels jugadors venen objectes reals del joc en una web, el comprador paga amb diners del joc i recull la comanda en una taquilla del servidor.'
+      en: 'E-commerce-style marketplace connected to a Minecraft server: players'' shops sell real in-game items on a website, the buyer pays with in-game money, and picks up the order from a server locker.'
   stack:
       - Java 21 + Paper
       - Next.js 16 + React 19 + TypeScript
@@ -15,11 +20,15 @@
   repo: https://github.com/IOxee/Cubezon
   imageAlt:
       es: 'Portada de la tienda de Cubezon: el buscador, las categorías del juego y los tres pasos para comprar (vincular la cuenta, elegir y pagar, recoger en la taquilla).'
+      ca: 'Portada de la botiga de Cubezon: el cercador, les categories del joc i els tres passos per comprar (vincular el compte, triar i pagar, recollir a la taquilla).'
+      en: 'Cubezon shop cover: the search bar, game categories, and the three steps to buy (link the account, choose and pay, pick up from the locker).'
   start: '2026-10'
   end: '2026-10'
   details:
       intro:
           es: 'El reto era que una web y un servidor de juego compartieran el mismo dinero y los mismos inventarios sin duplicar nada aunque algo falle a mitad:'
+          ca: 'El repte era fer que una web i un servidor de joc compartissin els mateixos diners i inventaris sense duplicar res encara que alguna cosa fallés a mig camí:'
+          en: 'The challenge was to make a web app and a game server share the same money and inventories without duplicating anything, even if something failed halfway through:'
       points:
           es:
               - El plugin es la única autoridad sobre saldos e inventarios; la web solo crea pedidos.
@@ -27,13 +36,29 @@
               - 'El pago al vendedor se marca antes de pagar: un fallo deja un pago pendiente, nunca uno doble.'
               - Solo se vende lo que el vendedor depositó antes en el juego (escrow, una fila por unidad).
               - Row Level Security en todas las tablas y permisos comprobados en SQL.
+          ca:
+              - El plugin és l'única autoritat sobre saldos i inventaris; la web només crea comandes.
+              - Cada comanda avança per estats (PENDING → PAID → READY → COLLECTED), i cada pas va en la seva pròpia transacció. Una comanda interrompuda es marca per revisar i mai es cobra dues vegades.
+              - "El pagament al venedor es registra abans d'abonar-lo: si falla, queda pendent, mai duplicat."
+              - Només es ven allò que el venedor havia dipositat abans al joc (escrow, una fila per unitat).
+              - Row Level Security a totes les taules i permisos verificats en SQL.
+          en:
+              - The plugin is the only authority over balances and inventories; the web only creates orders.
+              - Each order moves through states (PENDING → PAID → READY → COLLECTED), with every step in its own transaction. An interrupted order is flagged for review and is never charged twice.
+              - 'The seller payout is recorded before the money is sent: a failure leaves a pending payout, never a duplicate one.'
+              - Only what the seller previously deposited in the game can be sold (escrow, one row per unit).
+              - Row Level Security on every table and SQL permissions checked explicitly.
       closing:
           es: Incluye panel de vendedor y de administración, un modo roleplay con empleados, rangos, ordenador de empresa y repartidores con comisión y propina, y un diseño propio con modo claro y oscuro.
+          ca: Inclou panell de venedor i d'administració, un mode roleplay amb empleats, rangs, ordinador d'empresa i repartidors amb comissió i propina, i un disseny propi amb mode clar i fosc.
+          en: Includes seller and admin panels, a roleplay mode with employees, ranks, a company computer and delivery riders with commission and tips, plus a custom design with light and dark modes.
 
 - id: trellord-connector
   name: Trellord Connector
   summary:
-      es: Es una herramienta de conexión entre la API de Trello y Discord, envía cualquier detección de cambios en Trello a un canal de Discord y permite tener múltiples proyectos.
+      es: Herramienta de automatización entre Trello y Discord que detecta cambios en tableros, listas y tarjetas, y los reenvía a canales de Discord para llevar el seguimiento del trabajo en tiempo real.
+      ca: Eina d'automatització entre Trello i Discord que detecta canvis en taulers, llistes i targetes, i els reenvia a canals de Discord per fer el seguiment de la feina en temps real.
+      en: Automation tool between Trello and Discord that detects changes in boards, lists, and cards, then forwards them to Discord channels to keep track of work in real time.
   stack:
       - JavaScript
       - Trello API
@@ -41,13 +66,42 @@
   repo: https://github.com/IOxee/TrellordConnector
   imageAlt:
       es: 'Terminal con el logotipo en ASCII de Fractal Game Studios y el mensaje «Server started» al arrancar la herramienta.'
+      ca: "Terminal amb el logotip en ASCII de Fractal Game Studios i el missatge «Server started» en arrencar l'eina."
+      en: 'Terminal with the Fractal Game Studios ASCII logo and the message «Server started» when the tool starts.'
   start: '2023-12'
   end: '2024-04'
+  details:
+      intro:
+          es: 'El objetivo era conectar dos herramientas que normalmente viven separadas, sin perder contexto cuando en Trello cambiaba algo importante:'
+          ca: "L'objectiu era connectar dues eines que normalment viuen separades, sense perdre context quan a Trello canviava alguna cosa important:"
+          en: 'The goal was to connect two tools that usually live apart, without losing context when something important changed in Trello:'
+      points:
+          es:
+              - Escucha cambios en Trello y los traduce a mensajes claros para Discord.
+              - Permite trabajar con varios proyectos a la vez, manteniendo cada flujo de avisos separado.
+              - Usa webhooks para publicar las notificaciones de forma inmediata en el canal elegido.
+              - Centraliza el seguimiento del trabajo en un solo lugar para que el equipo no tenga que revisar Trello manualmente.
+          ca:
+              - Escolta canvis a Trello i els tradueix en missatges clars per a Discord.
+              - Permet treballar amb diversos projectes alhora, mantenint separat cada flux d'avisos.
+              - Fa servir webhooks per publicar les notificacions de manera immediata al canal escollit.
+              - Centralitza el seguiment de la feina en un sol lloc perquè l'equip no hagi de revisar Trello manualment.
+          en:
+              - Listens for changes in Trello and translates them into clear messages for Discord.
+              - Lets multiple projects run at once while keeping each notification stream separate.
+              - Uses webhooks to post notifications immediately to the chosen channel.
+              - Centralizes work tracking in one place so the team does not need to check Trello manually.
+      closing:
+          es: Una integración sencilla pero útil para convertir el tablero en una fuente de avisos automática y tener el estado del trabajo siempre visible en Discord.
+          ca: Una integració senzilla però útil per convertir el tauler en una font d'avisos automàtica i tenir l'estat de la feina sempre visible a Discord.
+          en: A simple but useful integration that turns the board into an automatic notification source and keeps the work status always visible in Discord.
 
 - id: animal-crossing-api-wrapper
   name: Nookphone - Animal Crossing
   summary:
-      es: Usando Ionic 6 y Angular 14 para obtener los datos de la API pública de Animal Crossing.
+      es: Aplicación con interfaz estilo NookPhone para consultar y presentar los datos de la API pública de Animal Crossing en una experiencia móvil hecha con Ionic y Angular.
+      ca: Aplicació amb interfície d'estil NookPhone per consultar i presentar les dades de l'API pública d'Animal Crossing en una experiència mòbil feta amb Ionic i Angular.
+      en: App with a NookPhone-style interface to browse and present data from the public Animal Crossing API in a mobile experience built with Ionic and Angular.
   stack:
       - Ionic 6
       - Angular 14
@@ -56,5 +110,32 @@
   repo: https://github.com/IOxee/Animal_Crossing_API_Wrapper
   imageAlt:
       es: 'Interfaz «Nook Phone»: una cuadrícula de iconos redondeados con las secciones de Animal Crossing.'
+      ca: "Interfície «Nook Phone»: una quadrícula d'icones arrodonides amb les seccions d'Animal Crossing."
+      en: 'Nook Phone interface: a grid of rounded icons with the Animal Crossing sections.'
   start: '2023-01'
   end: '2023-02'
+  details:
+      intro:
+          es: 'La idea era convertir una API pública en una app visual y fácil de explorar, con una interfaz que recordara al teléfono del juego:'
+          ca: "La idea era convertir una API pública en una app visual i fàcil d'explorar, amb una interfície que recordés el telèfon del joc:"
+          en: 'The idea was to turn a public API into a visual, easy-to-browse app with an interface that felt like the game''s phone:'
+      points:
+          es:
+              - Consume la API pública de Animal Crossing y organiza sus datos en una navegación clara.
+              - Presenta la información con una interfaz inspirada en el NookPhone, pensada para parecer una app móvil.
+              - Está construida con Ionic 6 y Angular 14, usando TypeScript para la lógica y SCSS para el estilo.
+              - Prioriza una lectura rápida de los datos y una experiencia visual coherente con el universo del juego.
+          ca:
+              - Consumeix l'API pública d'Animal Crossing i organitza les dades en una navegació clara.
+              - Presenta la informació amb una interfície inspirada en el NookPhone, pensada per semblar una app mòbil.
+              - Està construïda amb Ionic 6 i Angular 14, fent servir TypeScript per a la lògica i SCSS per a l'estil.
+              - Prioritza una lectura ràpida de les dades i una experiència visual coherent amb l'univers del joc.
+          en:
+              - Consumes the public Animal Crossing API and organizes its data into clear navigation.
+              - Presents the information with a NookPhone-inspired interface designed to feel like a mobile app.
+              - Built with Ionic 6 and Angular 14, using TypeScript for logic and SCSS for styling.
+              - Focuses on quick data scanning and a visual experience that fits the game's universe.
+      closing:
+          es: Un wrapper ligero para explorar el contenido de Animal Crossing desde una interfaz reconocible, cómoda y adaptada a móvil.
+          ca: Un wrapper lleuger per explorar el contingut d'Animal Crossing des d'una interfície reconeixible, còmoda i adaptada a mòbil.
+          en: A lightweight wrapper for exploring Animal Crossing content through a familiar, comfortable interface designed for mobile.

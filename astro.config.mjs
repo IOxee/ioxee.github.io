@@ -4,9 +4,9 @@ import { readFileSync } from 'node:fs';
 import sitemap from '@astrojs/sitemap';
 import { defineConfig } from 'astro/config';
 
-// El script del tema va en línea (si fuera un módulo diferido habría parpadeo) y su hash entra en la CSP, calculado
-// del mismo archivo que incrusta `Base.astro`. Los saltos de línea se normalizan a LF porque el navegador hace lo
-// mismo antes de hashear: con CRLF saldría otro hash.
+// The theme script is inline (as a deferred module there would be a flash) and its hash goes into the CSP, computed
+// from the same file that `Base.astro` inlines. Line breaks are normalized to LF because the browser does the
+// same before hashing: with CRLF the hash would differ.
 const themeInit = readFileSync(
 	new URL('./src/scripts/theme-init.js', import.meta.url),
 	'utf8',
@@ -23,29 +23,29 @@ export default defineConfig({
 			prefixDefaultLocale: false,
 		},
 	},
-	// No hay markdown. Shiki, el resaltador por defecto, pinta con estilos en línea que la CSP rechaza.
+	// No markdown. Shiki, the default highlighter, paints with inline styles that the CSP rejects.
 	markdown: { syntaxHighlight: false },
 	integrations: [
 		sitemap({
 			filter: (page) => !page.endsWith('/404/'),
 			i18n: {
 				defaultLocale: 'es',
-				// Los mismos códigos que los `hreflang` del `<head>`: idioma sin país.
+				// The same codes as the `hreflang` values in the `<head>`: language without country.
 				locales: { es: 'es', en: 'en', ca: 'ca' },
 			},
 		}),
 	],
 	security: {
-		// GitHub Pages no deja fijar cabeceras, así que la CSP va en una etiqueta <meta>. Astro
-		// añade `script-src` y `style-src` con los hashes de lo que genera; esto es lo demás.
+		// GitHub Pages does not let you set headers, so the CSP goes in a <meta> tag. Astro
+		// adds `script-src` and `style-src` with the hashes of what it generates; this is everything else.
 		csp: {
 			algorithm: 'SHA-256',
 			directives: [
 				"default-src 'none'",
-				// `data:` es el grano de papel de la mesa, un SVG incrustado en el CSS.
+				// `data:` is the paper grain of the desk, an SVG embedded in the CSS.
 				"img-src 'self' data:",
 				"font-src 'self'",
-				// El visor de documentos enseña un PDF del propio sitio dentro de la página (un <iframe>).
+				// The document viewer shows a PDF from the site itself inside the page (an <iframe>).
 				"frame-src 'self'",
 				"object-src 'none'",
 				"base-uri 'none'",
@@ -53,7 +53,7 @@ export default defineConfig({
 			],
 			scriptDirective: { hashes: [themeInitHash] },
 			styleDirective: {
-				// Cada hoja se inclina con `style="--tilt: …"`: atributos en línea, y solo atributos.
+				// Each sheet is tilted with `style="--tilt: …"`: inline attributes, and only attributes.
 				resources: [
 					{ resource: "'self'", kind: 'element' },
 					{ resource: "'unsafe-inline'", kind: 'attribute' },

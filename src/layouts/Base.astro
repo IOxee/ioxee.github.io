@@ -5,8 +5,8 @@ import '@fontsource/courier-prime/400-italic.css';
 import '@fontsource/courier-prime/700.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
-// Las fuentes que se ven al cargar se precargan: sin eso, el cambio de la tipografía de reserva
-// reordena el texto y sube el CLS, sobre todo en móvil.
+// The fonts visible on load are preloaded: without that, switching away from the fallback typeface
+// reflows the text and raises CLS, especially on mobile.
 import stardos700 from '@fontsource/stardos-stencil/files/stardos-stencil-latin-700-normal.woff2?url';
 import courier400 from '@fontsource/courier-prime/files/courier-prime-latin-400-normal.woff2?url';
 import courier700 from '@fontsource/courier-prime/files/courier-prime-latin-700-normal.woff2?url';
@@ -46,8 +46,8 @@ const {
 
 const canonical = absoluteUrl(Astro.url.pathname, Astro.site);
 const image = absoluteUrl(OG_IMAGE.path, Astro.site);
-// El navegador pasa CRLF a LF antes de hashear un script en línea; `astro.config.mjs` hace el mismo reemplazo para que
-// el hash coincida con el archivo, esté en LF (CI) o en CRLF (Windows).
+// The browser turns CRLF into LF before hashing an inline script; `astro.config.mjs` does the same replacement so that
+// the hash matches the file, whether it is LF (CI) or CRLF (Windows).
 const themeInit = themeInitSource.replace(/\r\n?/g, '\n');
 ---
 
@@ -63,7 +63,7 @@ const themeInit = themeInitSource.replace(/\r\n?/g, '\n');
 		) : (
 			<>
 				<link rel="canonical" href={canonical} />
-				{/* La misma página en cada idioma, incluida ella: así los buscadores las emparejan. */}
+				{/* The same page in every language, itself included: that is how search engines pair them up. */}
 				{languageAlternates(Astro.site).map(({ hreflang, href }) => (
 					<link rel="alternate" hreflang={hreflang} href={href} />
 				))}

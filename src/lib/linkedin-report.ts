@@ -15,8 +15,8 @@ const SENSITIVE: readonly [string, RegExp][] = [
 ];
 
 /**
- * Lo que parece un dato personal en un texto que va a ser público (correo, teléfono, enlace). Es
- * un aviso, no un filtro: LinkedIn lo deja escribir en las descripciones.
+ * What looks like personal data in a text that is going to be public (email, phone, link). It is
+ * a warning, not a filter: LinkedIn lets you write them in descriptions.
  */
 export function sensitiveHints(text: string): string[] {
 	return SENSITIVE.filter(([, pattern]) => pattern.test(text)).map(

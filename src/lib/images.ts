@@ -12,8 +12,8 @@ const extensionOf = (path: string): string => {
 };
 
 /**
- * Lo mismo que `pickImage`, pero el archivo es opcional: `undefined` si no existe. Dos archivos
- * para el mismo id (`curso.jpg` y `curso.png`) es un error, no una elección al azar.
+ * The same as `pickImage`, but the file is optional: `undefined` if it does not exist. Two files
+ * for the same id (`course.jpg` and `course.png`) are an error, not a random choice.
  */
 export function pickOptionalAsset<T>(
 	files: Readonly<Record<string, T>>,
@@ -32,9 +32,9 @@ export function pickOptionalAsset<T>(
 }
 
 /**
- * Los archivos de una carpeta de adjuntos que no se van a usar nunca: no se llaman como ninguno de
- * los `ids`, o su extensión no es de las que se muestran (en minúsculas: el build las busca así).
- * Sin este aviso, un nombre mal escrito dejaría la foto sin salir y sin decir por qué.
+ * The files in an attachments folder that will never be used: they are not named like any of
+ * the `ids`, or their extension is not one of those that get shown (lowercase: the build looks for them that way).
+ * Without this warning, a misspelled name would leave the photo out without saying why.
  */
 export function unusableAssets(
 	paths: readonly string[],
@@ -50,6 +50,34 @@ export function unusableAssets(
 			!extensions.includes(extensionOf(path))
 		);
 	});
+}
+
+interface AssetFolder {
+	/** Where the files live, relative to the repository: it names the folder in the error. */
+	folder: string;
+	files: readonly string[];
+	ids: readonly string[];
+	extensions: readonly string[];
+	/** What a file has to be named after, as it reads in the error ("un proyecto de projects.yaml"). */
+	owner: string;
+}
+
+/** Fails the build, naming the files, when a folder holds some that would never be shown. */
+export function assertAssetsUsed({
+	folder,
+	files,
+	ids,
+	extensions,
+	owner,
+}: AssetFolder): void {
+	const unused = unusableAssets(files, ids, extensions);
+	if (unused.length === 0) return;
+
+	throw new Error(
+		`En ${folder}/ hay archivos que no se van a usar: ${unused.join(', ')}. ` +
+			`Cada uno debe llamarse como el id de ${owner} y acabar en ` +
+			`${extensions.map((extension) => `.${extension}`).join(', ')} (en minúsculas).`,
+	);
 }
 
 export function pickImage<T>(

@@ -1,17 +1,17 @@
 name: Sync LinkedIn
 
-# Trae la experiencia y la formación de LinkedIn y, si algo cambia, abre un pull request.
-# Es opcional: sin el secreto LINKEDIN_ACCESS_TOKEN no hace nada. Va aparte del despliegue, así que
-# un fallo aquí (por ejemplo, el token caducado) nunca impide publicar la web.
-# Cómo se configura: README, apartado «Sincronizar con LinkedIn».
+# Pulls experience and education from LinkedIn and, if anything changed, opens a pull request.
+# It is optional: without the LINKEDIN_ACCESS_TOKEN secret it does nothing. It is separate from the deploy, so
+# a failure here (an expired token, for example) never keeps the site from being published.
+# How to set it up: README, "Sincronizar con LinkedIn" section.
 #
-# Tres trabajos, para que cada secreto y cada permiso lleguen solo a lo que los necesita:
-#   check   mira si hay token; no ejecuta nada del proyecto.
-#   sync    solo lectura: baja los datos (con el token), los aplica, comprueba que la web sigue
-#           compilando y pasa los tests. Ejecuta las dependencias de npm, pero sin permiso de
-#           escritura en el repositorio y sin el token (salvo el paso que llama a la API).
-#   propose permiso de escritura, sin npm: sube el archivo resultante y abre el pull request.
-# Las acciones van fijadas por el SHA de su commit; el comentario dice a qué versión corresponde.
+# Three jobs, so that each secret and each permission reaches only what needs it:
+#   check   looks for the token; runs nothing from the project.
+#   sync    read-only: downloads the data (with the token), applies it, checks that the site still
+#           builds and passes the tests. It runs npm dependencies, but without write permission on
+#           the repository and without the token (except for the step that calls the API).
+#   propose write permission, no npm: pushes the resulting file and opens the pull request.
+# Actions are pinned by their commit SHA; the comment says which version it corresponds to.
 
 on:
     schedule:
@@ -54,9 +54,9 @@ jobs:
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
               with:
-                  # Siempre la rama principal, aunque el workflow se lance a mano desde otra.
+                  # Always the main branch, even if the workflow is launched by hand from another one.
                   ref: ${{ github.event.repository.default_branch || 'main' }}
-                  # Sin credenciales de escritura en el disco mientras corre código de npm.
+                  # No write credentials on disk while npm code runs.
                   persist-credentials: false
 
             - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
@@ -66,7 +66,7 @@ jobs:
 
             - run: npm ci --ignore-scripts
 
-            # El token solo existe en este paso, que carga únicamente el cliente de la API.
+            # The token only exists in this step, which loads nothing but the API client.
             - name: Traer los datos de LinkedIn
               env:
                   LINKEDIN_ACCESS_TOKEN: ${{ secrets.LINKEDIN_ACCESS_TOKEN }}
@@ -75,7 +75,7 @@ jobs:
             - name: Aplicar los cambios a experience.yaml
               run: node scripts/import-linkedin.ts --json "$RUNNER_TEMP/linkedin.json" --write
 
-            # Lo mismo que ci.yml: este pull request lo crea el workflow y GitHub no lanza ci.yml sobre él.
+            # Same as ci.yml: this pull request is created by the workflow and GitHub does not run ci.yml on it.
             - name: Comprobar que la web sigue en pie con los datos nuevos
               run: |
                   npm run format:check
@@ -126,7 +126,7 @@ jobs:
                   BASE_BRANCH: ${{ github.event.repository.default_branch || 'main' }}
                   BRANCH: chore/linkedin-sync
               run: |
-                  # Si ya hay uno abierto no se toca: la rama podría llevar correcciones a mano.
+                  # If one is already open it is left alone: the branch might carry manual fixes.
                   if [ "$(gh pr list --head "$BRANCH" --state open --json number --jq length)" != "0" ]; then
                       echo "::notice::Ya hay un pull request abierto de $BRANCH: revísalo o ciérralo antes de la próxima sincronización."
                       exit 0
@@ -136,7 +136,7 @@ jobs:
 
                   git config user.name "github-actions[bot]"
                   git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-                  # La rama puede quedar de un pull request anterior ya cerrado.
+                  # The branch may be left over from an earlier pull request that is already closed.
                   git fetch origin "$BRANCH" || true
                   git switch -C "$BRANCH"
                   git add src/data/experience.yaml

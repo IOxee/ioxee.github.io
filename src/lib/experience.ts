@@ -26,13 +26,13 @@ export function formatPeriod(
 
 const isOngoing = (entry: ExperienceEntry): boolean => entry.end === null;
 
-// Las entradas en curso comparan igual entre sí (0): entre ellas decide el inicio.
+// Ongoing entries compare equal to each other (0): the start decides between them.
 const endKey = (entry: ExperienceEntry): number =>
 	entry.end === null ? 0 : partialDateKey(entry.end, 'end');
 
 /**
- * En curso primero; luego, de más reciente a más antigua: las terminadas por su fin y las
- * demás por su inicio, y como último desempate el id para que el orden sea determinista.
+ * Ongoing first; then, most recent to oldest: finished ones by their end and the
+ * rest by their start, with the id as the last tie-breaker so the order is deterministic.
  */
 export function sortExperience(
 	entries: readonly ExperienceEntry[],

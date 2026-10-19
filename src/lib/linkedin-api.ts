@@ -3,9 +3,9 @@ import type { LinkedinRow } from './linkedin.ts';
 export type SnapshotDomain = 'POSITIONS' | 'EDUCATION';
 
 const SNAPSHOT_URL = 'https://api.linkedin.com/rest/memberSnapshotData';
-/** Única versión que aceptan estos endpoints: otra devuelve 426. */
+/** The only version these endpoints accept: any other returns 426. */
 const API_VERSION = '202312';
-/** Una persona tiene un puñado de posiciones; pasar de aquí es un fallo, no datos. */
+/** A person has a handful of positions; going past this is a failure, not data. */
 const MAX_PAGES = 10;
 const REQUEST_TIMEOUT_MS = 15_000;
 
@@ -20,8 +20,8 @@ export class LinkedinApiError extends Error {
 }
 
 /**
- * Qué significa cada fallo, en el idioma del proyecto. Nunca incluye el cuerpo de la respuesta ni
- * la petición: podrían repetir el token.
+ * What each failure means, in the project's language. It never includes the response body or
+ * the request: they could repeat the token.
  */
 function describeFailure(status: number): string {
 	switch (status) {
@@ -57,7 +57,7 @@ function rowsOf(body: unknown): LinkedinRow[] {
 	);
 }
 
-/** Una página del dominio; `null` si LinkedIn no tiene (más) datos, que contesta 404. */
+/** One page of the domain; `null` if LinkedIn has no (more) data, which it answers with 404. */
 async function fetchPage(
 	domain: SnapshotDomain,
 	page: number,
@@ -73,7 +73,7 @@ async function fetchPage(
 				Authorization: `Bearer ${token}`,
 				'Linkedin-Version': API_VERSION,
 			},
-			// La URL es fija: una redirección no es normal, y no hay motivo para enviar el token a otro sitio.
+			// The URL is fixed: a redirect is not normal, and there is no reason to send the token somewhere else.
 			redirect: 'error',
 			signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
 		});
@@ -107,10 +107,10 @@ const rowKey = (row: LinkedinRow): string =>
 	JSON.stringify(Object.entries(row).sort(([a], [b]) => a.localeCompare(b)));
 
 /**
- * Todas las filas de un dominio del Member Snapshot API. Sigue las páginas hasta que LinkedIn
- * contesta 404 o una página no trae nada nuevo (el total que informa no es fiable y repite filas
- * entre páginas). Sin datos todavía —la instantánea se prepara tras dar el consentimiento— devuelve
- * una lista vacía.
+ * All the rows of a Member Snapshot API domain. It follows the pages until LinkedIn
+ * answers 404 or a page brings nothing new (the total it reports is not reliable and it repeats rows
+ * between pages). With no data yet —the snapshot is prepared after consent is given— it returns
+ * an empty list.
  */
 export async function fetchSnapshotDomain(
 	domain: SnapshotDomain,
@@ -124,8 +124,8 @@ export async function fetchSnapshotDomain(
 		);
 	}
 
-	// Un token con espacios o saltos de línea (mal pegado) hace que `fetch` falle con un mensaje
-	// que lo repite entero: se rechaza antes, con un texto fijo.
+	// A token with spaces or line breaks (badly pasted) makes `fetch` fail with a message
+	// that repeats it in full: it is rejected beforehand, with a fixed text.
 	if (!/^[\x21-\x7e]+$/.test(accessToken)) {
 		throw new LinkedinApiError(
 			'El token de LinkedIn no es válido: tiene espacios, saltos de línea u otros caracteres que no caben en una cabecera. Cópialo de nuevo, sin nada alrededor.',

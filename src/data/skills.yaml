@@ -1,48 +1,20 @@
-# Inventario de habilidades.
+# Skills inventory.
 #
-# `since`: año en que empezaste (los años de experiencia se calculan solos).
-# `state`: daily = uso diario · comfortable = con soltura · intermediate = intermedio ·
-#          basic = básico.
-# `provisional: true`: el `since` es una estimación sin confirmar. La web NO enseña los
-# años de las habilidades provisionales (solo su estado) hasta que borres esa línea.
+# `since`: year you started (the years of experience are computed automatically).
+# `state`: daily = daily use · comfortable = at ease · intermediate = intermediate ·
+#          basic = basic.
+# `provisional: true`: `since` is an unconfirmed estimate. The site does NOT show the
+# years of provisional skills (only their state) until you delete that line.
 #
-# Los `state` de Lua, PHP, Java, C#, Python, Angular, Next.js, SQL y PostgreSQL los fijaste
-# tú. Los de HTML, CSS y JavaScript siguen saliendo de tus antiguos porcentajes (>=75 % →
-# daily, 50 % → comfortable): confírmalos. El único `since` firme es el de Lua (servidores
-# FiveM desde 2022); el resto son estimaciones.
+# The `state` of Lua, PHP, Java, C#, Python, Angular, Next.js, SQL and PostgreSQL were set by
+# you. Those of HTML, CSS and JavaScript still come from your old percentages (>=75 % →
+# daily, 50 % → comfortable): confirm them. The only firm `since` is Lua's (FiveM servers
+# since 2022); the rest are estimates.
 - id: lua
   name: Lua
   category: backend
   since: 2022
   state: comfortable
-
-- id: csharp
-  name: C#
-  category: backend
-  since: 2023
-  state: daily
-  provisional: true
-
-- id: java
-  name: Java
-  category: backend
-  since: 2020
-  state: intermediate
-  provisional: true
-
-- id: php
-  name: PHP
-  category: backend
-  since: 2022
-  state: intermediate
-  provisional: true
-
-- id: python
-  name: Python
-  category: backend
-  since: 2021
-  state: basic
-  provisional: true
 
 - id: html
   name: HTML
@@ -65,11 +37,25 @@
   state: daily
   provisional: true
 
-- id: nextjs
-  name: Next.js
-  category: frontend
-  since: 2024
+- id: java
+  name: Java
+  category: backend
+  since: 2020
   state: intermediate
+  provisional: true
+
+- id: mysql
+  name: mySQL
+  category: data
+  since: 2020
+  state: comfortable
+  provisional: true
+
+- id: python
+  name: Python
+  category: backend
+  since: 2021
+  state: basic
   provisional: true
 
 - id: angular
@@ -79,11 +65,53 @@
   state: basic
   provisional: true
 
-- id: sql
-  name: SQL
-  category: data
-  since: 2020
+- id: php
+  name: PHP
+  category: backend
+  since: 2022
+  state: intermediate
+  provisional: true
+
+- id: dotnet
+  name: .NET
+  category: backend
+  since: 2023
   state: daily
+  provisional: true
+
+- id: csharp
+  name: C#
+  category: backend
+  since: 2023
+  state: daily
+  provisional: true
+
+- id: sqlserver
+  name: SQL Server
+  category: data
+  since: 2023
+  state: daily
+  provisional: true
+
+- id: devexpress
+  name: DevExpress
+  category: desktop
+  since: 2023
+  state: comfortable
+  provisional: true
+
+- id: wpf
+  name: WPF / WinForms
+  category: desktop
+  since: 2023
+  state: daily
+  provisional: true
+
+- id: nextjs
+  name: Next.js
+  category: frontend
+  since: 2024
+  state: intermediate
   provisional: true
 
 - id: postgresql

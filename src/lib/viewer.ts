@@ -9,14 +9,14 @@ export interface ClickLike {
 }
 
 /**
- * Si un clic en el enlace de una foto o de un documento lo atiende el visor de la página o lo sigue
- * el navegador. El enlace es siempre un enlace de verdad (sin JavaScript, o si el visor no puede
- * mostrarlo, se abre en otra pestaña), así que el visor solo se queda con el clic normal:
- *  - Con Ctrl, Cmd, Mays o Alt, o con el botón del medio o el derecho, la persona pidió otra
- *    pestaña o ventana: no se le quita.
- *  - Un PDF dentro de la página exige que el navegador traiga visor de PDF (`pdfViewerEnabled`). En
- *    un móvil sin él, el marco quedaría en blanco o descargaría el archivo. Si el navegador no lo
- *    dice, no se supone que lo tenga.
+ * Whether a click on the link of a photo or a document is handled by the page's viewer or followed
+ * by the browser. The link is always a real link (without JavaScript, or if the viewer cannot
+ * show it, it opens in another tab), so the viewer only takes the plain click:
+ *  - With Ctrl, Cmd, Shift or Alt, or with the middle or right button, the person asked for another
+ *    tab or window: it is not taken away.
+ *  - A PDF inside the page requires the browser to have a PDF viewer (`pdfViewerEnabled`). On
+ *    a phone without one, the frame would stay blank or download the file. If the browser does not
+ *    say so, it is not assumed to have one.
  */
 export function opensInViewer(
 	kind: ViewerKind,
@@ -37,8 +37,8 @@ export function opensInViewer(
 }
 
 /**
- * La dirección con la que se carga un PDF en el marco del visor: el visor del navegador lo ajusta al
- * ancho y esconde el panel lateral de miniaturas (Chrome, Edge y Firefox entienden estos parámetros).
+ * The address a PDF is loaded with in the viewer's frame: the browser's viewer fits it to the
+ * width and hides the thumbnails side panel (Chrome, Edge and Firefox understand these parameters).
  */
 export function pdfFrameUrl(href: string): string {
 	const [address = ''] = href.split('#');

@@ -1,8 +1,8 @@
 import { type Page, expect, test } from '@playwright/test';
 import { type Scheme, VIEWPORT_HEIGHT, WIDTHS, settle } from './support';
 
-// Las capturas dependen del sistema (suavizado del texto): cada plataforma tiene las suyas, y se
-// comparan solo en Chromium. Se lanzan a mano con `npm run test:visual`, no en el CI.
+// Screenshots depend on the system (text smoothing): each platform has its own, and they are
+// compared in Chromium only. They are run by hand with `npm run test:visual`, not in CI.
 test.skip(
 	({ browserName }) => browserName !== 'chromium',
 	'Una referencia por plataforma basta con un solo navegador.',
@@ -11,16 +11,16 @@ test.skip(
 test.use({ bypassCSP: true });
 
 /**
- * El grano de papel y de la mesa es ruido: un PNG no lo comprime y cada referencia pesaría varios
- * megas. La textura se prueba en el contraste; aquí importan la maquetación, el texto y los colores.
+ * The grain of the paper and of the desk is noise: a PNG cannot compress it and each reference would weigh several
+ * megabytes. The texture is tested in the contrast; here layout, text and colors matter.
  */
 const WITHOUT_GRAIN =
 	'body::before, .page--sheet::after { display: none !important; }';
 
 /**
- * Las hojas que se fotografían, con el ancla a la que se entra: la portada cerrada, un par con
- * texto (la experiencia) y un par con capturas (los proyectos). Entrar por el ancla coloca la
- * carpeta sin animación, así que la captura sale siempre igual.
+ * The sheets that get photographed, with the anchor they are entered through: the closed cover, a spread with
+ * text (experience) and a spread with screenshots (projects). Entering through the anchor places the
+ * folder without animation, so the screenshot always comes out the same.
  */
 const SHEETS = [
 	{ name: 'portada', hash: '' },
@@ -29,9 +29,9 @@ const SHEETS = [
 ] as const;
 
 /**
- * Lo que no se compara: el año del copyright, que cambia solo con el tiempo, y las imágenes, que
- * pesan mucho en una referencia. De ellas se sigue viendo dónde están y qué tamaño tienen, que es
- * lo que puede romper la maquetación.
+ * What is not compared: the copyright year, which changes just with time, and the images, which
+ * weigh a lot in a reference. Where they are and how big they are is still seen, which is
+ * what can break the layout.
  */
 const masked = (page: Page) => [page.locator('footer'), page.locator('img')];
 
@@ -46,9 +46,9 @@ async function capture(
 	await page.goto(`/${sheet.hash}`);
 	await page.addStyleTag({ content: WITHOUT_GRAIN });
 	await settle(page);
-	// El script coloca la carpeta al medir: se espera a que haya acabado de ponerse.
+	// The script places the folder when measuring: wait for it to finish settling.
 	await expect(page.locator('html')).toHaveAttribute('data-folder-ready', '');
-	// Entrar por un ancla hace un scroll suave: se captura cuando la página ya se ha quedado quieta.
+	// Entering through an anchor does a smooth scroll: the capture is taken once the page has come to rest.
 	await page.waitForFunction(
 		() =>
 			new Promise<boolean>((resolve) => {

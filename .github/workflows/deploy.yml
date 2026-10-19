@@ -3,26 +3,26 @@ name: Deploy to GitHub Pages
 on:
     push:
         branches: [main]
-    # Redespliega a diario para que el año del copyright y la vigencia de las certificaciones,
-    # que se calculan al compilar, se mantengan exactos aunque no haya commits.
+    # Redeploys daily so the copyright year and the validity of the certifications,
+    # which are computed at build time, stay exact even when there are no commits.
     schedule:
         - cron: '0 5 * * *'
     workflow_dispatch:
 
-# Por defecto solo lectura: los jobs que instalan dependencias y compilan no necesitan más.
-# Publicar en Pages (`pages` e `id-token`) lo permite únicamente el job `deploy`.
+# Read-only by default: the jobs that install dependencies and build need nothing more.
+# Publishing to Pages (`pages` and `id-token`) is allowed only to the `deploy` job.
 permissions:
     contents: read
 
-# Un despliegue por vez: el push y el cron diario no se pisan, y el que ya está en curso termina.
+# One deployment at a time: the push and the daily cron do not trample each other, and the one already running finishes.
 concurrency:
     group: pages
     cancel-in-progress: false
 
 jobs:
-    # Nada se publica si los tipos o los tests (incluida la validación de los datos) fallan:
-    # `withastro/action` solo compila, y un YAML mal formado no rompe el build por sí solo.
-    # Se compila aquí también para comprobar el HTML resultante (CSP, SEO, enlaces).
+    # Nothing is published if the types or the tests (including data validation) fail:
+    # `withastro/action` only builds, and a malformed YAML does not break the build on its own.
+    # It also builds here to check the resulting HTML (CSP, SEO, links).
     verify:
         runs-on: ubuntu-latest
         timeout-minutes: 10

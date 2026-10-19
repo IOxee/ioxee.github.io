@@ -59,7 +59,7 @@ describe('packByWeight', () => {
 	});
 
 	it('puts a heavy entry with a light one when they fit, and starts another group when they do not', () => {
-		// 1 + 3 caben en 4; el siguiente ligero ya no.
+		// 1 + 3 fit in 4; the next light one no longer does.
 		expect(packByWeight([1, 3, 1], 4)).toEqual([[0, 1], [2]]);
 		expect(packByWeight([3, 3], 4)).toEqual([[0], [1]]);
 	});
@@ -98,7 +98,7 @@ describe('planSheets', () => {
 			counts({ certifications: 4, photographedCertifications: [1] }),
 		).filter((sheet) => sheet.kind === 'certifications');
 
-		// Sin foto, cuatro a una hoja; con una foto (peso PHOTO_WEIGHT) solo cabe una corta con ella.
+		// Without a photo, four to a sheet; with a photo (weight PHOTO_WEIGHT) only one short one fits with it.
 		expect(PHOTO_WEIGHT).toBeGreaterThan(1);
 		expect(sheets.map((sheet) => sheet.items)).toEqual([
 			[0, 1],

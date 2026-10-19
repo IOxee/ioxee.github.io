@@ -85,9 +85,9 @@ test.describe('accesibilidad (axe, WCAG 2.2 AA)', () => {
 		await expect(page.getByRole('main')).toHaveCount(1);
 		await expect(page.getByRole('navigation')).toHaveCount(1);
 		await expect(page.getByRole('contentinfo')).toHaveCount(1);
-		// Cada página con título lo anuncia: sin hojas «mudas» en el árbol de accesibilidad. Se
-		// comprueba en el HTML, donde se ven todas: si una pierde su `aria-labelledby` deja de ser una
-		// región y el bucle de abajo no la vería.
+		// Every page with a title announces it: no "mute" sheets in the accessibility tree. This is
+		// checked in the HTML, where all of them are visible: if one loses its `aria-labelledby` it stops being a
+		// region and the loop below would not see it.
 		const pages = await page.locator('main [data-page]').count();
 		expect(pages).toBeGreaterThan(5);
 		const named = await page.evaluate(
@@ -112,8 +112,8 @@ test.describe('accesibilidad (axe, WCAG 2.2 AA)', () => {
 		page,
 		browserName,
 	}) => {
-		// Se lee el árbol que construye el navegador: los selectores de Playwright no tratan `inert`
-		// como oculto, pero un lector de pantalla sí lo deja fuera.
+		// The tree the browser builds is read: Playwright's selectors do not treat `inert`
+		// as hidden, but a screen reader does leave it out.
 		test.skip(browserName !== 'chromium', 'El árbol se pide por CDP.');
 
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -139,8 +139,8 @@ test.describe('accesibilidad (axe, WCAG 2.2 AA)', () => {
 				.map((node) => node.name?.value ?? '');
 		};
 
-		// Cerrada, solo la portada; abierta, el reverso de la hoja pasada y el anverso de la siguiente.
-		// Qué páginas son lo dice el mismo cálculo que usa la carpeta, para no depender de los datos.
+		// Closed, only the cover; open, the back of the turned sheet and the front of the next one.
+		// Which pages those are is given by the same calculation the folder uses, so as not to depend on the data.
 		const total = await page.locator('[data-page]').count();
 		for (const position of [0, 2, positionCount(total, 'spread') - 2]) {
 			const { left, right } = pagesAtPosition(position, total, 'spread');

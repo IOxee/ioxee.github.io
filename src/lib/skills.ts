@@ -1,4 +1,4 @@
-import { SKILL_CATEGORIES, SKILL_STATES } from './schemas';
+import { PREFERRED_SKILL_CATEGORIES, SKILL_STATES } from './schemas';
 import type { Skill } from './schemas';
 
 export interface SkillWithYears extends Skill {
@@ -10,7 +10,7 @@ export interface SkillGroup {
 	readonly skills: readonly SkillWithYears[];
 }
 
-/** Años de experiencia contados por año natural desde `since`. */
+/** Years of experience counted by calendar year from `since`. */
 export function yearsOfExperience(
 	since: number,
 	today: Date = new Date(),
@@ -40,10 +40,18 @@ export function groupSkills(
 		years: yearsOfExperience(skill.since, today),
 	}));
 
-	return SKILL_CATEGORIES.map((category) => ({
+	const present = new Set(withYears.map((skill) => skill.category));
+	const preferred = PREFERRED_SKILL_CATEGORIES.filter((category) =>
+		present.has(category),
+	);
+	const others = [...present]
+		.filter((category) => !preferred.some((known) => known === category))
+		.sort();
+
+	return [...preferred, ...others].map((category) => ({
 		category,
 		skills: withYears
 			.filter((skill) => skill.category === category)
 			.sort(compareSkills),
-	})).filter((group) => group.skills.length > 0);
+	}));
 }

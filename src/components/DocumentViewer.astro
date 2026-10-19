@@ -10,9 +10,9 @@ const { locale } = Astro.props;
 ---
 
 {/*
-	Visor modal de la foto y el documento de una certificación, sin descargar nada ni salir de la página. Los enlaces
-	que lo abren son enlaces de verdad: sin JavaScript, o si el navegador no puede mostrar un PDF dentro de una página,
-	se abren en otra pestaña. El script rellena el contenido al abrir y lo vacía al cerrar (así el PDF deja de cargar).
+	Modal viewer for the photo and document of a certification and the document of a project, without downloading anything or leaving the page. The links
+	that open it are real links: without JavaScript, or if the browser cannot show a PDF inside a page,
+	they open in another tab. The script fills in the content on open and empties it on close (so the PDF stops loading).
 */}
 <dialog
 	class="viewer"
@@ -23,7 +23,7 @@ const { locale } = Astro.props;
 >
 	<header class="viewer-bar">
 		<h2 id="viewer-title" class="viewer-title" data-viewer-title></h2>
-		{/* El enlace «abrir en otra pestaña» lo crea el script al abrir: sin nada que abrir, no hay enlace. */}
+		{/* The "open in another tab" link is created by the script on open: with nothing to open, there is no link. */}
 		<span data-viewer-external-slot></span>
 		<button type="button" class="viewer-button" data-viewer-close autofocus>
 			{t(locale, 'viewer.close')}
@@ -92,8 +92,8 @@ const { locale } = Astro.props;
 			external.textContent = dialog.dataset.newTabLabel ?? '';
 			externalSlot.replaceChildren(external);
 			body.replaceChildren(content(link, name));
-			// Una foto grande se desplaza dentro del visor: esa zona tiene que poder recorrerse con el
-			// teclado (WCAG 2.1.1), así que se enfoca y lleva nombre. El PDF se mueve con su propio visor.
+			// A large photo scrolls inside the viewer: that area must be reachable with the
+			// keyboard (WCAG 2.1.1), so it is focusable and has a name. The PDF moves with its own viewer.
 			if (kindOf(link) === 'image') {
 				body.tabIndex = 0;
 				body.setAttribute('role', 'region');
@@ -135,8 +135,8 @@ const { locale } = Astro.props;
 		});
 
 		closeButton.addEventListener('click', () => dialog.close());
-		// Pulsar fuera, sobre el fondo oscuro, también lo cierra: el diálogo no tiene holgura, así que
-		// un clic que llega al propio <dialog> es un clic en el fondo.
+		// Clicking outside, on the dark backdrop, also closes it: the dialog has no slack, so
+		// a click that reaches the <dialog> itself is a click on the backdrop.
 		dialog.addEventListener('click', (event) => {
 			if (event.target === dialog) dialog.close();
 		});
@@ -189,9 +189,9 @@ const { locale } = Astro.props;
 	}
 
 	/*
-	 * El mismo aire que el botón del tema y el selector de idioma: papel, borde de tinta y sombra. El
-	 * enlace «abrir en otra pestaña» lo crea el script, sin la marca de los estilos de este componente:
-	 * por eso `:global`, acotado al visor.
+	 * The same look as the theme button and the language selector: paper, ink border and shadow. The
+	 * "open in another tab" link is created by the script, without the mark of this component's styles:
+	 * hence `:global`, scoped to the viewer.
 	 */
 	.viewer :global(.viewer-button) {
 		display: inline-flex;
@@ -214,7 +214,7 @@ const { locale } = Astro.props;
 		background: color-mix(in oklch, var(--ink) 14%, var(--paper));
 	}
 
-	/* Su `box-shadow` anularía el halo del foco global: se repite aquí con el halo incluido. */
+	/* Its `box-shadow` would override the global focus halo: it is repeated here with the halo included. */
 	.viewer :global(.viewer-button:focus-visible) {
 		box-shadow:
 			0 3px 0 oklch(0% 0 0 / 0.35),

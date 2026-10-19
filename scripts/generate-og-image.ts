@@ -1,6 +1,6 @@
 /**
- * Genera `public/og.jpg` fotografiando la portada del sitio ya compilado, para que la imagen siempre coincida con
- * el diseño. Uso: `npm run build && npm run assets:og`.
+ * Generates `public/og.jpg` by photographing the cover of the already built site, so the image always matches
+ * the design. Usage: `npm run build && npm run assets:og`.
  */
 import { writeFileSync } from 'node:fs';
 import { chromium } from '@playwright/test';
@@ -8,7 +8,7 @@ import { preview } from 'astro';
 import sharp from 'sharp';
 
 const PORT = 4399;
-// Formato de Open Graph. `src/lib/seo.test.ts` comprueba que `OG_IMAGE` coincide con el archivo.
+// Open Graph format. `src/lib/seo.test.ts` checks that `OG_IMAGE` matches the file.
 const WIDTH = 1200;
 const HEIGHT = 630;
 
@@ -23,19 +23,19 @@ try {
 	const page = await browser.newPage({
 		viewport: { width: WIDTH, height: HEIGHT },
 		colorScheme: 'light',
-		// El script inyecta un <style> para esconder lo que no sale en la imagen; la CSP del sitio lo
-		// bloquearía.
+		// The script injects a <style> to hide what does not appear in the image; the site's CSP would
+		// block it.
 		bypassCSP: true,
 	});
 	await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'networkidle' });
 	await page.evaluate(() => document.fonts.ready);
-	// Solo la portada cerrada sobre la mesa: sin barra de navegación ni pie. La carpeta se escala a
-	// la altura que queda, así que al quitar la barra se recoloca sola.
-	// La invitación a hacer scroll tampoco: en una imagen no se puede bajar.
+	// Only the closed cover on the desk: no navigation bar or footer. The folder scales to
+	// the height that is left, so removing the bar repositions it on its own.
+	// The scroll invitation goes too: in an image you cannot scroll down.
 	await page.addStyleTag({
 		content: '.bar, footer, .cover-scroll { display: none !important; }',
 	});
-	// Espera a que se recoloque y a que el sello termine de caer.
+	// Waits for it to reposition and for the stamp to finish dropping.
 	await page.waitForTimeout(1800);
 
 	const screenshot = await page.screenshot({

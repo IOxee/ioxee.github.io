@@ -37,7 +37,7 @@ const KEY_ACTIONS: Readonly<Record<string, PagerAction>> = {
 	End: 'last',
 };
 
-/** Qué hace una tecla, o `null` si no es de la carpeta (así no se le quita el uso normal). */
+/** What a key does, or `null` if it is not the folder's (so its normal use is not taken away). */
 export const keyAction = (key: string): PagerAction | null =>
 	Object.hasOwn(KEY_ACTIONS, key) ? (KEY_ACTIONS[key] ?? null) : null;
 
@@ -63,15 +63,15 @@ export function sheetStates(index: number, total: number): SheetState[] {
 export const isNear = (position: number, index: number): boolean =>
 	Math.abs(position - index) <= 1;
 
-/** Lo mínimo que se desplaza por hoja: sin esto, un toque de la rueda pasaría varias de golpe. */
+/** The minimum scrolled per sheet: without this, one wheel tick would turn several at once. */
 const MIN_SCROLL_STEP = 320;
 
 export const scrollStep = (viewportHeight: number): number =>
 	Math.max(MIN_SCROLL_STEP, Math.round(viewportHeight / 2));
 
 /**
- * Cuántos pasos se ha desplazado la página desde que la carpeta quedó fija, con fracciones: es lo
- * que decide cuánto ha girado la hoja que está pasando. Va de la primera posición a la última.
+ * How many steps the page has scrolled since the folder was pinned, with fractions: it is what
+ * decides how far the sheet being turned has rotated. It goes from the first position to the last.
  */
 export function scrollProgress(
 	offset: number,
@@ -87,19 +87,19 @@ export const scrollOffsetFor = (index: number, step: number): number =>
 	Math.max(0, index) * step;
 
 /**
- * Cuánto hay que haberse movido hacia otra hoja (en pasos) para que termine de pasar sola. Es poco
- * a propósito: un toque de la rueda mueve unos 100 px y una flecha del teclado 40, una fracción
- * pequeña de la hoja, y con «la parada más cercana» volverían atrás en vez de pasarla. Un roce
- * del trackpad, de unos pocos píxeles, queda por debajo.
+ * How far you must have moved toward another sheet (in steps) for it to finish turning on its own. It is small
+ * on purpose: a wheel tick moves about 100 px and a keyboard arrow 40, a small fraction of the sheet,
+ * and with "the nearest stop" they would go back instead of turning it. A trackpad
+ * brush, of a few pixels, stays below it.
  */
 export const SETTLE_THRESHOLD = 0.04;
 
 /**
- * A qué punto de lectura termina de colocarse la carpeta cuando el scroll se detiene entre dos.
- * Sigue la dirección del movimiento: parte de `origin` (donde estaba antes de moverse) y, si se ha
- * pasado de `threshold` pasos hacia un lado, sigue hasta la hoja de ese lado. Un punto ya exacto
- * se queda donde está. `null` si el scroll está fuera de la pista (encima de la carpeta, o más
- * allá de la última hoja): ahí no hay nada que colocar.
+ * Which reading point the folder finishes settling at when scrolling stops between two.
+ * It follows the direction of movement: it starts from `origin` (where it was before moving) and, if it has
+ * gone past `threshold` steps to one side, continues to the sheet on that side. An already exact point
+ * stays where it is. `null` if the scroll is outside the track (above the folder, or beyond the last sheet):
+ * there is nothing to settle there.
  */
 export function settleTarget(
 	position: number,
@@ -121,21 +121,21 @@ export function settleTarget(
 }
 
 /**
- * La carpeta no se encoge por debajo de esto: más pequeña, el texto dejaría de poder leerse. Con el
- * menú y el pie siempre a la vista, un portátil de 768 de alto (unos 650 px de página) deja a la
- * carpeta poco más de 540 px: hace falta bajar hasta aquí para que siga fija.
+ * The folder does not shrink below this: smaller, the text could no longer be read. With the
+ * menu and footer always in view, a 768-tall laptop (about 650 px of page) leaves the folder
+ * little more than 540 px: it has to go down to here to stay pinned.
  */
 export const MIN_FIT_SCALE = 0.65;
 /**
- * Ni se amplía por encima de esto: en una pantalla enorme (4K, ultraancha) la carpeta llena el alto
- * o el ancho que tenga, pero más allá el papel y las capturas se verían pixelados.
+ * Nor is it enlarged above this: on a huge screen (4K, ultrawide) the folder fills the height
+ * or width it has, but beyond that the paper and the screenshots would look pixelated.
  */
 export const MAX_FIT_SCALE = 2.4;
 
 /**
- * Cuánto hay que escalar la carpeta para que llene el hueco que deja la ventana: se encoge si no
- * cabe y, si sobra sitio, se amplía hasta `maximum` (1 por defecto: no se amplía). Si habría que
- * encogerla más que `minimum` no se fija (`null`): se vería cortada o ilegible.
+ * How much to scale the folder so it fills the gap the window leaves: it shrinks if it does not
+ * fit and, if there is room to spare, it is enlarged up to `maximum` (1 by default: not enlarged). If it would have to
+ * shrink more than `minimum` it is not pinned (`null`): it would look cut off or unreadable.
  */
 export function fitScale(
 	available: number,

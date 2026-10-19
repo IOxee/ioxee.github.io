@@ -1,4 +1,4 @@
-/** Fecha parcial: `AAAA` o `AAAA-MM`. */
+/** Partial date: `YYYY` or `YYYY-MM`. */
 export const PARTIAL_DATE = /^(\d{4})(?:-(0[1-9]|1[0-2]))?$/;
 
 export type PeriodBound = 'start' | 'end';
@@ -23,8 +23,8 @@ export function parsePartialDate(date: string): PartialDate {
 }
 
 /**
- * Número comparable `AAAAMM`. Un año suelto abre en enero si es el inicio de un periodo y
- * cierra en diciembre si es el final: así `2022` como fin nunca queda antes de `2022-03`.
+ * Comparable `YYYYMM` number. A bare year opens in January if it is the start of a period and
+ * closes in December if it is the end: so `2022` as an end is never before `2022-03`.
  */
 export function partialDateKey(date: string, bound: PeriodBound): number {
 	const { year, month } = parsePartialDate(date);

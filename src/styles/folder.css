@@ -1,23 +1,23 @@
 /*
- * La carpeta tiene tres maneras de verse, y la primera es la base:
- *  - LISTA: todas las páginas seguidas. Es lo que sale sin JavaScript y al imprimir, y permite buscar y copiar.
- *  - PARALLAX (`data-scroll="on"`): con JavaScript, la carpeta llena la pantalla entre el menú y el pie y se queda fija;
- *    el scroll hace girar las hojas sobre el lomo, de forma continua (`--progress`). Se escala con `--fit`.
- *  - GIRA SOLA (`data-scroll="off"`): sin fijarse, cuando habría que encogerla tanto que no se leería (un móvil, una
- *    ventana muy baja). Las hojas giran con una animación.
+ * The folder has three ways of being displayed, and the first is the base:
+ *  - LIST: all the pages one after another. It is what you get without JavaScript and when printing, and it allows searching and copying.
+ *  - PARALLAX (`data-scroll="on"`): with JavaScript, the folder fills the screen between the menu and the footer and stays fixed;
+ *    scrolling turns the sheets on the spine, continuously (`--progress`). It is scaled with `--fit`.
+ *  - TURNS BY ITSELF (`data-scroll="off"`): not pinned, for when it would have to shrink so much that it could not be read (a phone, a
+ *    very short window). The sheets turn with an animation.
  *
- * Una hoja lleva dos páginas (`.page`): desde 60rem la carpeta se ve abierta (el reverso de la hoja pasada a la
- * izquierda y el anverso de la siguiente a la derecha); por debajo, una página cada vez. El umbral es el mismo que usa
- * el script (`book.ts`).
+ * A sheet carries two pages (`.page`): from 60rem up the folder is shown open (the back of the turned sheet on the
+ * left and the front of the next one on the right); below that, one page at a time. The threshold is the same one the script uses
+ * (`book.ts`).
  *
- * Nada va con `style` en línea salvo `--tilt` (lo exige la CSP): el resto de valores los pone el script con el CSSOM.
+ * Nothing uses inline `style` except `--tilt` (the CSP requires it): the script sets the rest of the values through the CSSOM.
  */
 
 .folder {
 	--leaf-width: min(100%, 38rem);
 	--turn-duration: 800ms;
 	--ease-turn: cubic-bezier(0.45, 0.05, 0.2, 1);
-	/* Cuánto se aleja el ojo de la hoja que gira: más grande, menos deformada y menos se sale de la carpeta. */
+	/* How far the eye is from the turning sheet: the farther, the less distortion and the less it sticks out of the folder. */
 	--depth: 3600px;
 	--pin-top: var(--bar-h, 0px);
 	position: relative;
@@ -33,7 +33,7 @@
 	counter-reset: folio;
 }
 
-/* Las hojas físicas no pintan nada por sí solas: las páginas van sueltas, una tras otra. */
+/* The physical sheets paint nothing by themselves: the pages are loose, one after another. */
 .folder .leaf {
 	display: contents;
 }
@@ -49,7 +49,7 @@
 	display: none;
 }
 
-/* Los botones para lectores de pantalla los mueve el script: sin él no harían nada. */
+/* The screen-reader buttons are moved by the script: without it they would do nothing. */
 html:not(.js) .folder [data-turn] {
 	display: none;
 }
@@ -79,7 +79,7 @@ html:not(.js) .folder [data-turn] {
 	opacity: 0.1;
 }
 
-/* El número sale solo, contando páginas de contenido: la portada es la primera y no lleva. */
+/* The number appears on its own, counting content pages: the cover is the first and has none. */
 .folder .folio {
 	position: absolute;
 	right: 0;
@@ -154,7 +154,7 @@ html:not(.js) .folder [data-turn] {
 	gap: var(--space-1) var(--space-3);
 }
 
-/* La foto va entera en una caja de proporción fija (3:2): una vertical no estira la hoja y una apaisada no se recorta. */
+/* The photo goes in whole inside a fixed-ratio box (3:2): a portrait one does not stretch the sheet and a landscape one is not cropped. */
 .folder .doc-cert-text {
 	display: grid;
 	gap: var(--space-1);
@@ -269,8 +269,8 @@ html:not(.js) .folder [data-turn] {
 	}
 
 	/*
-	 * El escenario ocupa la pantalla desde el primer pintado, antes de que el script mida: así la
-	 * carpeta ya está donde va a quedar y no se mueve al cargar.
+	 * The stage fills the screen from the first paint, before the script measures: this way the
+	 * folder is already where it will end up and does not move on load.
 	 */
 	html.js .folder .stage {
 		display: grid;
@@ -279,9 +279,9 @@ html:not(.js) .folder [data-turn] {
 	}
 
 	/*
-	 * El pie no se enseña hasta que la carpeta está colocada: antes de eso la página es corta y el
-	 * pie se vería, para saltar fuera de pantalla al crecer la pista. Si el script no llegara a
-	 * ejecutarse, el pie aparece solo tras un momento.
+	 * The footer is not shown until the folder is in place: before that the page is short and the
+	 * footer would be visible, then jump off screen when the track grows. If the script never
+	 * ran, the footer appears by itself after a moment.
 	 */
 	html.js:not([data-folder-ready]) body > footer {
 		visibility: hidden;
@@ -295,9 +295,9 @@ html:not(.js) .folder [data-turn] {
 	}
 
 	/*
-	 * El texto de una página se puede seleccionar con el ratón: solo los dedos pasan hoja
-	 * deslizando. El gesto lateral es de la carpeta; el vertical y el de pellizcar (ampliar) siguen
-	 * siendo del navegador.
+	 * The text of a page can be selected with the mouse: only fingers turn the page by swiping.
+	 * The sideways gesture belongs to the folder; the vertical one and pinching (zooming) remain
+	 * the browser's.
 	 */
 	html.js .folder .viewport {
 		padding-block: var(--space-2);
@@ -305,8 +305,8 @@ html:not(.js) .folder [data-turn] {
 	}
 
 	/*
-	 * En una pantalla alta las hojas son de folio, más altas que anchas, y la carpeta deja aire
-	 * arriba y abajo en vez de tocar el menú y el borde. En una baja no: encogería hasta no leerse.
+	 * On a tall screen the sheets are folio-sized, taller than wide, and the folder leaves air
+	 * above and below instead of touching the menu and the edge. On a short one it does not: it would shrink until it could not be read.
 	 */
 	@media (min-height: 50rem) {
 		html.js .folder .stack {
@@ -349,8 +349,8 @@ html:not(.js) .folder [data-turn] {
 	}
 
 	/*
-	 * El foco de la carpeta y de las páginas se dibuja por dentro: por fuera lo recortaría el borde
-	 * de la carpeta o lo taparía la barra. Mismos dos tonos que el resto (tinta y halo claro).
+	 * The focus of the folder and of the pages is drawn inside: outside, the folder's border would
+	 * clip it or the bar would cover it. Same two tones as the rest (ink and light halo).
 	 */
 	html.js .folder :is(.viewport, .page):focus-visible {
 		outline: 3px solid var(--ink);
@@ -380,10 +380,10 @@ html:not(.js) .folder [data-turn] {
 	}
 
 	/*
-	 * El pie se ve siempre, abajo, como el menú arriba, con o sin la carpeta fija. Con ella fija, la carpeta ocupa lo que
-	 * queda entre los dos y la pista acaba justo en la última hoja, sin un tramo de scroll de más. Dónde se detiene el
-	 * scroll entre dos hojas lo decide el script (`settle`): con paradas obligatorias del navegador, un toque de rueda
-	 * (más corto que media hoja) volvía atrás.
+	 * The footer is always visible, at the bottom, like the menu at the top, with or without the folder pinned. With it pinned, the folder takes what
+	 * is left between the two and the track ends exactly at the last sheet, without an extra stretch of scroll. Where the
+	 * scroll stops between two sheets is decided by the script (`settle`): with mandatory browser snap points, a wheel tick
+	 * (shorter than half a sheet) went back.
 	 */
 	html.js body > footer {
 		position: sticky;
@@ -395,12 +395,12 @@ html:not(.js) .folder [data-turn] {
 		scroll-padding-bottom: var(--foot-h);
 	}
 
-	/* Con la carpeta fija, su altura es exactamente la que el script le descuenta a la carpeta. */
+	/* With the folder pinned, its height is exactly the one the script subtracts for the folder. */
 	html:has(.folder[data-scroll='on']) body > footer {
 		height: var(--foot-h);
 	}
 
-	/* La pista mide la pantalla y un paso de scroll por cada punto de lectura que se pasa. */
+	/* The track is as tall as the screen plus one scroll step for each reading point that gets passed. */
 	html.js .folder[data-scroll='on'] .track {
 		height: calc(
 			var(--stage-h, 0px) + (var(--positions, 1) - 1) * var(--step, 0px)
@@ -416,12 +416,12 @@ html:not(.js) .folder [data-turn] {
 	}
 
 	/*
-	 * La carpeta se escala (`--fit`) para llenar la pantalla, encogida o ampliada: se escala el
-	 * dibujo, que no cambia el tamaño de la caja, así que la altura se fija aparte con la medida
-	 * natural.
+	 * The folder is scaled (`--fit`) to fill the screen, shrunk or enlarged: the drawing is scaled,
+	 * which does not change the size of the box, so the height is set separately from the
+	 * natural measure.
 	 */
 	html.js .folder[data-scroll='on'] .viewport {
-		/* El relleno va aparte: con `border-box` se comería altura y las hojas se saldrían de la caja. */
+		/* The padding is separate: with `border-box` it would eat height and the sheets would spill out of the box. */
 		box-sizing: content-box;
 		height: calc(var(--spread-h, 0px) * var(--fit, 1));
 	}
@@ -437,14 +437,14 @@ html:not(.js) .folder [data-turn] {
 		grid-template-columns: minmax(0, 1fr);
 		width: var(--leaf-width);
 		margin-inline: auto;
-		/* Sitio para la pestaña de la portada, que sobresale por arriba: va dentro para que escale con la carpeta. */
+		/* Room for the cover tab, which sticks out at the top: it goes inside so it scales with the folder. */
 		padding-top: 2.25rem;
 		transition: transform var(--turn-duration) var(--ease-turn);
 	}
 
 	html.js .folder .stack {
 		position: relative;
-		/* Las hojas se ordenan con `z-index`: este contexto evita que se mezclen con lo de fuera. */
+		/* The sheets are ordered with `z-index`: this context keeps them from mixing with what is outside. */
 		isolation: isolate;
 		display: grid;
 		grid-template: 'leaf' / minmax(0, 1fr);
@@ -496,7 +496,7 @@ html:not(.js) .folder [data-turn] {
 		backface-visibility: hidden;
 	}
 
-	/* Sin transición mientras se coloca todo la primera vez, o al saltar a un ancla de la URL. */
+	/* No transition while everything is placed for the first time, or when jumping to an anchor in the URL. */
 	html.js .folder[data-instant] .leaf,
 	html.js .folder[data-instant] .page,
 	html.js .folder[data-instant] .spread {
@@ -523,9 +523,9 @@ html:not(.js) .folder [data-turn] {
 		}
 
 		/*
-		 * Una hoja gira entera sobre el lomo (su borde izquierdo). La perspectiva va en cada hoja y
-		 * no en el contenedor: así el lomo es el punto de fuga de todas y las pasadas quedan justo
-		 * pegadas a las que no, sin la rendija que dejaría la profundidad de cada una.
+		 * A sheet turns whole on the spine (its left edge). The perspective is on each sheet and
+		 * not on the container: this way the spine is the vanishing point for all of them and the turned ones sit flush
+		 * against the ones that are not, without the gap the depth of each one would leave.
 		 */
 		html.js .folder .leaf {
 			position: relative;
@@ -535,9 +535,9 @@ html:not(.js) .folder [data-turn] {
 			transform-style: preserve-3d;
 			transform-origin: left center;
 			transform: perspective(var(--depth)) rotateY(var(--turn, 0deg));
-			/* El orden de las hojas lo da el `z-index`: las de la derecha, de la primera abajo a la última; las de la izquierda, al revés. */
+			/* Sheet order comes from `z-index`: those on the right, from the first at the bottom to the last; those on the left, the reverse. */
 			z-index: calc(var(--leaves, 0) - var(--k, 0));
-			/* El orden cambia a mitad del giro, cuando la hoja está de canto y no se ve. */
+			/* The order changes halfway through the turn, when the sheet is edge-on and not visible. */
 			transition:
 				transform var(--turn-duration) var(--ease-turn),
 				z-index 0s linear calc(var(--turn-duration) / 2);
@@ -610,7 +610,7 @@ html:not(.js) .folder [data-turn] {
 	}
 
 	@media (width < 60rem) {
-		/* Aquí cada cara pasa como si fuera una hoja suelta, así que las hojas no cuentan. */
+		/* Here each face turns like a loose sheet, so the sheets do not count. */
 		html.js .folder .page {
 			grid-area: leaf;
 			visibility: hidden;

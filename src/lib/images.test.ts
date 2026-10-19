@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { pickImage, pickOptionalAsset, unusableAssets } from './images';
+import {
+	assertAssetsUsed,
+	pickImage,
+	pickOptionalAsset,
+	unusableAssets,
+} from './images';
 
 describe('pickOptionalAsset', () => {
 	const files = {
@@ -90,6 +95,45 @@ describe('unusableAssets', () => {
 		expect(
 			unusableAssets(['../assets/certifications/curso'], ids, extensions),
 		).toEqual(['../assets/certifications/curso']);
+	});
+});
+
+describe('assertAssetsUsed', () => {
+	const options = {
+		folder: 'src/assets/projects',
+		ids: ['demo', 'other'],
+		extensions: ['png', 'pdf'],
+		owner: 'un proyecto de projects.yaml',
+	};
+
+	it('accepts a folder where every file is named after an id and has a shown type', () => {
+		expect(() =>
+			assertAssetsUsed({
+				...options,
+				files: ['demo.png', 'demo.pdf', 'other.png'],
+			}),
+		).not.toThrow();
+	});
+
+	it('accepts an empty folder', () => {
+		expect(() => assertAssetsUsed({ ...options, files: [] })).not.toThrow();
+	});
+
+	it('names the folder, the useless files and what they should be called after', () => {
+		expect(() =>
+			assertAssetsUsed({
+				...options,
+				files: ['demo.png', 'dmeo.pdf', 'other.docx'],
+			}),
+		).toThrow(
+			/src\/assets\/projects\/.*dmeo\.pdf, other\.docx.*un proyecto de projects\.yaml/,
+		);
+	});
+
+	it('lists the accepted extensions, in lowercase, so the fix is obvious', () => {
+		expect(() =>
+			assertAssetsUsed({ ...options, files: ['demo.PDF'] }),
+		).toThrow(/\.png, \.pdf/);
 	});
 });
 

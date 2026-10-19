@@ -1,6 +1,6 @@
 /**
- * Rellena los `{clave}` de una plantilla. Usa una función como reemplazo a propósito: con una
- * cadena, `$&` o `$1` dentro de un valor se interpretarían como patrones de reemplazo.
+ * Fills in the `{key}` placeholders of a template. It uses a function as the replacement on purpose: with a
+ * string, `$&` or `$1` inside a value would be interpreted as replacement patterns.
  */
 export function fill(
 	template: string,

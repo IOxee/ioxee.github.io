@@ -17,7 +17,7 @@ describe('opensInViewer', () => {
 
 	it('opens a PDF in the viewer only when the browser can show a PDF inside a page', () => {
 		expect(opensInViewer('pdf', plain, true)).toBe(true);
-		// Sin visor (un móvil) el marco se quedaría en blanco o descargaría: el enlace hace su trabajo.
+		// Without a viewer (a phone) the frame would stay blank or download: the link does its job.
 		expect(opensInViewer('pdf', plain, false)).toBe(false);
 	});
 

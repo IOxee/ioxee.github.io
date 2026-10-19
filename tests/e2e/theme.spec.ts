@@ -19,7 +19,7 @@ test.describe('tema día y noche', () => {
 			await trackThemeAtBody(page);
 			await page.goto('/');
 
-			// Ya al crearse el <body>, antes de pintar: el script del tema es el primero que corre.
+			// Already when the <body> is created, before painting: the theme script is the first to run.
 			expect(await page.evaluate(() => window.__themeAtBody)).toBe(
 				expected,
 			);

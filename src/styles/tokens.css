@@ -13,7 +13,7 @@
 	--leading-tight: 1.05;
 	--measure: 62ch;
 
-	/* Ritmo irregular a propósito: pasos de proporción áurea, no una escala uniforme. */
+	/* Deliberately irregular rhythm: golden-ratio steps, not a uniform scale. */
 	--space-1: 0.25rem;
 	--space-2: 0.5rem;
 	--space-3: 0.8125rem;
@@ -24,7 +24,7 @@
 
 	--gutter: clamp(1rem, 4vw, 2.5rem);
 	--page-width: 70rem;
-	/* Altura fija del menú, que siempre se ve: la carpeta lo sabe antes de medir y no se mueve al cargar. */
+	/* Fixed height of the menu, which is always visible: the folder knows it before measuring and does not move on load. */
 	--bar-h: 3.3125rem;
 	--foot-h: 2.5rem;
 

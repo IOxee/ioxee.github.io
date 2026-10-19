@@ -56,6 +56,23 @@ describe('groupSkills', () => {
 		]);
 	});
 
+	it('puts categories of your own after the preferred ones, alphabetically', () => {
+		const groups = groupSkills(
+			[
+				skill({ id: 'unity', name: 'Unity', category: 'games' }),
+				skill({ id: 'docker', name: 'Docker', category: 'devops' }),
+				skill({ id: 'sql', name: 'SQL', category: 'data' }),
+			],
+			NOW,
+		);
+
+		expect(groups.map((group) => group.category)).toEqual([
+			'data',
+			'devops',
+			'games',
+		]);
+	});
+
 	it('omits categories that have no skills', () => {
 		const groups = groupSkills([skill({ category: 'frontend' })], NOW);
 

@@ -23,7 +23,7 @@ export interface SheetPlan {
 export interface FolderCounts {
 	experience: number;
 	education: number;
-	/** Categorías de habilidades (Backend, Frontend…), no habilidades sueltas. */
+	/** Skill categories (Backend, Frontend…), not individual skills. */
 	skillGroups: number;
 	languages: number;
 	certifications: number;
@@ -33,14 +33,14 @@ export interface FolderCounts {
 }
 
 /**
- * Cuánto ocupa, en las certificaciones de una hoja, una con foto a todo el ancho: una sin foto vale 1
- * y en una hoja caben 4 (`DEFAULT_SHEET_SIZES.certifications`), así que con una foto solo cabe otra corta.
+ * How much space a certification with a full-width photo takes among the certifications on one sheet: one without a photo
+ * is worth 1 and a sheet holds 4 (`DEFAULT_SHEET_SIZES.certifications`), so with a photo only one other short one fits.
  */
 export const PHOTO_WEIGHT = 3;
 
 /**
- * Cuántas entradas caben en una hoja (en las habilidades, categorías). Los proyectos llevan
- * siempre una hoja cada uno.
+ * How many entries fit on a sheet (for skills, categories). Projects always take
+ * one sheet each.
  */
 export interface SheetSizes {
 	experience: number;
@@ -77,8 +77,8 @@ export function chunkIndices(count: number, size: number): number[][] {
 }
 
 /**
- * Nunca adelanta una entrada a un grupo anterior (se leerían desordenadas), y una más pesada que la capacidad se
- * queda sola en el suyo.
+ * Never moves an entry ahead of an earlier group (they would be read out of order), and one heavier than the capacity
+ * stays alone in its own.
  */
 export function packByWeight(
 	weights: readonly number[],
@@ -112,8 +112,8 @@ export function packByWeight(
 }
 
 /**
- * Una sección sin contenido no tiene hoja (ni pestaña) y la primera hoja de cada sección recibe su ancla. Los idiomas
- * no tienen hoja propia: van en la última de habilidades (o en una sola, vacía de categorías, si no hay ninguna).
+ * A section with no content has no sheet (or tab) and the first sheet of each section gets its anchor. Languages
+ * have no sheet of their own: they go on the last skills sheet (or on a single one, with no categories, if there are none).
  */
 export function planSheets(
 	counts: FolderCounts,
