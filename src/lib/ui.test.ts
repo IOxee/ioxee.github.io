@@ -1,5 +1,80 @@
 import { describe, expect, it } from 'vitest';
-import { formatYears, t, translate } from './ui';
+import { dictionaries, formatYears, t, translate } from './ui';
+
+const placeholders = (text: string): string[] =>
+	[...text.matchAll(/\{(\w+)\}/g)].map((match) => match[1] ?? '').sort();
+
+describe('dictionaries', () => {
+	const keys = Object.keys(
+		dictionaries.es,
+	) as (keyof typeof dictionaries.es)[];
+
+	it.each(['en', 'ca'] as const)(
+		'translates every interface text into %s, so the page does not mix languages',
+		(locale) => {
+			const missing = keys.filter(
+				(key) => dictionaries[locale]?.[key] === undefined,
+			);
+
+			expect(missing).toEqual([]);
+		},
+	);
+
+	it.each(['en', 'ca'] as const)(
+		'keeps the same {placeholders} in the %s text as in the Spanish one',
+		(locale) => {
+			for (const key of keys) {
+				const translated = dictionaries[locale]?.[key] ?? '';
+
+				expect(placeholders(translated), key).toEqual(
+					placeholders(dictionaries.es[key]),
+				);
+			}
+		},
+	);
+
+	it.each(['en', 'ca'] as const)(
+		'does not leave an empty %s text',
+		(locale) => {
+			for (const key of keys) {
+				expect(dictionaries[locale]?.[key]?.trim(), key).not.toBe('');
+			}
+		},
+	);
+
+	it('names the document viewer buttons in the three languages, and the frame after the certificate', () => {
+		expect(t('es', 'viewer.close')).toBe('Cerrar');
+		expect(t('en', 'viewer.close')).toBe('Close');
+		expect(t('ca', 'viewer.close')).toBe('Tanca');
+		for (const locale of ['es', 'en', 'ca'] as const) {
+			expect(t(locale, 'viewer.frameTitle')).toContain('{name}');
+			expect(t(locale, 'viewer.newTab')).toMatch(/\S/);
+		}
+	});
+
+	it('names the language selector in the three languages', () => {
+		expect(t('es', 'lang.label')).toBe('Idioma');
+		expect(t('en', 'lang.label')).toBe('Language');
+		expect(t('ca', 'lang.label')).toBe('Idioma');
+	});
+
+	it('keeps the text a link shows inside the label it is read with', () => {
+		// El nombre accesible de un enlace tiene que contener lo que se ve (WCAG 2.5.3).
+		const pairs = [
+			['cert.verify', 'cert.verifyLabel'],
+			['cert.document', 'cert.documentLabel'],
+			['mission.repo', 'mission.repoLabel'],
+		] as const;
+
+		for (const locale of ['es', 'en', 'ca'] as const) {
+			for (const [visible, label] of pairs) {
+				expect(t(locale, label), `${locale} ${label}`).toContain(
+					t(locale, visible),
+				);
+			}
+		}
+	});
+});
 
 describe('translate', () => {
 	const dictionaries = {
@@ -32,6 +107,10 @@ describe('t', () => {
 			'meta.description',
 			'card.photoAlt',
 			'mission.repoLabel',
+			'cert.verifyLabel',
+			'cert.imageAlt',
+			'cert.imageLabel',
+			'cert.documentLabel',
 		] as const;
 
 		for (const key of keys) {

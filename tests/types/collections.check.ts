@@ -1,5 +1,6 @@
 import type { CollectionEntry } from 'astro:content';
 import type {
+	Certification,
 	ExperienceEntry,
 	Language,
 	Profile,
@@ -23,4 +24,5 @@ export const collectionTypesMatchTheirSchemas: [
 	Equal<CollectionEntry<'skills'>['data'], Skill>,
 	Equal<CollectionEntry<'projects'>['data'], Project>,
 	Equal<CollectionEntry<'languages'>['data'], Language>,
-] = [true, true, true, true, true];
+	Equal<CollectionEntry<'certifications'>['data'], Certification>,
+] = [true, true, true, true, true, true];

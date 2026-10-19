@@ -1,0 +1,840 @@
+---
+import '../styles/folder.css';
+import type { Locale } from '../lib/i18n';
+import { t } from '../lib/ui';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+
+// El script corre en el navegador y no tiene acceso a `ui.ts`: los textos viajan en atributos.
+const labels = {
+	'data-status-cover': t(locale, 'folder.statusCover'),
+	'data-status-one': t(locale, 'folder.statusOne'),
+	'data-status-two': t(locale, 'folder.statusTwo'),
+};
+---
+
+<div
+	class="folder"
+	data-folder
+	data-scroll="off"
+	data-open="false"
+	data-at-end="false"
+	data-back-cover="false"
+	{...labels}
+>
+	<p
+		class="visually-hidden"
+		data-announce
+		aria-live="polite"
+		aria-atomic="true"
+	></p>
+	<p id="folder-help" class="folder-help visually-hidden">
+		{t(locale, 'folder.help')}
+	</p>
+
+	<div class="track" data-track>
+		<div class="stage" data-stage>
+			<div
+				class="viewport"
+				data-viewport
+				role="group"
+				aria-label={t(locale, 'folder.label')}
+				aria-describedby="folder-help"
+				aria-keyshortcuts="ArrowLeft ArrowRight PageUp PageDown Home End"
+				tabindex="0"
+			>
+				{/*
+					Para lectores de pantalla y control por voz, que no mandan flechas ni gestos. No se ven
+					(la carpeta no lleva botones) ni entran en el orden del Tab.
+				*/}
+				<button
+					type="button"
+					class="visually-hidden"
+					data-turn="prev"
+					tabindex="-1"
+				>
+					{t(locale, 'folder.prev')}
+				</button>
+				<button
+					type="button"
+					class="visually-hidden"
+					data-turn="next"
+					tabindex="-1"
+				>
+					{t(locale, 'folder.next')}
+				</button>
+				<div class="spread" data-spread>
+					<div class="stack">
+						<slot />
+						<div class="backcover" aria-hidden="true"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script>
+	import {
+		type Layout,
+		pageAtPosition,
+		pagesAtPosition,
+		positionCount,
+		positionOfPage,
+	} from '../lib/book';
+	import {
+		gestureAction,
+		pageForHash,
+		pageForPosition,
+		readingStatus,
+		shownProgress,
+	} from '../lib/folder-view';
+	import {
+		type AnchoredPage,
+		MAX_FIT_SCALE,
+		MIN_FIT_SCALE,
+		type PagerAction,
+		clampIndex,
+		fitScale,
+		indexForHash,
+		isNear,
+		keyAction,
+		scrollOffsetFor,
+		scrollProgress,
+		scrollStep,
+		sectionAt,
+		settleTarget,
+		sheetStates,
+		turn,
+	} from '../lib/pager';
+	import type { SectionId } from '../lib/sections';
+
+	interface GoOptions {
+		focus?: boolean;
+		syncHash?: boolean;
+		/** Sin animación ni anuncio: al cargar, con el ancla de la URL. */
+		instant?: boolean;
+		/** La orden viene del propio scroll de la página: no hay que volver a desplazarla. */
+		fromScroll?: boolean;
+	}
+
+	interface Parts {
+		folder: HTMLElement;
+		pages: HTMLElement[];
+		leaves: HTMLElement[];
+		viewport: HTMLElement;
+		spread: HTMLElement;
+		track: HTMLElement;
+		announce: HTMLElement;
+		turners: HTMLButtonElement[];
+		bar: HTMLElement | null;
+		foot: HTMLElement | null;
+		navLinks: HTMLAnchorElement[];
+	}
+
+	// Mismo umbral que el CSS: desde aquí caben dos páginas y la carpeta se ve abierta.
+	const WIDE = '(min-width: 60rem)';
+	// Lo que se espera tras el último cambio de página antes de anunciarla: así un salto largo no suelta un anuncio por hoja.
+	const ANNOUNCE_DELAY = 300;
+	// Cuánto se vigila, al entrar por un ancla, que el navegador no deje la carpeta fuera de su sitio.
+	const LANDING_WINDOW = 3000;
+	// El navegador avisa (`scrollend`) de cuándo el scroll se detiene, pero no todos lo cumplen (Firefox lo anuncia y
+	// no lo manda tras una rueda): se espera además a que pase un rato sin que el scroll se mueva.
+	const HAS_SCROLLEND = 'onscrollend' in window;
+	const SETTLE_IDLE = 120;
+	// Lo que se espera a que llegue un desplazamiento que pidió la propia carpeta antes de darlo por cortado.
+	const HEADING_PATIENCE = 2000;
+
+	function throttled(work: () => void): () => void {
+		let queued = false;
+
+		return () => {
+			if (queued) return;
+			queued = true;
+			requestAnimationFrame(() => {
+				queued = false;
+				work();
+			});
+		};
+	}
+
+	const afterPaint = (callback: () => void) =>
+		requestAnimationFrame(() => requestAnimationFrame(callback));
+
+	function findParts(folder: HTMLElement): Parts | null {
+		const one = (selector: string) =>
+			folder.querySelector<HTMLElement>(selector);
+		const viewport = one('[data-viewport]');
+		const spread = one('[data-spread]');
+		const track = one('[data-track]');
+		const announce = one('[data-announce]');
+		const pages = [...folder.querySelectorAll<HTMLElement>('[data-page]')];
+		if (!viewport || !spread || !track || !announce) return null;
+		if (pages.length === 0) return null;
+
+		return {
+			folder,
+			pages,
+			leaves: [...folder.querySelectorAll<HTMLElement>('[data-leaf]')],
+			viewport,
+			spread,
+			track,
+			announce,
+			turners: [
+				...folder.querySelectorAll<HTMLButtonElement>('[data-turn]'),
+			],
+			bar: document.querySelector<HTMLElement>('[data-site-bar]'),
+			foot: document.querySelector<HTMLElement>('body > footer'),
+			navLinks: [
+				...document.querySelectorAll<HTMLAnchorElement>(
+					'[data-site-nav] a[href^="#"]',
+				),
+			],
+		};
+	}
+
+	class FolderView {
+		private readonly parts: Parts;
+		/** La página por la que va la lectura. En pares es la de la derecha, salvo si se pidió la de la izquierda. */
+		private page = 0;
+		/** La página que se pidió (pestaña, ancla, tecla): manda sobre la de la derecha si es la de la izquierda. */
+		private preferred: number | null = null;
+		/** Página a la que llevar el foco en cuanto se vea: con scroll, el giro tarda en llegar. */
+		private pendingFocus: number | null = null;
+		private layout: Layout;
+		private scrollMode = false;
+		private step = scrollStep(innerHeight);
+		private pin = 0;
+		private foot = 0;
+		/** El punto de lectura donde estaba el scroll antes de moverse: de ahí se sabe hacia dónde va. */
+		private rest = 0;
+		private settleTimer = 0;
+		/** Hay un dedo apoyado: el scroll no está parado aunque no se mueva, y no se coloca nada. */
+		private holding = false;
+		/**
+		 * Adónde va un desplazamiento que pidió la carpeta (una pestaña, una tecla, su propia colocación) y
+		 * desde cuándo. Si otra orden lo corta, el navegador avisa de que «el scroll paró» a mitad de
+		 * camino: eso no es un reposo, y colocar la hoja ahí desviaría la nueva orden.
+		 */
+		private heading: { top: number; since: number } | null = null;
+		private announceTimer = 0;
+		private markedSection: SectionId | null = null;
+		private readonly plan: AnchoredPage[];
+		private readonly total: number;
+		private readonly reduceMotion = matchMedia(
+			'(prefers-reduced-motion: reduce)',
+		);
+		private readonly wide = matchMedia(WIDE);
+
+		constructor(parts: Parts) {
+			this.parts = parts;
+			this.total = parts.pages.length;
+			this.plan = parts.pages.map((element) => ({
+				section: (element.dataset.section ?? 'home') as SectionId,
+				anchor: element.dataset.anchor === 'true',
+			}));
+			this.layout = this.wide.matches ? 'spread' : 'single';
+		}
+
+		start(): void {
+			this.tag();
+			this.listen();
+
+			// Solo un ancla de la carpeta cuenta: sin ancla, o con otra (`#contenido`), se empieza por la portada.
+			const landed = location.hash
+				? indexForHash(location.hash, this.plan)
+				: null;
+			this.apply(landed ?? 0, { instant: true, syncHash: false });
+			this.measure();
+			if (landed !== null) this.settleLanding(landed);
+
+			// Ya está colocada: el pie, que hasta ahora estaba oculto, puede mostrarse sin saltar.
+			document.documentElement.dataset.folderReady = '';
+		}
+
+		private get position(): number {
+			return positionOfPage(this.page, this.layout);
+		}
+
+		private get count(): number {
+			return positionCount(this.total, this.layout);
+		}
+
+		// Datos de cada hoja y página para el CSS. Se ponen con el CSSOM: la CSP solo admite `--tilt` en línea.
+		private tag(): void {
+			const { folder, leaves, pages } = this.parts;
+			folder.style.setProperty('--pages', String(this.total));
+			folder.style.setProperty('--leaves', String(leaves.length));
+			leaves.forEach((leaf, index) =>
+				leaf.style.setProperty('--k', String(index)),
+			);
+			pages.forEach((element, index) => {
+				element.style.setProperty('--i', String(index));
+				element.tabIndex = -1;
+			});
+		}
+
+		private render(announce: boolean): void {
+			const at = this.position;
+			const { left, right } = pagesAtPosition(
+				at,
+				this.total,
+				this.layout,
+			);
+
+			this.paintSheets(left, right);
+			const { dataset } = this.parts.folder;
+			dataset.open = String(at > 0);
+			dataset.atEnd = String(at === this.count - 1);
+			dataset.backCover = String(
+				this.layout === 'spread' && at > 0 && right === null,
+			);
+			this.markTab();
+			if (announce) this.announceSoon();
+			this.focusPending(left, right);
+		}
+
+		private paintSheets(left: number | null, right: number | null): void {
+			const states = sheetStates(this.page, this.total);
+			// Hojas pasadas, según los pares: con carpeta abierta es lo que decide qué se ve a la izquierda.
+			const turned = positionOfPage(this.page, 'spread');
+
+			this.parts.pages.forEach((element, index) => {
+				element.dataset.state = states[index] ?? 'future';
+				element.toggleAttribute('data-near', isNear(index, this.page));
+				element.inert = index !== left && index !== right;
+			});
+			this.parts.leaves.forEach((leaf, index) => {
+				leaf.toggleAttribute('data-turned', index < turned);
+				leaf.toggleAttribute(
+					'data-near',
+					index >= turned - 2 && index <= turned + 1,
+				);
+			});
+		}
+
+		private markTab(): void {
+			const section = sectionAt(this.page, this.plan);
+			if (section === this.markedSection) return;
+			this.markedSection = section;
+
+			for (const link of this.parts.navLinks) {
+				const current =
+					section !== 'home' && link.hash === `#${section}`;
+				if (!current) {
+					link.removeAttribute('aria-current');
+					continue;
+				}
+
+				link.setAttribute('aria-current', 'location');
+				const nav = link.closest('nav');
+				if (nav && nav.scrollWidth > nav.clientWidth) {
+					const box = nav.getBoundingClientRect();
+					const own = link.getBoundingClientRect();
+					nav.scrollLeft +=
+						own.left - box.left - (box.width - own.width) / 2;
+				}
+			}
+		}
+
+		private announceSoon(): void {
+			const { folder, pages, announce } = this.parts;
+			const sentence = readingStatus(
+				this.page,
+				this.total,
+				this.layout,
+				pages[this.page]?.dataset.title ?? '',
+				{
+					cover: folder.dataset.statusCover ?? '',
+					one: folder.dataset.statusOne ?? '',
+					two: folder.dataset.statusTwo ?? '',
+				},
+			);
+			clearTimeout(this.announceTimer);
+			this.announceTimer = window.setTimeout(() => {
+				announce.textContent = sentence;
+			}, ANNOUNCE_DELAY);
+		}
+
+		private focusPending(left: number | null, right: number | null): void {
+			const target = this.pendingFocus;
+			if (target === null || (target !== left && target !== right))
+				return;
+
+			this.pendingFocus = null;
+			this.parts.pages[target]?.focus({ preventScroll: true });
+		}
+
+		private syncHash(): void {
+			const section = sectionAt(this.page, this.plan);
+			const url = new URL(location.href);
+			url.hash = section === 'home' ? '' : section;
+			if (url.href !== location.href) history.replaceState(null, '', url);
+		}
+
+		private trackTop(): number {
+			return this.parts.track.getBoundingClientRect().top + scrollY;
+		}
+
+		/** Lo que se ha desplazado la página desde que la carpeta quedó fija. */
+		private scrolled(): number {
+			return scrollY - (this.trackTop() - this.pin);
+		}
+
+		private offsetOfPosition(position: number): number {
+			return (
+				this.trackTop() -
+				this.pin +
+				scrollOffsetFor(position, this.step)
+			);
+		}
+
+		private offsetOf(page: number): number {
+			return this.offsetOfPosition(positionOfPage(page, this.layout));
+		}
+
+		private scrollToPage(target: number, smooth: boolean): void {
+			this.scrollTop(this.offsetOf(target), smooth);
+		}
+
+		// Todo desplazamiento que pide la carpeta pasa por aquí: así se sabe adónde iba si lo cortan.
+		private scrollTop(top: number, smooth: boolean): void {
+			const animated = smooth && !this.reduceMotion.matches;
+			this.heading = animated ? { top, since: performance.now() } : null;
+			scrollTo({ top, behavior: animated ? 'smooth' : 'instant' });
+		}
+
+		private scheduleSettle(): void {
+			clearTimeout(this.settleTimer);
+			this.settleTimer = window.setTimeout(
+				() => this.settle(),
+				SETTLE_IDLE,
+			);
+		}
+
+		private onScroll(): void {
+			if (!this.scrollMode) return;
+
+			this.scheduleSettle();
+
+			const progress = scrollProgress(
+				this.scrolled(),
+				this.step,
+				this.count,
+			);
+			this.parts.folder.style.setProperty(
+				'--progress',
+				shownProgress(progress, this.reduceMotion.matches).toFixed(3),
+			);
+
+			const at = Math.round(progress);
+			if (at === this.position) return;
+
+			this.apply(
+				pageForPosition(at, this.preferred, this.total, this.layout),
+				{ fromScroll: true },
+			);
+		}
+
+		// Cuánto escalar la carpeta para llenar la pantalla entre la barra y el pie; `null` si no cabe legible.
+		private fit(natural: number): number | null {
+			const { viewport, spread } = this.parts;
+			const padding = getComputedStyle(viewport);
+			const chrome =
+				Number.parseFloat(padding.paddingTop) +
+				Number.parseFloat(padding.paddingBottom);
+			// `offsetWidth` no cuenta la escala: es el ancho natural de las páginas.
+			const widest = viewport.clientWidth / spread.offsetWidth;
+
+			return fitScale(
+				innerHeight - this.pin - this.foot - chrome,
+				natural,
+				MIN_FIT_SCALE,
+				Math.min(MAX_FIT_SCALE, widest),
+			);
+		}
+
+		/**
+		 * Decide si la carpeta llena la pantalla (encogida o ampliada) o no cabe, y mide la pista.
+		 * Con `reanchor` (al cambiar la maqueta) se vuelve a poner el scroll en la página que se leía
+		 * antes de dejar que el scroll decida: si no, la posición vieja daría otra página.
+		 */
+		private measure(reanchor = false): void {
+			const { folder, spread, bar, foot } = this.parts;
+			const wasOn = this.scrollMode;
+			// Primero se mide todo y después se cambia: una medida a mitad obligaría a maquetar con el
+			// modo ya cambiado.
+			this.pin = Math.round(bar?.getBoundingClientRect().height ?? 0);
+			// El pie se fija con su altura mínima: así la medida no depende de si ya está fijo o no.
+			this.foot = foot
+				? Math.round(
+						Number.parseFloat(getComputedStyle(foot).minHeight) ||
+							0,
+					)
+				: 0;
+			// `offsetHeight` no cuenta la escala: es la altura natural de las páginas.
+			const natural = spread.offsetHeight;
+			const scale = this.fit(natural);
+
+			this.scrollMode = scale !== null;
+			this.step = scrollStep(innerHeight);
+			folder.style.setProperty('--pin-top', `${this.pin}px`);
+			folder.style.setProperty('--fit', (scale ?? 1).toFixed(4));
+			folder.style.setProperty('--spread-h', `${natural}px`);
+			folder.style.setProperty('--positions', String(this.count));
+			folder.style.setProperty('--step', `${this.step}px`);
+			folder.style.setProperty(
+				'--stage-h',
+				`${Math.max(innerHeight - this.pin - this.foot, 0)}px`,
+			);
+			folder.dataset.scroll = this.scrollMode ? 'on' : 'off';
+
+			if (!this.scrollMode) return;
+			if (this.page > 0 && (reanchor || !wasOn)) {
+				this.scrollToPage(this.page, false);
+			}
+			if (reanchor || !wasOn) this.rest = this.restingPosition();
+			this.onScroll();
+		}
+
+		private restingPosition(): number {
+			return clampIndex(
+				Math.round(
+					scrollProgress(this.scrolled(), this.step, this.count),
+				),
+				this.count,
+			);
+		}
+
+		/**
+		 * Al detenerse el scroll entre dos hojas, la carpeta termina de pasar la que se estaba girando, en el sentido en
+		 * que iba. Con paradas del navegador (`scroll-snap`) iría a la más cercana, y un toque de rueda la devolvería a donde
+		 * estaba.
+		 */
+		private settle(): void {
+			if (!this.scrollMode || this.holding) return;
+
+			// Un desplazamiento pedido por la carpeta que sigue en camino no está parado: se espera a que llegue.
+			const { heading } = this;
+			if (heading) {
+				const arriving =
+					performance.now() - heading.since < HEADING_PATIENCE &&
+					Math.abs(scrollY - heading.top) > 1;
+				if (arriving) return;
+				this.heading = null;
+			}
+
+			const at = this.scrolled() / this.step;
+			const target = settleTarget(at, this.rest, this.count);
+			if (target === null) {
+				this.rest = this.restingPosition();
+				return;
+			}
+
+			const top = this.offsetOfPosition(target);
+			if (Math.abs(scrollY - top) <= 1) {
+				this.rest = target;
+				return;
+			}
+
+			// Al llegar, el scroll vuelve a parar y esta función anota el punto como el de reposo.
+			this.scrollTop(top, true);
+			if (this.reduceMotion.matches) this.rest = target;
+		}
+
+		// Sin scroll, tras ir a otra hoja desde un enlace se sube a ver la carpeta si quedó fuera de pantalla.
+		private reveal(): void {
+			const { folder } = this.parts;
+			const top = folder.getBoundingClientRect().top;
+			if (top >= this.pin && top < innerHeight * 0.6) return;
+
+			folder.scrollIntoView({
+				block: 'start',
+				behavior: this.reduceMotion.matches ? 'auto' : 'smooth',
+			});
+		}
+
+		// Cambia lo que se ve. No toca el scroll de la página: de eso se ocupa `go`.
+		private apply(target: number, options: GoOptions = {}): void {
+			const { focus = false, syncHash = true, instant = false } = options;
+			const { folder } = this.parts;
+			const clamped = clampIndex(target, this.total);
+			const changed = clamped !== this.page;
+			this.page = clamped;
+			if (focus) this.pendingFocus = clamped;
+
+			if (instant) folder.dataset.instant = '';
+			this.render(!instant);
+			if (instant)
+				afterPaint(() => folder.removeAttribute('data-instant'));
+
+			if (changed && syncHash) this.syncHash();
+		}
+
+		private go(target: number, options: GoOptions = {}): void {
+			const clamped = clampIndex(target, this.total);
+			if (!this.scrollMode || options.instant || options.fromScroll) {
+				this.apply(clamped, options);
+				return;
+			}
+
+			// Con scroll, ir a una página es desplazar la página hasta ella: las hojas giran por el camino.
+			this.preferred = clamped;
+			if (options.focus) this.pendingFocus = clamped;
+			// Si ya se ve, el scroll no la cambiaría: se aplica ya (puede ser la otra página del par).
+			if (positionOfPage(clamped, this.layout) === this.position) {
+				this.apply(clamped, options);
+			}
+			if (Math.abs(scrollY - this.offsetOf(clamped)) > 1) {
+				this.scrollToPage(clamped, true);
+			}
+		}
+
+		private turnTo(action: PagerAction): void {
+			this.go(
+				pageAtPosition(
+					turn(this.position, action, this.count),
+					this.total,
+					this.layout,
+				),
+			);
+		}
+
+		private onLayoutChange(): void {
+			const { folder } = this.parts;
+			this.layout = this.wide.matches ? 'spread' : 'single';
+
+			folder.dataset.instant = '';
+			this.render(false);
+			this.measure(true);
+			afterPaint(() => folder.removeAttribute('data-instant'));
+		}
+
+		/**
+		 * Entrar por un ancla (`/#resume`, de un enlace antiguo): el navegador desplaza la página hasta
+		 * el elemento del ancla, que aquí está dentro de la carpeta fija, y puede seguir haciéndolo
+		 * mientras carga. Al acabar se vuelve a colocar la carpeta donde toca, salvo que la persona
+		 * ya haya empezado a moverse.
+		 */
+		private settleLanding(landed: number): void {
+			this.preferred = landed;
+
+			// Mientras carga, el ancla se queda sin elemento al que apuntar: así el navegador deja de
+			// saltar por su cuenta hasta él (Firefox lo repite hasta acabar de cargar), y quien coloca la
+			// carpeta es el script. Sin JavaScript el id sigue en el HTML, y aquí se devuelve en seguida.
+			const anchor = document.getElementById(location.hash.slice(1));
+			const id = anchor?.id;
+			anchor?.removeAttribute('id');
+			setTimeout(() => {
+				if (anchor && id) anchor.id = id;
+			}, LANDING_WINDOW);
+
+			let moved = false;
+			for (const type of [
+				'wheel',
+				'touchstart',
+				'pointerdown',
+				'keydown',
+			]) {
+				addEventListener(
+					type,
+					() => {
+						moved = true;
+					},
+					{ once: true, passive: true },
+				);
+			}
+			const place = () => {
+				if (moved || !this.scrollMode) return;
+				if (Math.abs(scrollY - this.offsetOf(landed)) > 1) {
+					this.scrollToPage(landed, false);
+				}
+			};
+			if (document.readyState === 'complete') {
+				requestAnimationFrame(place);
+			} else {
+				addEventListener('load', () => requestAnimationFrame(place), {
+					once: true,
+				});
+			}
+			void document.fonts.ready.then(place);
+
+			// Firefox puede terminar su scroll suave hasta el ancla después de todo eso: durante un rato,
+			// cada vez que un scroll acaba se comprueba que la carpeta sigue donde toca.
+			addEventListener('scrollend', place);
+			setTimeout(
+				() => removeEventListener('scrollend', place),
+				LANDING_WINDOW,
+			);
+		}
+
+		private listen(): void {
+			const { folder, viewport, spread, bar, turners } = this.parts;
+
+			for (const button of turners) {
+				button.addEventListener('click', () =>
+					this.turnTo(
+						button.dataset.turn === 'prev' ? 'prev' : 'next',
+					),
+				);
+			}
+			folder.addEventListener('keydown', (event) => this.onKey(event));
+			this.listenToFingers(viewport);
+			document.addEventListener('click', (event) =>
+				this.onLinkClick(event),
+			);
+			addEventListener('hashchange', () => this.onHash());
+
+			// Quien vuelve a mover la página a mano ya no espera la hoja que pidió antes.
+			const forget = () => {
+				this.pendingFocus = null;
+				this.preferred = null;
+			};
+			addEventListener('wheel', forget, { passive: true });
+			addEventListener('touchstart', forget, { passive: true });
+
+			// Cualquier orden de la persona corta lo que la carpeta estuviera desplazando por su cuenta. En
+			// captura: así corre antes que quien pida otro desplazamiento (el clic de una pestaña).
+			for (const type of [
+				'wheel',
+				'touchstart',
+				'pointerdown',
+				'keydown',
+			]) {
+				addEventListener(
+					type,
+					() => {
+						this.heading = null;
+					},
+					{ capture: true, passive: true },
+				);
+			}
+			// Con un dedo apoyado el scroll no está parado aunque no se mueva; al levantarlo, se coloca.
+			addEventListener(
+				'touchstart',
+				() => {
+					this.holding = true;
+				},
+				{ passive: true },
+			);
+			for (const type of ['touchend', 'touchcancel']) {
+				addEventListener(
+					type,
+					(event) => {
+						this.holding = (event as TouchEvent).touches.length > 0;
+						if (!this.holding) this.scheduleSettle();
+					},
+					{ passive: true },
+				);
+			}
+
+			addEventListener(
+				'scroll',
+				throttled(() => this.onScroll()),
+				{
+					passive: true,
+				},
+			);
+			if (HAS_SCROLLEND)
+				addEventListener('scrollend', () => this.settle());
+			const remeasure = throttled(() => this.measure());
+			addEventListener('resize', remeasure);
+			this.wide.addEventListener('change', () => this.onLayoutChange());
+			// Las fuentes y las imágenes cambian la altura de las hojas después de pintar.
+			const sizes = new ResizeObserver(remeasure);
+			sizes.observe(spread);
+			if (bar) sizes.observe(bar);
+			void document.fonts.ready.then(remeasure);
+		}
+
+		// Las teclas pasan hojas con el foco en la carpeta o en la página que se lee, no en un enlace de dentro.
+		private onKey(event: KeyboardEvent): void {
+			if (
+				event.altKey ||
+				event.ctrlKey ||
+				event.metaKey ||
+				event.shiftKey
+			)
+				return;
+			const target = event.target as Element;
+			const page = target.closest('[data-page]');
+			if ((page && page !== target) || target.closest('button')) return;
+
+			const action = keyAction(event.key);
+			if (!action) return;
+
+			event.preventDefault();
+			this.turnTo(action);
+		}
+
+		// Deslizar el dedo a un lado, o tocar un borde, pasa la hoja. Con ratón no: así se selecciona texto.
+		private listenToFingers(viewport: HTMLElement): void {
+			let start: { x: number; y: number } | null = null;
+			viewport.addEventListener('pointerdown', (event) => {
+				if (event.pointerType === 'mouse') return;
+				if ((event.target as Element).closest('a, button')) return;
+				start = { x: event.clientX, y: event.clientY };
+			});
+			viewport.addEventListener('pointerup', (event) => {
+				if (!start) return;
+
+				const box = viewport.getBoundingClientRect();
+				const action = gestureAction(
+					event.clientX - start.x,
+					event.clientY - start.y,
+					event.clientX - box.left,
+					box.width,
+				);
+				start = null;
+				if (action) this.turnTo(action);
+			});
+			viewport.addEventListener('pointercancel', () => {
+				start = null;
+			});
+		}
+
+		private onLinkClick(event: MouseEvent): void {
+			if (event.defaultPrevented || event.button !== 0) return;
+			if (
+				event.altKey ||
+				event.ctrlKey ||
+				event.metaKey ||
+				event.shiftKey
+			)
+				return;
+
+			const link = (event.target as Element).closest<HTMLAnchorElement>(
+				'a[href^="#"]',
+			);
+			const target = link ? indexForHash(link.hash, this.plan) : null;
+			if (!link || target === null) return;
+
+			event.preventDefault();
+			// Volver a pulsar la pestaña de la sección en la que ya se está no llena el historial.
+			if (link.hash !== location.hash)
+				history.pushState(null, '', link.hash);
+			this.go(target, { focus: true, syncHash: false });
+			if (!this.scrollMode) this.reveal();
+		}
+
+		// «Atrás» y «Adelante» entre anclas, también hasta la dirección sin ancla, que es la portada.
+		private onHash(): void {
+			const target = pageForHash(location.hash, this.plan);
+			if (target === null) return;
+
+			this.go(target, { focus: target > 0, syncHash: false });
+			if (!this.scrollMode) this.reveal();
+		}
+	}
+
+	for (const folder of document.querySelectorAll<HTMLElement>(
+		'[data-folder]',
+	)) {
+		const parts = findParts(folder);
+		if (parts) new FolderView(parts).start();
+	}
+</script>

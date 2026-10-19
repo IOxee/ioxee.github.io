@@ -3,16 +3,13 @@ import { chromium, expect, test } from '@playwright/test';
 import lighthouse from 'lighthouse';
 import desktopConfig from 'lighthouse/core/config/desktop-config.js';
 
-// Lighthouse necesita Chromium (no habla con Firefox) y mide el sitio compilado.
 test.skip(
 	({ browserName }) => browserName !== 'chromium',
 	'Lighthouse solo funciona con Chromium.',
 );
 
-/** Puntuación mínima de rendimiento, de 0 a 1. Varía con la máquina, así que deja margen. */
 const PERFORMANCE_MINIMUM = 0.9;
 
-/** Las categorías donde no se tolera ninguna auditoría fallida: son de corrección, no de ritmo. */
 const STRICT = ['accessibility', 'best-practices', 'seo'] as const;
 
 /**
@@ -28,11 +25,9 @@ const KNOWN: Record<string, string> = {
 
 interface Result {
 	performance: number;
-	/** Auditorías de corrección que no sacan un 1 y no están explicadas en `KNOWN`. */
 	failing: string[];
 }
 
-/** Un puerto libre, para que ninguna ejecución choque con otra ni con otro proceso. */
 function freePort(): Promise<number> {
 	return new Promise((resolve, reject) => {
 		const server = createServer();
@@ -44,13 +39,11 @@ function freePort(): Promise<number> {
 	});
 }
 
-/** Lo que dice Lighthouse de una dirección, en móvil (por defecto) o en escritorio. */
 async function audit(
 	url: string,
 	device: 'mobile' | 'desktop',
 ): Promise<Result> {
 	const port = await freePort();
-	// Cada ejecución lleva su propio Chromium con el puerto de depuración que Lighthouse necesita.
 	const browser = await chromium.launch({
 		args: [`--remote-debugging-port=${port}`],
 	});
@@ -91,7 +84,6 @@ async function audit(
 						.join(' '),
 				),
 		);
-		// Si Lighthouse mismo falló, lo demás no vale: se dice así y no como «rendimiento 0».
 		if (lhr.runtimeError) {
 			failing.unshift(`Lighthouse falló: ${lhr.runtimeError.message}`);
 		}
@@ -108,7 +100,6 @@ async function audit(
 test.describe('Lighthouse', { tag: '@lighthouse' }, () => {
 	// Una detrás de otra: dos auditorías a la vez se robarían CPU y torcerían la nota de rendimiento.
 	test.describe.configure({ mode: 'serial' });
-	// Cada auditoría arranca su propio navegador y tarda; no hay prisa, pero tampoco se cuelga.
 	test.setTimeout(120_000);
 
 	for (const device of ['mobile', 'desktop'] as const) {

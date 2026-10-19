@@ -1,8 +1,23 @@
 import { expect, test } from '@playwright/test';
-import { SCHEMES, SECTION_LINKS, VIEWPORT_HEIGHT, settle } from './support';
+import {
+	SCHEMES,
+	SECTION_LINKS,
+	VIEWPORT_HEIGHT,
+	folderGeometry,
+	settle,
+	showPosition,
+} from './support';
 
-/** Cuántos Tab como máximo antes de dar la vuelta: hay unos catorce elementos enfocables. */
+/** Cuántos Tab como máximo antes de dar la vuelta: hay unos diez elementos enfocables por pantalla. */
 const MAX_TABS = 40;
+
+/**
+ * Desde dónde se recorre el teclado: la portada (menú y carpeta), los proyectos (enlaces a los
+ * repositorios, sobre el papel) y el contacto (enlaces de contacto). Cada pantalla tiene otros. A
+ * las hojas se llega por su pestaña, como haría quien usa el teclado: el foco queda en la hoja y
+ * el Tab sigue desde ahí.
+ */
+const STARTS = [null, '#portfolio', '#contact'] as const;
 
 test.describe('teclado', () => {
 	for (const scheme of SCHEMES) {
@@ -10,51 +25,98 @@ test.describe('teclado', () => {
 			page,
 		}) => {
 			await page.emulateMedia({ colorScheme: scheme });
-			await page.goto('/');
-			await settle(page);
 
 			const missing: string[] = [];
-			let count = 0;
-			for (let i = 0; i < MAX_TABS; i += 1) {
-				await page.keyboard.press('Tab');
-				// El aro y el halo aparecen con una transición corta: se mide cuando ha terminado.
+			const focused: string[] = [];
+			for (const tab of STARTS) {
+				const start = tab ?? 'la portada';
+				await page.goto('/');
 				await settle(page);
+				if (tab) {
+					await page
+						.locator(`[data-site-nav] a[href="${tab}"]`)
+						.click();
+					await expect(
+						page.locator(`[data-page]${tab}:not([inert])`),
+					).toHaveCount(1);
+					await settle(page);
+				}
 
-				const info = await page.evaluate(() => {
-					const element = document.activeElement;
-					if (!element || element === document.body) return null;
+				for (let i = 0; i < MAX_TABS; i += 1) {
+					await page.keyboard.press('Tab');
+					// El aro y el halo aparecen con una transición corta: se mide cuando ha terminado.
+					await settle(page);
 
-					const style = getComputedStyle(element);
+					const info = await page.evaluate(() => {
+						const element = document.activeElement;
+						if (!element || element === document.body) return null;
 
-					return {
-						label: (
-							element.getAttribute('aria-label') ??
-							element.textContent ??
-							element.tagName
-						)
-							.trim()
-							.slice(0, 28),
-						// Aro de tinta (se ve sobre el papel) y halo claro (se ve sobre la mesa).
-						outline:
-							style.outlineStyle !== 'none' &&
-							parseFloat(style.outlineWidth) >= 2,
-						halo: /\b7px\b/.test(style.boxShadow),
-					};
-				});
-				if (!info) break;
+						const style = getComputedStyle(element);
 
-				count += 1;
-				if (!info.outline || !info.halo) {
-					missing.push(
-						`"${info.label}" aro=${info.outline} halo=${info.halo}`,
-					);
+						return {
+							label: (
+								element.getAttribute('aria-label') ??
+								element.textContent ??
+								element.tagName
+							)
+								.trim()
+								.slice(0, 28),
+							outline:
+								style.outlineStyle !== 'none' &&
+								parseFloat(style.outlineWidth) >= 2,
+							halo: /\b7px\b/.test(style.boxShadow),
+						};
+					});
+					if (!info) break;
+
+					focused.push(info.label);
+					if (!info.outline || !info.halo) {
+						missing.push(
+							`${start}: "${info.label}" aro=${info.outline} halo=${info.halo}`,
+						);
+					}
 				}
 			}
 
-			expect(count).toBeGreaterThanOrEqual(8);
+			expect(focused.length).toBeGreaterThanOrEqual(10);
+			expect(focused.some((label) => /repositorio/i.test(label))).toBe(
+				true,
+			);
+			expect(focused.some((label) => /linkedin/i.test(label))).toBe(true);
 			expect(missing).toEqual([]);
 		});
 	}
+
+	test('las flechas, Inicio y Fin pasan las hojas cuando el foco está en la carpeta', async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
+		await page.goto('/');
+		await settle(page);
+
+		const pageNow = () =>
+			page.evaluate(() =>
+				Number(
+					document
+						.querySelector<HTMLElement>(
+							'[data-page][data-state="current"]',
+						)
+						?.style.getPropertyValue('--i'),
+				),
+			);
+		await page.locator('[data-viewport]').focus();
+
+		await page.keyboard.press('ArrowRight');
+		await expect.poll(pageNow).toBe(1);
+		await page.keyboard.press('ArrowRight');
+		await expect.poll(pageNow).toBe(3);
+		await page.keyboard.press('ArrowLeft');
+		await expect.poll(pageNow).toBe(1);
+		await page.keyboard.press('End');
+		await expect.poll(pageNow).toBeGreaterThanOrEqual(9);
+		await page.keyboard.press('Home');
+		await expect.poll(pageNow).toBe(0);
+	});
 
 	test('el primer Tab lleva al enlace para saltar al contenido, que salta de verdad el menú', async ({
 		page,
@@ -69,7 +131,6 @@ test.describe('teclado', () => {
 		await page.keyboard.press('Enter');
 		await page.keyboard.press('Tab');
 
-		// Lo siguiente enfocable está dentro del contenido, no en el menú que se salta.
 		const inMain = await page.evaluate(
 			() => document.activeElement?.closest('#contenido') !== null,
 		);
@@ -94,7 +155,7 @@ test.describe('teclado', () => {
 		expect(await theme()).toBe('day');
 	});
 
-	test('el menú marca la sección en la que se está al desplazarse', async ({
+	test('el menú marca la sección de la hoja que se está leyendo al girar la carpeta', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -102,40 +163,70 @@ test.describe('teclado', () => {
 		await settle(page);
 
 		const current = page.locator('[data-site-nav] a[aria-current]');
-		await expect(current).toHaveCount(0);
+		const { positions } = await folderGeometry(page);
+		expect(positions).toBeGreaterThanOrEqual(5);
 
-		for (const href of SECTION_LINKS) {
-			await page.evaluate((selector) => {
-				document
-					.querySelector(selector)
-					?.scrollIntoView({ behavior: 'instant', block: 'start' });
-			}, href);
+		const seen = new Set<string>();
+		for (let position = 0; position < positions; position += 1) {
+			await showPosition(page, position);
 
-			await expect(current).toHaveAttribute('href', href);
+			const section = await page.evaluate(
+				() =>
+					document.querySelector<HTMLElement>(
+						'[data-page][data-state="current"]',
+					)?.dataset.section,
+			);
+			if (section === 'home') {
+				await expect(current).toHaveCount(0);
+			} else {
+				await expect(current).toHaveAttribute('href', `#${section}`);
+				seen.add(`#${section}`);
+			}
 		}
 
-		await page.evaluate(() =>
-			window.scrollTo({ top: 0, behavior: 'instant' }),
-		);
-		await expect(current).toHaveCount(0);
+		for (const href of SECTION_LINKS) expect(seen).toContain(href);
 	});
 
-	test('al final de la página el menú marca el contacto aunque esa sección sea corta', async ({
+	test('las pestañas del menú llevan a la primera hoja de su sección y quedan marcadas', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
 		await page.goto('/');
 		await settle(page);
 
-		await page.evaluate(() =>
-			window.scrollTo({
-				top: document.documentElement.scrollHeight,
-				behavior: 'instant',
-			}),
-		);
+		for (const href of SECTION_LINKS) {
+			await page.locator(`[data-site-nav] a[href="${href}"]`).click();
 
-		await expect(
-			page.locator('[data-site-nav] a[aria-current]'),
-		).toHaveAttribute('href', '#contact');
+			await expect(
+				page.locator('[data-site-nav] a[aria-current]'),
+			).toHaveAttribute('href', href);
+			await expect(
+				page.locator(`[data-page]${href}:not([inert])`),
+			).toHaveCount(1);
+			await expect(page).toHaveURL(new RegExp(`${href}$`));
+		}
+	});
+
+	test('el menú no se mueve: se ve siempre, también a mitad de la carpeta', async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
+		await page.goto('/');
+		await settle(page);
+
+		for (const position of [0, 3, 6]) {
+			await showPosition(page, position);
+
+			await expect(page.locator('[data-site-bar]')).toBeInViewport({
+				ratio: 1,
+			});
+			const top = await page.evaluate(
+				() =>
+					document
+						.querySelector('[data-site-bar]')
+						?.getBoundingClientRect().top,
+			);
+			expect(top).toBe(0);
+		}
 	});
 });

@@ -25,10 +25,23 @@ const partialDate = z.string().regex(PARTIAL_DATE, 'Usa AAAA o AAAA-MM');
 const order = z.number().int().min(1);
 
 // Estos enlaces acaban como `href`: solo https, para que ni un dato mal copiado ni un
-// importador automático puedan colar `javascript:`, `file:` o `http:`.
-const httpsUrl = z.url({ protocol: /^https$/ });
+// importador automático puedan colar `javascript:`, `file:` o `http:`. Además tiene que estar
+// escrito entero (`https://…`: `https:web.com` sería una ruta del propio sitio) y sin usuario ni
+// contraseña delante del dominio, que despistan sobre a qué web se va.
+const httpsUrl = z.url({ protocol: /^https$/ }).refine(
+	(value) => {
+		const url = URL.parse(value);
 
-/** Texto con español obligatorio y catalán/inglés opcionales. */
+		return (
+			value.startsWith('https://') &&
+			url !== null &&
+			url.username === '' &&
+			url.password === ''
+		);
+	},
+	{ error: 'Usa una dirección https:// completa, sin usuario ni contraseña' },
+);
+
 const localizedText = z.object({
 	es: nonEmpty,
 	ca: nonEmpty.optional(),
@@ -109,16 +122,61 @@ export const skillSchema = z.object({
 	provisional: z.boolean().optional(),
 });
 
-export const projectSchema = z.object({
-	id,
-	name: nonEmpty,
-	summary: localizedText,
-	stack: z.array(nonEmpty).min(1),
-	/** Texto alternativo de la captura `src/assets/projects/<id>.png`: es contenido, no adorno. */
-	imageAlt: localizedText,
-	repo: httpsUrl,
-	order,
-});
+export const projectSchema = z
+	.object({
+		id,
+		name: nonEmpty,
+		summary: localizedText,
+		stack: z.array(nonEmpty).min(1),
+		/** Texto alternativo de la captura `src/assets/projects/<id>.png`: es contenido, no adorno. */
+		imageAlt: localizedText,
+		repo: httpsUrl,
+		start: partialDate,
+		end: partialDate.nullable(),
+		details: z
+			.object({
+				intro: localizedText,
+				points: localizedParagraphs,
+				closing: localizedText.optional(),
+			})
+			.optional(),
+	})
+	.refine(endsAfterStart, {
+		error: 'El fin no puede ser anterior al inicio',
+		path: ['end'],
+	});
+
+/** Certificaciones y cursos que no son formación reglada. */
+export const certificationSchema = z
+	.object({
+		id,
+		name: nonEmpty,
+		issuer: nonEmpty,
+		issued: partialDate,
+		expires: partialDate.optional(),
+		url: httpsUrl.optional(),
+		summary: localizedText.optional(),
+		/**
+		 * La foto (`src/assets/certifications/<id>.png|jpg|webp`) y el documento (`<id>.pdf`, en la misma
+		 * carpeta) no se declaran aquí: salen solos si existe el archivo. Este texto, si se quiere, sustituye
+		 * al alternativo automático de la foto («Certificado: {nombre}»).
+		 */
+		imageAlt: localizedText.optional(),
+		order,
+	})
+	.refine(
+		(entry) =>
+			entry.expires === undefined ||
+			// Si algún formato ya es inválido se deja pasar: lo reporta el campo concreto.
+			!PARTIAL_DATE.test(entry.issued) ||
+			!PARTIAL_DATE.test(entry.expires) ||
+			partialDateKey(entry.expires, 'end') >=
+				partialDateKey(entry.issued, 'start'),
+		{
+			error: 'La caducidad no puede ser anterior a la emisión',
+			path: ['expires'],
+		},
+	);
 
 export const languageSchema = z.object({
 	id,
@@ -132,3 +190,4 @@ export type ExperienceEntry = z.infer<typeof experienceSchema>;
 export type Skill = z.infer<typeof skillSchema>;
 export type Project = z.infer<typeof projectSchema>;
 export type Language = z.infer<typeof languageSchema>;
+export type Certification = z.infer<typeof certificationSchema>;

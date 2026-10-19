@@ -110,7 +110,6 @@ describe('applyPlan', () => {
 			summary: { es: parse(SOURCE)[0].summary.es },
 		});
 		expect(instituto).toEqual(parse(SOURCE)[1]);
-		// Las fechas van entre comillas simples, como en el resto del archivo.
 		expect(text).toContain("start: '2022-03'");
 		expect(text).toContain("end: '2024-01'");
 		expect(text).toContain('# Fechas:');

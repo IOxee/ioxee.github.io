@@ -1,0 +1,49 @@
+---
+import type { SheetKind } from '../lib/folder';
+import type { SectionId } from '../lib/sections';
+
+interface Props {
+	kind: SheetKind;
+	section: SectionId;
+	/** Es la primera página de su sección: lleva el id del ancla. */
+	anchor?: boolean;
+	title: string;
+	labelledby: string;
+	/** Es la que se ve al cargar. El resto las coloca el script. */
+	current?: boolean;
+	face?: 'front' | 'back';
+	tilt?: number;
+}
+
+const {
+	kind,
+	section,
+	anchor = false,
+	title,
+	labelledby,
+	current = false,
+	face = 'front',
+	tilt = 0,
+} = Astro.props;
+
+const variant = kind === 'cover' ? 'cover' : 'sheet';
+---
+
+{/* El estado inicial va en el HTML para que el primer pintado ya sea el bueno; el script hace el resto. */}
+<section
+	class:list={['page', `page--${variant}`, `page--${face}`]}
+	id={anchor ? section : undefined}
+	data-page
+	data-kind={kind}
+	data-section={section}
+	data-anchor={anchor}
+	data-title={title}
+	data-state={current ? 'current' : 'future'}
+	data-near={current ? '' : undefined}
+	aria-labelledby={labelledby}
+	style={`--tilt: ${tilt}deg`}
+>
+	<slot />
+	{/* El número sale solo, contando páginas de contenido: la portada no lleva. */}
+	{variant === 'sheet' && <p class="folio" aria-hidden="true" />}
+</section>

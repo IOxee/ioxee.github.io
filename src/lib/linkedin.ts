@@ -1,17 +1,13 @@
 import { parse } from 'csv-parse/sync';
 
-/** Una fila del export de LinkedIn (o de su API, que usa las mismas columnas): columna → texto. */
 export type LinkedinRow = Readonly<Record<string, string>>;
 
-/** Una posición o un estudio de LinkedIn, ya traducido al modelo de `experience.yaml`. */
 export interface ImportedEntry {
 	kind: 'work' | 'education';
 	organization: string;
 	role: string;
 	summary?: string;
-	/** `AAAA` o `AAAA-MM`. */
 	start: string;
-	/** `null` si sigue en curso. */
 	end: string | null;
 	/**
 	 * Otros nombres con los que la web puede llamar a lo mismo: en la formación, el título (la web
@@ -29,7 +25,6 @@ export interface ImportResult {
 /** Rol de una formación sin título, que es como la web ya llama a estos registros. */
 const DEFAULT_EDUCATION_ROLE = 'Estudiante';
 
-/** Lo que `fetch-linkedin` guarda y `import-linkedin --json` lee: las filas de cada dominio. */
 export interface Snapshot {
 	positions?: LinkedinRow[];
 	education?: LinkedinRow[];
@@ -45,7 +40,6 @@ const isRowList = (value: unknown): value is LinkedinRow[] =>
 			Object.values(row).every((cell) => typeof cell === 'string'),
 	);
 
-/** Lee el JSON de una instantánea y comprueba su forma antes de fiarse de ella. */
 export function parseSnapshot(text: string): Snapshot {
 	let data: unknown;
 	try {
@@ -99,7 +93,6 @@ const STILL_GOING = /^(?:present|actualidad|actualitat|actual|actualmente)$/i;
 const unsupported = (text: string): RangeError =>
 	new RangeError(`Fecha no reconocida: "${text}"`);
 
-/** Mes (1-12) de un nombre completo o abreviado en inglés, español o catalán; `null` si no lo es. */
 function monthFromName(word: string): number | null {
 	const name = word.toLowerCase();
 	if (name.length < 3) return null;
@@ -185,7 +178,6 @@ export function parseLinkedinCsv(
 const field = (row: LinkedinRow, column: string): string =>
 	(row[column] ?? '').replace(/[\p{Cc}\p{Zl}\p{Zp}]+/gu, ' ').trim();
 
-/** Lee `start` y `end` de una fila; un `end` vacío (o «Present») es «en curso». */
 function readDates(
 	row: LinkedinRow,
 	startColumn: string,
@@ -202,7 +194,6 @@ function readDates(
 	};
 }
 
-/** Convierte cada fila; las que fallan por datos malos se anotan en `skipped`, sin parar el resto. */
 function convertRows(
 	rows: readonly LinkedinRow[],
 	convert: (row: LinkedinRow) => ImportedEntry | string,
@@ -227,7 +218,6 @@ function convertRows(
 const withSummary = (summary: string): { summary?: string } =>
 	summary === '' ? {} : { summary };
 
-/** Las posiciones de `Positions.csv` (o del dominio `POSITIONS` de la API). */
 export function positionsToEntries(rows: readonly LinkedinRow[]): ImportResult {
 	return convertRows(
 		rows,
@@ -253,7 +243,6 @@ export function positionsToEntries(rows: readonly LinkedinRow[]): ImportResult {
 	);
 }
 
-/** Los estudios de `Education.csv` (o del dominio `EDUCATION` de la API). */
 export function educationToEntries(rows: readonly LinkedinRow[]): ImportResult {
 	return convertRows(
 		rows,

@@ -4,6 +4,7 @@ import { parse } from 'yaml';
 import type { DocumentOptions, ParseOptions, SchemaOptions } from 'yaml';
 import { describe, expect, it } from 'vitest';
 import {
+	certificationSchema,
 	experienceSchema,
 	languageSchema,
 	profileSchema,
@@ -99,6 +100,15 @@ describe('project screenshots', () => {
 	});
 });
 
+describe('src/data/certifications.yaml', () => {
+	// Puede estar vacío: sin certificaciones la carpeta no tiene esa sección.
+	it('is a valid list, possibly empty, with no duplicate ids', () => {
+		const certifications = load('certifications.yaml', certificationSchema);
+
+		expect(duplicateIds(certifications)).toEqual([]);
+	});
+});
+
 describe('display order of projects and languages', () => {
 	const repeated = (items: readonly { order: number }[]): number[] =>
 		items
@@ -106,8 +116,10 @@ describe('display order of projects and languages', () => {
 			.filter((order, index, all) => all.indexOf(order) !== index);
 
 	it('has no repeated order within a collection', () => {
-		expect(repeated(load('projects.yaml', projectSchema))).toEqual([]);
 		expect(repeated(load('languages.yaml', languageSchema))).toEqual([]);
+		expect(
+			repeated(load('certifications.yaml', certificationSchema)),
+		).toEqual([]);
 	});
 });
 

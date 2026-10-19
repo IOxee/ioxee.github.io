@@ -86,7 +86,7 @@ test.describe('maquetación', () => {
 		await settle(page);
 
 		const overflowing = await page.evaluate(() =>
-			[...document.querySelectorAll('.paper')]
+			[...document.querySelectorAll('.page--sheet, .page--cover')]
 				.filter((paper) => paper.scrollWidth > paper.clientWidth + 1)
 				.map((paper) => paper.textContent?.trim().slice(0, 30)),
 		);

@@ -1,0 +1,253 @@
+---
+import type { Locale } from '../lib/i18n';
+import { t } from '../lib/ui';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+{/*
+	Visor modal de la foto y el documento de una certificación, sin descargar nada ni salir de la página. Los enlaces
+	que lo abren son enlaces de verdad: sin JavaScript, o si el navegador no puede mostrar un PDF dentro de una página,
+	se abren en otra pestaña. El script rellena el contenido al abrir y lo vacía al cerrar (así el PDF deja de cargar).
+*/}
+<dialog
+	class="viewer"
+	data-viewer-dialog
+	data-frame-title={t(locale, 'viewer.frameTitle')}
+	data-new-tab-label={t(locale, 'viewer.newTab')}
+	aria-labelledby="viewer-title"
+>
+	<header class="viewer-bar">
+		<h2 id="viewer-title" class="viewer-title" data-viewer-title></h2>
+		{/* El enlace «abrir en otra pestaña» lo crea el script al abrir: sin nada que abrir, no hay enlace. */}
+		<span data-viewer-external-slot></span>
+		<button type="button" class="viewer-button" data-viewer-close autofocus>
+			{t(locale, 'viewer.close')}
+		</button>
+	</header>
+	<div class="viewer-body" data-viewer-body></div>
+</dialog>
+
+<script>
+	import { type ViewerKind, opensInViewer, pdfFrameUrl } from '../lib/viewer';
+
+	const dialog = document.querySelector<HTMLDialogElement>(
+		'[data-viewer-dialog]',
+	);
+	const title = dialog?.querySelector<HTMLElement>('[data-viewer-title]');
+	const body = dialog?.querySelector<HTMLElement>('[data-viewer-body]');
+	const externalSlot = dialog?.querySelector<HTMLElement>(
+		'[data-viewer-external-slot]',
+	);
+	const closeButton = dialog?.querySelector<HTMLButtonElement>(
+		'[data-viewer-close]',
+	);
+
+	const links =
+		document.querySelectorAll<HTMLAnchorElement>('a[data-viewer]');
+	const kindOf = (link: HTMLAnchorElement): ViewerKind =>
+		link.dataset.viewer === 'pdf' ? 'pdf' : 'image';
+
+	const PLAIN_CLICK = {
+		button: 0,
+		ctrlKey: false,
+		metaKey: false,
+		shiftKey: false,
+		altKey: false,
+	};
+
+	function content(link: HTMLAnchorElement, name: string): HTMLElement {
+		if (kindOf(link) === 'pdf') {
+			const frame = document.createElement('iframe');
+			frame.src = pdfFrameUrl(link.href);
+			frame.title = (dialog?.dataset.frameTitle ?? '{name}').replace(
+				'{name}',
+				name,
+			);
+
+			return frame;
+		}
+
+		const image = document.createElement('img');
+		image.src = link.href;
+		image.alt = link.querySelector('img')?.alt ?? name;
+
+		return image;
+	}
+
+	if (dialog && title && body && externalSlot && closeButton) {
+		const open = (link: HTMLAnchorElement) => {
+			const name = link.dataset.viewerTitle ?? '';
+			title.textContent = name;
+			const external = document.createElement('a');
+			external.className = 'viewer-button';
+			external.href = link.href;
+			external.target = '_blank';
+			external.rel = 'noopener noreferrer';
+			external.dataset.viewerExternal = '';
+			external.textContent = dialog.dataset.newTabLabel ?? '';
+			externalSlot.replaceChildren(external);
+			body.replaceChildren(content(link, name));
+			// Una foto grande se desplaza dentro del visor: esa zona tiene que poder recorrerse con el
+			// teclado (WCAG 2.1.1), así que se enfoca y lleva nombre. El PDF se mueve con su propio visor.
+			if (kindOf(link) === 'image') {
+				body.tabIndex = 0;
+				body.setAttribute('role', 'region');
+				body.setAttribute('aria-label', name);
+			} else {
+				body.removeAttribute('tabindex');
+				body.removeAttribute('role');
+				body.removeAttribute('aria-label');
+			}
+			document.documentElement.dataset.viewerOpen = '';
+			dialog.showModal();
+		};
+
+		for (const link of links) {
+			if (
+				opensInViewer(
+					kindOf(link),
+					PLAIN_CLICK,
+					navigator.pdfViewerEnabled,
+				)
+			) {
+				link.setAttribute('aria-haspopup', 'dialog');
+			}
+		}
+
+		document.addEventListener('click', (event) => {
+			const link = (event.target as Element).closest<HTMLAnchorElement>(
+				'a[data-viewer]',
+			);
+			if (
+				!link ||
+				!opensInViewer(kindOf(link), event, navigator.pdfViewerEnabled)
+			) {
+				return;
+			}
+
+			event.preventDefault();
+			open(link);
+		});
+
+		closeButton.addEventListener('click', () => dialog.close());
+		// Pulsar fuera, sobre el fondo oscuro, también lo cierra: el diálogo no tiene holgura, así que
+		// un clic que llega al propio <dialog> es un clic en el fondo.
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) dialog.close();
+		});
+		dialog.addEventListener('close', () => {
+			body.replaceChildren();
+			externalSlot.replaceChildren();
+			delete document.documentElement.dataset.viewerOpen;
+		});
+	}
+</script>
+
+<style>
+	.viewer {
+		width: min(100vw - 2 * var(--gutter), 64rem);
+		height: min(100dvh - 2 * var(--gutter), 60rem);
+		max-width: none;
+		max-height: none;
+		margin: auto;
+		padding: 0;
+		overflow: hidden;
+		color: var(--ink);
+		background: var(--paper);
+		border: 3px solid var(--ink);
+		border-radius: 0.25rem;
+		box-shadow: 0 1.5rem 3rem oklch(0% 0 0 / 0.5);
+	}
+
+	.viewer[open] {
+		display: grid;
+		grid-template-rows: auto minmax(0, 1fr);
+	}
+
+	.viewer::backdrop {
+		background: oklch(0% 0 0 / 0.72);
+	}
+
+	.viewer-bar {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--space-2) var(--space-3);
+		align-items: center;
+		padding: var(--space-2) var(--space-3);
+		border-bottom: 2px solid var(--ink);
+	}
+
+	.viewer-title {
+		flex: 1 1 12rem;
+		min-width: 0;
+		font-size: var(--text-lg);
+	}
+
+	/*
+	 * El mismo aire que el botón del tema y el selector de idioma: papel, borde de tinta y sombra. El
+	 * enlace «abrir en otra pestaña» lo crea el script, sin la marca de los estilos de este componente:
+	 * por eso `:global`, acotado al visor.
+	 */
+	.viewer :global(.viewer-button) {
+		display: inline-flex;
+		align-items: center;
+		min-height: 2.75rem;
+		padding: 0.5rem 0.95rem;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--text-sm);
+		color: var(--ink);
+		text-decoration: none;
+		cursor: pointer;
+		background: var(--paper);
+		border: 2px solid var(--ink);
+		border-radius: 0.2rem;
+		box-shadow: 0 3px 0 oklch(0% 0 0 / 0.35);
+	}
+
+	.viewer :global(.viewer-button:hover) {
+		background: color-mix(in oklch, var(--ink) 14%, var(--paper));
+	}
+
+	/* Su `box-shadow` anularía el halo del foco global: se repite aquí con el halo incluido. */
+	.viewer :global(.viewer-button:focus-visible) {
+		box-shadow:
+			0 3px 0 oklch(0% 0 0 / 0.35),
+			0 0 0 7px var(--on-desk);
+	}
+
+	.viewer-body {
+		display: grid;
+		place-items: start center;
+		overflow: auto;
+		overscroll-behavior: contain;
+		background: color-mix(in oklch, var(--ink) 8%, var(--paper));
+	}
+
+	.viewer-body:focus-visible {
+		outline: 3px solid var(--ink);
+		outline-offset: -6px;
+	}
+
+	.viewer-body :global(iframe) {
+		width: 100%;
+		height: 100%;
+		background: white;
+		border: 0;
+	}
+
+	.viewer-body :global(img) {
+		max-width: 100%;
+		height: auto;
+	}
+
+	:global(html[data-viewer-open]) {
+		overflow: hidden;
+		scrollbar-gutter: stable;
+	}
+</style>

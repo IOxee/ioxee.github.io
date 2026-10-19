@@ -1,11 +1,8 @@
 /**
- * Descarga de la API de LinkedIn las posiciones y los estudios y los guarda en un JSON. Es lo único
- * que ve el token (variable LINKEDIN_ACCESS_TOKEN) y carga solo el cliente de la API: el resto
- * (`import-linkedin`, con todas sus dependencias) lee ese JSON después, sin el token.
+ * Descarga de la API de LinkedIn las posiciones y los estudios a un JSON. Es lo único que ve el token
+ * (LINKEDIN_ACCESS_TOKEN) y solo carga el cliente de la API; `import-linkedin` lee ese JSON después, sin el token.
  *
  *   LINKEDIN_ACCESS_TOKEN=… node scripts/fetch-linkedin.ts <instantanea.json>
- *
- * Node 22.19 o superior.
  */
 import { writeFileSync } from 'node:fs';
 import { fetchSnapshotDomain } from '../src/lib/linkedin-api.ts';

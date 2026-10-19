@@ -127,7 +127,7 @@ test.describe('preferencias de accesibilidad del sistema', () => {
 		const display = await page.evaluate(() => ({
 			desk: getComputedStyle(document.body, '::before').display,
 			paper: getComputedStyle(
-				document.querySelector('.paper') as Element,
+				document.querySelector('.page--sheet') as Element,
 				'::after',
 			).display,
 		}));

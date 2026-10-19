@@ -1,15 +1,11 @@
 /**
- * Genera `public/og.jpg` (1200×630, la imagen que se ve al compartir el enlace) fotografiando la
- * cartilla del propio sitio ya compilado. Así la imagen siempre coincide con el diseño real.
- *
- * Uso: `npm run build && npm run assets:og` (Node 22.19 o superior).
+ * Genera `public/og.jpg` fotografiando la portada del sitio ya compilado, para que la imagen siempre coincida con
+ * el diseño. Uso: `npm run build && npm run assets:og`.
  */
 import { writeFileSync } from 'node:fs';
 import { chromium } from '@playwright/test';
 import { preview } from 'astro';
 import sharp from 'sharp';
-import { SECTION_IDS } from '../src/lib/sections.ts';
-import { t } from '../src/lib/ui.ts';
 
 const PORT = 4399;
 // Formato de Open Graph. `src/lib/seo.test.ts` comprueba que `OG_IMAGE` coincide con el archivo.
@@ -33,27 +29,14 @@ try {
 	});
 	await page.goto(`http://127.0.0.1:${PORT}/`, { waitUntil: 'networkidle' });
 	await page.evaluate(() => document.fonts.ready);
-	// Solo la cartilla sobre la mesa: sin barra de navegación ni el resto de secciones.
-	const otherSections = Object.values(SECTION_IDS)
-		.filter((id) => id !== SECTION_IDS.home)
-		.map((id) => `#${id}`)
-		.join(', ');
+	// Solo la portada cerrada sobre la mesa: sin barra de navegación ni pie. La carpeta se escala a
+	// la altura que queda, así que al quitar la barra se recoloca sola.
+	// La invitación a hacer scroll tampoco: en una imagen no se puede bajar.
 	await page.addStyleTag({
-		content: `.bar, footer, ${otherSections} { display: none !important; } .page { margin-top: 100px !important; }`,
+		content: '.bar, footer, .cover-scroll { display: none !important; }',
 	});
-	// La edad cambia con los años y el sitio se recompila a diario, pero esta imagen no: sin esa
-	// fila no puede quedarse anticuada.
-	await page.evaluate(
-		(ageLabel) => {
-			for (const row of document.querySelectorAll('dl.leaders .row')) {
-				if (row.querySelector('dt')?.textContent === ageLabel)
-					row.remove();
-			}
-		},
-		t('es', 'card.age'),
-	);
-	// Espera a que el sello termine de caer.
-	await page.waitForTimeout(1600);
+	// Espera a que se recoloque y a que el sello termine de caer.
+	await page.waitForTimeout(1800);
 
 	const screenshot = await page.screenshot({
 		clip: { x: 0, y: 0, width: WIDTH, height: HEIGHT },

@@ -2,7 +2,6 @@
 interface Item {
 	label: string;
 	value: string;
-	/** Si lo hay, el valor es un enlace. */
 	href?: string;
 }
 
@@ -39,7 +38,6 @@ const { items } = Astro.props;
 		column-gap: var(--space-2);
 	}
 
-	/* Rótulo en cursiva, como los pies de campo de un formulario, y puntos guía hasta el valor. */
 	.row dt {
 		display: flex;
 		flex: 1 1 auto;

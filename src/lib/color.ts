@@ -46,14 +46,13 @@ function toLinearSrgb({ l, c, h }: Oklch): LinearRgb {
 
 const clamp01 = (value: number): number => Math.min(1, Math.max(0, value));
 
-/** Luminancia relativa WCAG. Los colores fuera de gamut sRGB se recortan canal a canal. */
+/** Los colores fuera de gamut sRGB se recortan canal a canal. */
 function relativeLuminance(color: Oklch): number {
 	const [r, g, b] = toLinearSrgb(color);
 
 	return 0.2126 * clamp01(r) + 0.7152 * clamp01(g) + 0.0722 * clamp01(b);
 }
 
-// Función de transferencia sRGB: de luz lineal a valor codificado.
 const encodeSrgb = (linear: number): number => {
 	const value = clamp01(linear);
 
@@ -62,7 +61,6 @@ const encodeSrgb = (linear: number): number => {
 		: 1.055 * value ** (1 / 2.4) - 0.055;
 };
 
-/** Color `oklch()` opaco como `#rrggbb` (los colores fuera de gamut sRGB se recortan canal a canal). */
 export function oklchToHex(css: string): string {
 	const [r, g, b] = toLinearSrgb(parseOklch(css));
 	const channels = [r, g, b].map((channel) =>
@@ -74,7 +72,6 @@ export function oklchToHex(css: string): string {
 	return `#${channels.join('')}`;
 }
 
-/** Ratio de contraste WCAG entre dos colores `oklch()`, de 1 a 21, sin importar el orden. */
 export function contrastRatio(foreground: string, background: string): number {
 	const first = relativeLuminance(parseOklch(foreground));
 	const second = relativeLuminance(parseOklch(background));

@@ -2,9 +2,7 @@ import type { MergePlan } from './linkedin-merge.ts';
 
 interface Report {
 	plan: MergePlan;
-	/** Filas de LinkedIn que no se pudieron importar. */
 	skipped: readonly string[];
-	/** `true` si los cambios se han escrito; `false` si es solo una simulación. */
 	write: boolean;
 }
 
@@ -26,7 +24,6 @@ export function sensitiveHints(text: string): string[] {
 	);
 }
 
-/** Lo que va a pasar (o ha pasado) con `experience.yaml`, para leerlo en la terminal. */
 export function formatReport({ plan, skipped, write }: Report): string {
 	const lines = [
 		write

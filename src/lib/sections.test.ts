@@ -7,9 +7,21 @@ describe('SECTION_IDS', () => {
 			home: 'home',
 			about: 'about-me',
 			resume: 'resume',
+			certifications: 'certifications',
 			projects: 'portfolio',
 			contact: 'contact',
 		});
+	});
+
+	it('lists the sections in the order they appear in the folder', () => {
+		expect(Object.keys(SECTION_IDS)).toEqual([
+			'home',
+			'about',
+			'resume',
+			'certifications',
+			'projects',
+			'contact',
+		]);
 	});
 
 	it('has no repeated ids, which would make two sections share an anchor', () => {

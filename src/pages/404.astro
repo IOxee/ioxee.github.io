@@ -6,8 +6,8 @@ import Base from '../layouts/Base.astro';
 import { fill } from '../lib/text';
 import { t } from '../lib/ui';
 
-// GitHub Pages sirve esta página para cualquier dirección que no existe. El sitio solo está en
-// español por ahora, así que no hay forma de saber el idioma de quien llega.
+// GitHub Pages sirve esta página para cualquier dirección que no existe: no hay forma de saber el idioma de quien
+// llega, así que va en el principal.
 const locale = 'es';
 
 const [profileEntry] = await getCollection('profile');

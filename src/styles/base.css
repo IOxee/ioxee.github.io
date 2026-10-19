@@ -7,6 +7,8 @@
 html {
 	-webkit-text-size-adjust: 100%;
 	scroll-behavior: smooth;
+	/* La barra de navegación está siempre arriba: lo que se enfoca o a lo que lleva un ancla no queda debajo. */
+	scroll-padding-top: var(--bar-h);
 }
 
 body {
@@ -15,7 +17,6 @@ body {
 	font-family: var(--font-text);
 	font-size: var(--text-base);
 	line-height: var(--leading-text);
-	/* El texto que queda directamente sobre la mesa; el de los papeles lo fija cada hoja. */
 	color: var(--on-desk);
 	background-color: var(--desk);
 }
@@ -117,13 +118,11 @@ html:not(.js) [data-theme-toggle] {
 	display: none;
 }
 
-/* Contenedor de los filtros SVG: ocupa 0×0 y no debe empujar la maquetación. */
 .ink-defs {
 	position: absolute;
 	overflow: hidden;
 }
 
-/* En modo de contraste forzado el fondo pasa a ser liso: el grano de la mesa solo ensuciaría el texto. */
 @media (forced-colors: active) {
 	body::before {
 		display: none;

@@ -3,8 +3,8 @@ name: Deploy to GitHub Pages
 on:
     push:
         branches: [main]
-    # Redespliega a diario para que la edad y el año del copyright, que se calculan al
-    # compilar, se mantengan exactos aunque no haya commits.
+    # Redespliega a diario para que el año del copyright y la vigencia de las certificaciones,
+    # que se calculan al compilar, se mantengan exactos aunque no haya commits.
     schedule:
         - cron: '0 5 * * *'
     workflow_dispatch:

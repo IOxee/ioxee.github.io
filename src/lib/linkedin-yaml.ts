@@ -14,7 +14,6 @@ function dateNode(date: string | null): Scalar | null {
 	return node;
 }
 
-/** Los registros de `experience.yaml`, validados con el esquema de la web. */
 export function readExperience(yamlText: string): ExperienceEntry[] {
 	const data: unknown = parse(yamlText);
 	if (!Array.isArray(data)) throw new Error(NOT_A_LIST);

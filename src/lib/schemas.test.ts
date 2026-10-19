@@ -1,6 +1,7 @@
 import type { z } from 'astro/zod';
 import { describe, expect, it } from 'vitest';
 import {
+	certificationSchema,
 	experienceSchema,
 	languageSchema,
 	profileSchema,
@@ -35,7 +36,8 @@ const project = {
 	stack: ['TypeScript'],
 	imageAlt: { es: 'Captura de la portada' },
 	repo: 'https://github.com/example/demo',
-	order: 1,
+	start: '2024-01',
+	end: '2024-03',
 };
 
 const profile = {
@@ -164,14 +166,56 @@ describe('projectSchema', () => {
 		expect(accepts(projectSchema, project)).toBe(true);
 	});
 
-	it.each([0, -1, 1.5, '1'])('rejects the display order %j', (order) => {
-		expect(accepts(projectSchema, { ...project, order })).toBe(false);
-	});
-
-	it('requires a display order, because the content store does not keep file order', () => {
-		expect(accepts(projectSchema, { ...project, order: undefined })).toBe(
+	it('requires when it started, which is what orders the projects', () => {
+		expect(accepts(projectSchema, { ...project, start: undefined })).toBe(
 			false,
 		);
+	});
+
+	it('takes `end: null` for a project still under way', () => {
+		expect(accepts(projectSchema, { ...project, end: null })).toBe(true);
+	});
+
+	it.each(['marzo 2024', '2024-13', '24-03'])(
+		'rejects the date %j',
+		(start) => {
+			expect(accepts(projectSchema, { ...project, start })).toBe(false);
+		},
+	);
+
+	it('rejects an end before the start', () => {
+		expect(
+			accepts(projectSchema, {
+				...project,
+				start: '2024-05',
+				end: '2024-03',
+			}),
+		).toBe(false);
+	});
+
+	it('accepts the details of a project that takes a second page: the challenge, its points and a closing line', () => {
+		const details = {
+			intro: { es: 'El reto era…' },
+			points: { es: ['Uno', 'Dos'] },
+			closing: { es: 'Incluye…' },
+		};
+
+		expect(accepts(projectSchema, { ...project, details })).toBe(true);
+		expect(
+			accepts(projectSchema, {
+				...project,
+				details: { ...details, closing: undefined },
+			}),
+		).toBe(true);
+	});
+
+	it('rejects details without points, which would leave the second page empty', () => {
+		expect(
+			accepts(projectSchema, {
+				...project,
+				details: { intro: { es: 'El reto era…' }, points: { es: [] } },
+			}),
+		).toBe(false);
 	});
 
 	it.each([undefined, { es: '' }, { en: 'Screenshot' }])(
@@ -194,6 +238,160 @@ describe('projectSchema', () => {
 		'ftp://example.com/demo',
 	])('rejects the repository URL %j', (repo) => {
 		expect(accepts(projectSchema, { ...project, repo })).toBe(false);
+	});
+});
+
+const certification = {
+	id: 'curso-demo',
+	name: 'Curso de demostración',
+	issuer: 'Plataforma Ejemplo',
+	issued: '2023-05',
+	order: 1,
+};
+
+describe('certificationSchema', () => {
+	it('accepts a certification with only what is required', () => {
+		expect(accepts(certificationSchema, certification)).toBe(true);
+	});
+
+	it('accepts the optional expiry, verification link and summary', () => {
+		expect(
+			accepts(certificationSchema, {
+				...certification,
+				expires: '2026-05',
+				url: 'https://example.com/verify/123',
+				summary: { es: 'Qué cubre.' },
+			}),
+		).toBe(true);
+	});
+
+	it('keeps the optional alternative text of its photo, in the languages it is given', () => {
+		const parsed = certificationSchema.parse({
+			...certification,
+			imageAlt: {
+				es: 'Diploma con el sello de la academia',
+				en: 'Diploma',
+			},
+		});
+
+		expect(parsed.imageAlt).toEqual({
+			es: 'Diploma con el sello de la academia',
+			en: 'Diploma',
+		});
+		expect(
+			certificationSchema.parse(certification).imageAlt,
+		).toBeUndefined();
+	});
+
+	it.each([{ es: '' }, { es: '   ' }, { ca: 'Sense castellà' }])(
+		'rejects the alternative text %j: it needs Spanish and cannot be empty',
+		(imageAlt) => {
+			expect(
+				accepts(certificationSchema, { ...certification, imageAlt }),
+			).toBe(false);
+		},
+	);
+
+	it.each(['name', 'issuer', 'issued', 'order'])(
+		'rejects a certification without %s',
+		(field) => {
+			expect(
+				accepts(certificationSchema, {
+					...certification,
+					[field]: undefined,
+				}),
+			).toBe(false);
+		},
+	);
+
+	it.each(['', '   '])('rejects the empty issuer %j', (issuer) => {
+		expect(accepts(certificationSchema, { ...certification, issuer })).toBe(
+			false,
+		);
+	});
+
+	it.each(['2022-13', 'ayer', '22', '2022-3'])(
+		'rejects the issue date %j',
+		(issued) => {
+			expect(
+				accepts(certificationSchema, { ...certification, issued }),
+			).toBe(false);
+		},
+	);
+
+	it('rejects an expiry before the issue date', () => {
+		expect(
+			accepts(certificationSchema, {
+				...certification,
+				issued: '2023-05',
+				expires: '2023-04',
+			}),
+		).toBe(false);
+	});
+
+	it('accepts an expiry in the same month or in the same year, which closes in December', () => {
+		expect(
+			accepts(certificationSchema, {
+				...certification,
+				issued: '2023-05',
+				expires: '2023-05',
+			}),
+		).toBe(true);
+		expect(
+			accepts(certificationSchema, {
+				...certification,
+				issued: '2023-05',
+				expires: '2023',
+			}),
+		).toBe(true);
+	});
+
+	it('does not throw while reporting a badly formed date next to a valid one', () => {
+		for (const dates of [
+			{ issued: 'ayer', expires: '2024' },
+			{ issued: '2023-05', expires: 'mañana' },
+		]) {
+			expect(() =>
+				certificationSchema.safeParse({ ...certification, ...dates }),
+			).not.toThrow();
+			expect(
+				accepts(certificationSchema, { ...certification, ...dates }),
+			).toBe(false);
+		}
+	});
+
+	it.each([
+		'javascript:alert(1)',
+		'http://example.com/verify',
+		'//example.com/verify',
+		'not a url',
+		// Una página https los toma como rutas del propio sitio, no como otra web.
+		'https:example.com/verify',
+		'https:/example.com/verify',
+		// Usuario y contraseña en el enlace: se ven en la barra y despistan sobre a qué web se va.
+		'https://user:pass@example.com/verify',
+	])(
+		'rejects the verification link %j, which is not an https address',
+		(url) => {
+			expect(
+				accepts(certificationSchema, { ...certification, url }),
+			).toBe(false);
+		},
+	);
+
+	it('trims the spaces around the verification link, so the link it renders is clean', () => {
+		const parsed = certificationSchema.parse({
+			...certification,
+			url: ' https://example.com/verify ',
+		});
+
+		expect(parsed.url).toBe('https://example.com/verify');
+	});
+
+	it.each([0, -1, 1.5])('rejects the order %j', (order) => {
+		expect(accepts(certificationSchema, { ...certification, order })).toBe(
+			false,
+		);
 	});
 });
 

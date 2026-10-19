@@ -1,0 +1,675 @@
+/*
+ * La carpeta tiene tres maneras de verse, y la primera es la base:
+ *  - LISTA: todas las páginas seguidas. Es lo que sale sin JavaScript y al imprimir, y permite buscar y copiar.
+ *  - PARALLAX (`data-scroll="on"`): con JavaScript, la carpeta llena la pantalla entre el menú y el pie y se queda fija;
+ *    el scroll hace girar las hojas sobre el lomo, de forma continua (`--progress`). Se escala con `--fit`.
+ *  - GIRA SOLA (`data-scroll="off"`): sin fijarse, cuando habría que encogerla tanto que no se leería (un móvil, una
+ *    ventana muy baja). Las hojas giran con una animación.
+ *
+ * Una hoja lleva dos páginas (`.page`): desde 60rem la carpeta se ve abierta (el reverso de la hoja pasada a la
+ * izquierda y el anverso de la siguiente a la derecha); por debajo, una página cada vez. El umbral es el mismo que usa
+ * el script (`book.ts`).
+ *
+ * Nada va con `style` en línea salvo `--tilt` (lo exige la CSP): el resto de valores los pone el script con el CSSOM.
+ */
+
+.folder {
+	--leaf-width: min(100%, 38rem);
+	--turn-duration: 800ms;
+	--ease-turn: cubic-bezier(0.45, 0.05, 0.2, 1);
+	/* Cuánto se aleja el ojo de la hoja que gira: más grande, menos deformada y menos se sale de la carpeta. */
+	--depth: 3600px;
+	--pin-top: var(--bar-h, 0px);
+	position: relative;
+	color: var(--ink);
+}
+
+.folder .stack {
+	display: grid;
+	gap: var(--space-5);
+	width: min(100%, 44rem);
+	margin-inline: auto;
+	margin-top: var(--space-6);
+	counter-reset: folio;
+}
+
+/* Las hojas físicas no pintan nada por sí solas: las páginas van sueltas, una tras otra. */
+.folder .leaf {
+	display: contents;
+}
+
+.folder .page {
+	position: relative;
+	margin: 0;
+	transform: rotate(var(--tilt, 0deg));
+}
+
+.folder .page--blank,
+.folder .backcover {
+	display: none;
+}
+
+/* Los botones para lectores de pantalla los mueve el script: sin él no harían nada. */
+html:not(.js) .folder [data-turn] {
+	display: none;
+}
+
+.folder .page--sheet {
+	counter-increment: folio;
+	padding: var(--space-5) var(--space-5) var(--space-6);
+	background-color: var(--sheet);
+	background-image: linear-gradient(
+		170deg,
+		oklch(100% 0 0 / 0.35),
+		transparent 40%,
+		oklch(0% 0 0 / 0.05)
+	);
+	box-shadow:
+		0 1px 0 var(--sheet-edge),
+		0 8px 18px oklch(0% 0 0 / 0.28);
+}
+
+.folder .page--sheet::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background-image: var(--grain);
+	mix-blend-mode: multiply;
+	opacity: 0.1;
+}
+
+/* El número sale solo, contando páginas de contenido: la portada es la primera y no lleva. */
+.folder .folio {
+	position: absolute;
+	right: 0;
+	bottom: var(--space-3);
+	left: 0;
+	margin: 0;
+	max-width: none;
+	font-size: var(--text-sm);
+	text-align: center;
+	color: var(--ink-muted);
+}
+
+.folder .folio::before {
+	content: '— ' counter(folio) ' —';
+}
+
+.folder .doc-title {
+	margin-bottom: var(--space-4);
+	padding-bottom: var(--space-2);
+	font-size: clamp(1.6rem, 1.2rem + 1.4vw, 2.25rem);
+	border-bottom: 3px double var(--ink);
+}
+
+.folder .doc-text {
+	margin-bottom: var(--space-3);
+}
+
+.folder .doc-entry {
+	display: grid;
+	gap: var(--space-1);
+	padding-block: var(--space-3);
+}
+
+.folder .doc-entry + .doc-entry {
+	border-top: 1px dotted var(--rule);
+}
+
+.folder .doc-role {
+	font-size: var(--text-h3);
+}
+
+.folder .doc-meta {
+	font-size: var(--text-sm);
+	font-style: italic;
+	color: var(--ink-muted);
+}
+
+.folder .doc-list {
+	display: grid;
+	gap: var(--space-2);
+	margin: 0 0 var(--space-3);
+	padding-left: var(--space-4);
+}
+
+.folder .doc-list li {
+	max-width: var(--measure);
+}
+
+.folder .doc-list li::marker {
+	content: '■  ';
+	font-size: 0.7em;
+}
+
+.folder .doc-note {
+	font-size: var(--text-sm);
+	color: var(--ink-muted);
+}
+
+.folder .doc-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-1) var(--space-3);
+}
+
+/* La foto va entera en una caja de proporción fija (3:2): una vertical no estira la hoja y una apaisada no se recorta. */
+.folder .doc-cert-text {
+	display: grid;
+	gap: var(--space-1);
+	min-width: 0;
+}
+
+.folder .doc-cert-shot {
+	display: block;
+	margin-bottom: var(--space-2);
+	line-height: 0;
+	background: color-mix(in oklch, var(--ink) 8%, var(--sheet));
+	border: 2px solid var(--ink);
+}
+
+.folder .doc-cert-shot img {
+	width: 100%;
+	height: auto;
+	aspect-ratio: 3 / 2;
+	object-fit: contain;
+}
+
+.folder .doc-shot {
+	width: 100%;
+	height: auto;
+	margin-bottom: var(--space-3);
+	border: 2px solid var(--ink);
+}
+
+.folder .page--cover {
+	display: grid;
+	grid-template-rows: auto 1fr auto auto;
+	gap: var(--space-4);
+	min-height: 30rem;
+	padding: var(--space-5);
+	background-color: var(--folder);
+	background-image:
+		linear-gradient(90deg, oklch(0% 0 0 / 0.14), transparent 7%),
+		linear-gradient(170deg, oklch(100% 0 0 / 0.25), transparent 45%);
+	box-shadow:
+		0 1px 0 var(--folder-shade),
+		0 10px 22px oklch(0% 0 0 / 0.32);
+}
+
+.folder .cover-tab {
+	position: absolute;
+	top: -1.85rem;
+	right: var(--space-5);
+	margin: 0;
+	padding: 0.3rem 1.1rem 0.2rem;
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: var(--text-base);
+	background: var(--folder-shade);
+	border-radius: 0.5rem 0.5rem 0 0;
+}
+
+.folder .polaroid {
+	position: relative;
+	justify-self: start;
+	width: min(11.5rem, 52%);
+	margin: 0;
+	padding: 0.55rem 0.55rem 1.7rem;
+	background: var(--sheet);
+	box-shadow:
+		0 2px 0 oklch(0% 0 0 / 0.16),
+		0 8px 12px oklch(0% 0 0 / 0.28);
+	transform: rotate(-4deg);
+}
+
+.folder .polaroid img {
+	width: 100%;
+	height: auto;
+	aspect-ratio: 1;
+	object-fit: cover;
+}
+
+.folder .clip {
+	position: absolute;
+	top: -1.1rem;
+	left: 1rem;
+	width: 1.5rem;
+	height: 3.2rem;
+	color: var(--ink-muted);
+	filter: drop-shadow(0 1px 1px oklch(0% 0 0 / 0.35));
+}
+
+.folder .cover-stamp {
+	align-self: center;
+	justify-self: center;
+}
+
+.folder .cover-stamp .stamp {
+	font-size: clamp(1.5rem, 0.9rem + 3.4vw, 2.75rem);
+}
+
+.folder .cover-headline {
+	justify-self: center;
+	margin: 0;
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: var(--text-lg);
+	text-align: center;
+}
+
+.folder .cover-scroll {
+	display: none;
+}
+
+@media screen {
+	html.js .folder {
+		overflow-x: clip;
+	}
+
+	/*
+	 * El escenario ocupa la pantalla desde el primer pintado, antes de que el script mida: así la
+	 * carpeta ya está donde va a quedar y no se mueve al cargar.
+	 */
+	html.js .folder .stage {
+		display: grid;
+		align-content: center;
+		min-height: calc(100svh - var(--pin-top) - var(--foot-h));
+	}
+
+	/*
+	 * El pie no se enseña hasta que la carpeta está colocada: antes de eso la página es corta y el
+	 * pie se vería, para saltar fuera de pantalla al crecer la pista. Si el script no llegara a
+	 * ejecutarse, el pie aparece solo tras un momento.
+	 */
+	html.js:not([data-folder-ready]) body > footer {
+		visibility: hidden;
+		animation: folder-reveal 0s 1.5s forwards;
+	}
+
+	@keyframes folder-reveal {
+		to {
+			visibility: visible;
+		}
+	}
+
+	/*
+	 * El texto de una página se puede seleccionar con el ratón: solo los dedos pasan hoja
+	 * deslizando. El gesto lateral es de la carpeta; el vertical y el de pellizcar (ampliar) siguen
+	 * siendo del navegador.
+	 */
+	html.js .folder .viewport {
+		padding-block: var(--space-2);
+		touch-action: pan-y pinch-zoom;
+	}
+
+	/*
+	 * En una pantalla alta las hojas son de folio, más altas que anchas, y la carpeta deja aire
+	 * arriba y abajo en vez de tocar el menú y el borde. En una baja no: encogería hasta no leerse.
+	 */
+	@media (min-height: 50rem) {
+		html.js .folder .stack {
+			aspect-ratio: 1 / 1.32;
+		}
+
+		html.js .folder .viewport {
+			padding-block: clamp(var(--space-4), 5vh, var(--space-6));
+		}
+	}
+
+	html.js .folder[data-scroll='on'] .cover-scroll {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-1);
+		justify-self: center;
+		margin: 0;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--text-sm);
+		text-align: center;
+	}
+
+	html.js .folder .cover-scroll svg {
+		width: 1.75rem;
+		height: 1.75rem;
+		animation: cover-scroll-nudge 1.6s ease-in-out infinite;
+	}
+
+	@keyframes cover-scroll-nudge {
+		0%,
+		100% {
+			translate: 0 0;
+		}
+
+		50% {
+			translate: 0 0.4rem;
+		}
+	}
+
+	/*
+	 * El foco de la carpeta y de las páginas se dibuja por dentro: por fuera lo recortaría el borde
+	 * de la carpeta o lo taparía la barra. Mismos dos tonos que el resto (tinta y halo claro).
+	 */
+	html.js .folder :is(.viewport, .page):focus-visible {
+		outline: 3px solid var(--ink);
+		outline-offset: -3px;
+		box-shadow: inset 0 0 0 7px var(--on-desk);
+	}
+
+	html.js .folder:has(.viewport:focus-visible) .folder-help {
+		position: fixed;
+		bottom: calc(var(--foot-h) + var(--space-3));
+		left: 50%;
+		z-index: 6;
+		width: max-content;
+		max-width: min(36rem, 100% - 2 * var(--gutter));
+		height: auto;
+		margin: 0;
+		padding: var(--space-2) var(--space-3);
+		overflow: visible;
+		clip-path: none;
+		white-space: normal;
+		font-size: var(--text-sm);
+		text-align: center;
+		color: var(--ink);
+		background: var(--paper);
+		border: 2px solid var(--ink);
+		translate: -50% 0;
+	}
+
+	/*
+	 * El pie se ve siempre, abajo, como el menú arriba, con o sin la carpeta fija. Con ella fija, la carpeta ocupa lo que
+	 * queda entre los dos y la pista acaba justo en la última hoja, sin un tramo de scroll de más. Dónde se detiene el
+	 * scroll entre dos hojas lo decide el script (`settle`): con paradas obligatorias del navegador, un toque de rueda
+	 * (más corto que media hoja) volvía atrás.
+	 */
+	html.js body > footer {
+		position: sticky;
+		bottom: 0;
+		z-index: 5;
+	}
+
+	html.js {
+		scroll-padding-bottom: var(--foot-h);
+	}
+
+	/* Con la carpeta fija, su altura es exactamente la que el script le descuenta a la carpeta. */
+	html:has(.folder[data-scroll='on']) body > footer {
+		height: var(--foot-h);
+	}
+
+	/* La pista mide la pantalla y un paso de scroll por cada punto de lectura que se pasa. */
+	html.js .folder[data-scroll='on'] .track {
+		height: calc(
+			var(--stage-h, 0px) + (var(--positions, 1) - 1) * var(--step, 0px)
+		);
+	}
+
+	html.js .folder[data-scroll='on'] .stage {
+		position: sticky;
+		top: var(--pin-top);
+		display: grid;
+		align-content: center;
+		height: var(--stage-h);
+	}
+
+	/*
+	 * La carpeta se escala (`--fit`) para llenar la pantalla, encogida o ampliada: se escala el
+	 * dibujo, que no cambia el tamaño de la caja, así que la altura se fija aparte con la medida
+	 * natural.
+	 */
+	html.js .folder[data-scroll='on'] .viewport {
+		/* El relleno va aparte: con `border-box` se comería altura y las hojas se saldrían de la caja. */
+		box-sizing: content-box;
+		height: calc(var(--spread-h, 0px) * var(--fit, 1));
+	}
+
+	html.js .folder[data-scroll='on'] .spread {
+		transform-origin: top center;
+		transform: scale(var(--fit, 1));
+		transition: none;
+	}
+
+	html.js .folder .spread {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		width: var(--leaf-width);
+		margin-inline: auto;
+		/* Sitio para la pestaña de la portada, que sobresale por arriba: va dentro para que escale con la carpeta. */
+		padding-top: 2.25rem;
+		transition: transform var(--turn-duration) var(--ease-turn);
+	}
+
+	html.js .folder .stack {
+		position: relative;
+		/* Las hojas se ordenan con `z-index`: este contexto evita que se mezclen con lo de fuera. */
+		isolation: isolate;
+		display: grid;
+		grid-template: 'leaf' / minmax(0, 1fr);
+		gap: 0;
+		width: auto;
+		margin: 0;
+	}
+
+	html.js .folder[data-at-end='false'] .stack::before,
+	html.js .folder[data-at-end='false'] .stack::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		background: var(--sheet);
+		box-shadow: 0 1px 0 var(--sheet-edge);
+	}
+
+	html.js .folder[data-at-end='false'] .stack::before {
+		translate: 0.55rem 0.3rem;
+	}
+
+	html.js .folder[data-at-end='false'] .stack::after {
+		translate: 0.3rem 0.15rem;
+	}
+
+	html.js .folder .backcover {
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		display: none;
+		background-color: var(--folder);
+		background-image: linear-gradient(
+			90deg,
+			oklch(0% 0 0 / 0.14),
+			transparent 7%
+		);
+		box-shadow:
+			0 1px 0 var(--folder-shade),
+			0 10px 22px oklch(0% 0 0 / 0.32);
+	}
+
+	html.js .folder[data-back-cover='true'] .backcover {
+		display: block;
+	}
+
+	html.js .folder .page {
+		transform: none;
+		backface-visibility: hidden;
+	}
+
+	/* Sin transición mientras se coloca todo la primera vez, o al saltar a un ancla de la URL. */
+	html.js .folder[data-instant] .leaf,
+	html.js .folder[data-instant] .page,
+	html.js .folder[data-instant] .spread {
+		transition: none !important;
+	}
+
+	@media (min-width: 60rem) {
+		html.js .folder .spread {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			width: min(100%, 76rem);
+		}
+
+		html.js .folder .stack {
+			grid-column: 2;
+		}
+
+		html.js .folder[data-open='false'] .spread {
+			transform: translateX(-25%);
+		}
+
+		html.js .folder[data-scroll='on'] .spread {
+			transform: scale(var(--fit, 1))
+				translateX(calc(-25% * (1 - clamp(0, var(--progress, 0), 1))));
+		}
+
+		/*
+		 * Una hoja gira entera sobre el lomo (su borde izquierdo). La perspectiva va en cada hoja y
+		 * no en el contenedor: así el lomo es el punto de fuga de todas y las pasadas quedan justo
+		 * pegadas a las que no, sin la rendija que dejaría la profundidad de cada una.
+		 */
+		html.js .folder .leaf {
+			position: relative;
+			display: grid;
+			grid-area: leaf;
+			visibility: hidden;
+			transform-style: preserve-3d;
+			transform-origin: left center;
+			transform: perspective(var(--depth)) rotateY(var(--turn, 0deg));
+			/* El orden de las hojas lo da el `z-index`: las de la derecha, de la primera abajo a la última; las de la izquierda, al revés. */
+			z-index: calc(var(--leaves, 0) - var(--k, 0));
+			/* El orden cambia a mitad del giro, cuando la hoja está de canto y no se ve. */
+			transition:
+				transform var(--turn-duration) var(--ease-turn),
+				z-index 0s linear calc(var(--turn-duration) / 2);
+		}
+
+		html.js .folder .leaf[data-near] {
+			visibility: visible;
+		}
+
+		html.js .folder .leaf[data-turned] {
+			--turn: -180deg;
+			z-index: var(--k, 0);
+		}
+
+		html.js .folder[data-scroll='on'] .leaf,
+		html.js .folder[data-scroll='on'] .leaf[data-turned] {
+			--turn: calc(
+				clamp(0, var(--progress, 0) - var(--k, 0), 1) * -180deg
+			);
+			transition: none;
+		}
+
+		html.js .folder .page {
+			grid-area: 1 / 1;
+		}
+
+		html.js .folder .page--back {
+			transform: rotateY(180deg);
+		}
+
+		html.js .folder .page--sheet,
+		html.js .folder .page--blank {
+			background-color: var(--sheet);
+			background-image:
+				linear-gradient(
+					var(--spine, 90deg),
+					oklch(0% 0 0 / 0.12),
+					transparent 5%
+				),
+				linear-gradient(
+					170deg,
+					oklch(100% 0 0 / 0.35),
+					transparent 40%,
+					oklch(0% 0 0 / 0.05)
+				);
+		}
+
+		html.js .folder .page--back {
+			--spine: -90deg;
+		}
+
+		html.js .folder .page--blank {
+			display: block;
+			box-shadow:
+				0 1px 0 var(--sheet-edge),
+				0 8px 18px oklch(0% 0 0 / 0.28);
+		}
+
+		html.js .folder .leaf--cover .page--blank {
+			background-color: var(--folder-shade);
+			background-image: linear-gradient(
+				-90deg,
+				oklch(0% 0 0 / 0.16),
+				transparent 8%
+			);
+			box-shadow:
+				0 1px 0 var(--folder-shade),
+				0 10px 22px oklch(0% 0 0 / 0.32);
+		}
+	}
+
+	@media (width < 60rem) {
+		/* Aquí cada cara pasa como si fuera una hoja suelta, así que las hojas no cuentan. */
+		html.js .folder .page {
+			grid-area: leaf;
+			visibility: hidden;
+			transform-origin: left center;
+			transform: perspective(var(--depth)) rotateY(var(--turn, 0deg));
+			z-index: calc(var(--pages, 0) - var(--i, 0));
+			transition:
+				transform var(--turn-duration) var(--ease-turn),
+				z-index 0s linear calc(var(--turn-duration) / 2);
+		}
+
+		html.js .folder .page[data-near] {
+			visibility: visible;
+		}
+
+		html.js .folder .page[data-state='past'] {
+			--turn: -180deg;
+			z-index: var(--i, 0);
+		}
+
+		html.js .folder[data-scroll='on'] .page,
+		html.js .folder[data-scroll='on'] .page[data-state='past'] {
+			--turn: calc(
+				clamp(0, var(--progress, 0) - var(--i, 0), 1) * -180deg
+			);
+			transition: none;
+		}
+
+		html.js .folder .page--blank {
+			display: none;
+		}
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.folder {
+		--turn-duration: 1ms;
+	}
+}
+
+@media (forced-colors: active) {
+	.folder .page--sheet::after {
+		display: none;
+	}
+
+	.folder .page--sheet,
+	.folder .page--cover {
+		background-image: none;
+		border: 2px solid CanvasText;
+	}
+}
+
+@media print {
+	.folder .page--sheet::after {
+		display: none;
+	}
+
+	.folder .page {
+		break-inside: avoid;
+		transform: none;
+	}
+}

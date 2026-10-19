@@ -6,33 +6,31 @@ import '@fontsource/courier-prime/700.css';
 import '../styles/tokens.css';
 import '../styles/base.css';
 // Las fuentes que se ven al cargar se precargan: sin eso, el cambio de la tipografía de reserva
-// reordenaba el texto del carné y el CLS en móvil llegaba a 0,13.
+// reordena el texto y sube el CLS, sobre todo en móvil.
 import stardos700 from '@fontsource/stardos-stencil/files/stardos-stencil-latin-700-normal.woff2?url';
 import courier400 from '@fontsource/courier-prime/files/courier-prime-latin-400-normal.woff2?url';
 import courier700 from '@fontsource/courier-prime/files/courier-prime-latin-700-normal.woff2?url';
-// Texto del script que fija el tema. `astro.config.mjs` calcula su hash para la CSP del mismo
-// archivo.
 import themeInitSource from '../scripts/theme-init.js?raw';
 import { oklchToHex } from '../lib/color';
 import type { Locale } from '../lib/i18n';
-import { OG_IMAGE, OG_LOCALES, absoluteUrl, serializeJsonLd } from '../lib/seo';
+import {
+	OG_IMAGE,
+	OG_LOCALES,
+	absoluteUrl,
+	alternateOgLocales,
+	languageAlternates,
+	serializeJsonLd,
+} from '../lib/seo';
 import { PALETTES } from '../lib/theme';
 import { t } from '../lib/ui';
 
 interface Props {
 	title: string;
 	description: string;
-	/** Nombre del sitio al compartir el enlace: sin él las redes enseñan el dominio. */
 	siteName: string;
-	/** Texto alternativo de la imagen que aparece al compartir el enlace. */
 	imageAlt: string;
 	locale?: Locale;
-	/**
-	 * Páginas que no deben aparecer en buscadores ni compartirse (la 404): con `noindex` y sin
-	 * canonical ni etiquetas para redes sociales.
-	 */
 	noindex?: boolean;
-	/** Datos estructurados (schema.org) de la página. */
 	jsonLd?: object;
 }
 
@@ -48,9 +46,8 @@ const {
 
 const canonical = absoluteUrl(Astro.url.pathname, Astro.site);
 const image = absoluteUrl(OG_IMAGE.path, Astro.site);
-// El navegador convierte CRLF en LF antes de calcular el hash de un script en línea. Con el
-// archivo en LF (CI) y en CRLF (Windows con autocrlf) el texto y su hash tienen que coincidir.
-// El mismo reemplazo está en `astro.config.mjs`.
+// El navegador pasa CRLF a LF antes de hashear un script en línea; `astro.config.mjs` hace el mismo reemplazo para que
+// el hash coincida con el archivo, esté en LF (CI) o en CRLF (Windows).
 const themeInit = themeInitSource.replace(/\r\n?/g, '\n');
 ---
 
@@ -64,7 +61,13 @@ const themeInit = themeInitSource.replace(/\r\n?/g, '\n');
 		{noindex ? (
 			<meta name="robots" content="noindex" />
 		) : (
-			<link rel="canonical" href={canonical} />
+			<>
+				<link rel="canonical" href={canonical} />
+				{/* La misma página en cada idioma, incluida ella: así los buscadores las emparejan. */}
+				{languageAlternates(Astro.site).map(({ hreflang, href }) => (
+					<link rel="alternate" hreflang={hreflang} href={href} />
+				))}
+			</>
 		)}
 		<meta
 			name="theme-color"
@@ -84,6 +87,9 @@ const themeInit = themeInitSource.replace(/\r\n?/g, '\n');
 				<meta property="og:description" content={description} />
 				<meta property="og:url" content={canonical} />
 				<meta property="og:locale" content={OG_LOCALES[locale]} />
+				{alternateOgLocales(locale).map((alternate) => (
+					<meta property="og:locale:alternate" content={alternate} />
+				))}
 				<meta property="og:image" content={image} />
 				<meta property="og:image:type" content={OG_IMAGE.type} />
 				<meta
@@ -130,7 +136,6 @@ const themeInit = themeInitSource.replace(/\r\n?/g, '\n');
 		</a>
 		<slot />
 
-		{/* Filtro que irregulariza el borde de los sellos para que parezcan tinta y no vector. */}
 		<svg
 			class="ink-defs"
 			width="0"

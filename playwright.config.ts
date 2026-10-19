@@ -2,10 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 4173;
 
-/**
- * Pruebas en navegador sobre el sitio ya compilado (`npm run build` antes). Se sirve con
- * `astro preview` porque la CSP solo existe en el build: en `astro dev` no se aplica.
- */
+/** Se sirve con `astro preview` (hay que compilar antes): la CSP solo existe en el build, no en `astro dev`. */
 export default defineConfig({
 	testDir: 'tests/e2e',
 	fullyParallel: true,

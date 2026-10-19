@@ -1,97 +1,52 @@
 ---
 import type { Locale } from '../lib/i18n';
-import { SECTION_IDS } from '../lib/sections';
+import type { SectionId } from '../lib/sections';
 import { t } from '../lib/ui';
+import LanguageSwitch from './LanguageSwitch.astro';
 import ThemeToggle from './ThemeToggle.astro';
+
+interface Tab {
+	section: SectionId;
+	label: string;
+}
 
 interface Props {
 	locale: Locale;
+	tabs: readonly Tab[];
 }
 
-const { locale } = Astro.props;
-
-// El orden coincide con el de las secciones en la página: el script lo da por hecho.
-const links = [
-	{ id: SECTION_IDS.about, label: t(locale, 'nav.about') },
-	{ id: SECTION_IDS.resume, label: t(locale, 'nav.resume') },
-	{ id: SECTION_IDS.projects, label: t(locale, 'nav.projects') },
-	{ id: SECTION_IDS.contact, label: t(locale, 'nav.contact') },
-];
+const { locale, tabs } = Astro.props;
 ---
 
-<header class="bar">
+<header class="bar" data-site-bar>
 	<div class="inner">
 		<nav aria-label={t(locale, 'nav.label')} data-site-nav>
 			<ul class="links" role="list">
-				{links.map((link) => (
+				{tabs.map((tab) => (
 					<li>
-						<a href={`#${link.id}`}>{link.label}</a>
+						<a href={`#${tab.section}`}>{tab.label}</a>
 					</li>
 				))}
 			</ul>
 		</nav>
 		<div class="tools">
+			<LanguageSwitch locale={locale} />
 			<ThemeToggle locale={locale} />
 		</div>
 	</div>
 </header>
 
-<script>
-	const links = new Map<string, HTMLAnchorElement>();
-	document
-		.querySelectorAll<HTMLAnchorElement>('[data-site-nav] a[href^="#"]')
-		.forEach((link) => links.set(link.hash.slice(1), link));
-
-	const sections = [...links.keys()]
-		.map((id) => document.getElementById(id))
-		.filter((section): section is HTMLElement => section !== null);
-
-	// Una única regla decide la sección actual, así no hay dos escritores que se pisen:
-	// la última cuya parte superior ya pasó el 35 % de la ventana; ninguna si seguimos en la
-	// cartilla (arriba del todo); y la última sección al llegar al final de la página.
-	function update() {
-		const line = window.innerHeight * 0.35;
-		const atBottom =
-			window.innerHeight + window.scrollY >=
-			document.documentElement.scrollHeight - 2;
-
-		let current: string | null = null;
-		if (atBottom) {
-			current = sections.at(-1)?.id ?? null;
-		} else {
-			for (const section of sections) {
-				if (section.getBoundingClientRect().top <= line)
-					current = section.id;
-			}
-		}
-
-		links.forEach((link, id) => {
-			if (id === current) link.setAttribute('aria-current', 'location');
-			else link.removeAttribute('aria-current');
-		});
-	}
-
-	let queued = false;
-	const schedule = () => {
-		if (queued) return;
-		queued = true;
-		requestAnimationFrame(() => {
-			queued = false;
-			update();
-		});
-	};
-
-	window.addEventListener('scroll', schedule, { passive: true });
-	window.addEventListener('resize', schedule);
-	update();
-</script>
-
 <style>
 	.bar {
+		position: sticky;
+		top: 0;
+		z-index: 5;
+		height: var(--bar-h);
 		background: var(--desk);
+		border-bottom: 1px solid
+			color-mix(in oklch, var(--on-desk) 16%, transparent);
 	}
 
-	/* Una sola fila: los enlaces se reparten en las líneas que necesiten junto al botón. */
 	.inner {
 		display: flex;
 		flex-wrap: nowrap;
@@ -99,22 +54,38 @@ const links = [
 		align-items: center;
 		justify-content: space-between;
 		width: min(100% - 2 * var(--gutter), var(--page-width));
+		height: 100%;
 		margin-inline: auto;
-		padding-block: var(--space-3);
 	}
 
+	/*
+	 * En pantallas estrechas el menú se desliza de lado, y un contenedor que se desliza recorta lo
+	 * que sale de él: el relleno deja sitio al anillo de foco de las pestañas y el margen negativo lo
+	 * compensa para que el menú no ocupe más.
+	 */
 	nav {
 		flex: 1;
 		min-width: 0;
+		margin: -0.75rem;
+		padding: 0.75rem;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+
+	nav::-webkit-scrollbar {
+		display: none;
 	}
 
 	.tools {
+		display: flex;
 		flex: none;
+		gap: var(--space-2);
+		align-items: center;
 	}
 
 	.links {
 		display: flex;
-		flex-wrap: wrap;
+		flex-wrap: nowrap;
 		gap: 0 var(--space-3);
 		margin: 0;
 		padding: 0;
@@ -127,9 +98,10 @@ const links = [
 		min-height: 2.75rem;
 		font-family: var(--font-display);
 		font-weight: 700;
-		font-size: var(--text-base);
+		font-size: var(--text-sm);
 		color: var(--on-desk);
 		text-decoration: none;
+		white-space: nowrap;
 		border-bottom: 3px solid transparent;
 	}
 
@@ -141,12 +113,10 @@ const links = [
 		);
 	}
 
-	/* La sección actual se marca con un subrayado de cinta: no depende solo del color. */
 	.links a[aria-current] {
 		border-bottom-color: var(--tape);
 	}
 
-	/* Con espacio de sobra la barra acompaña al scroll; en móvil se queda arriba y no tapa nada. */
 	@media (min-width: 48rem) {
 		.links {
 			column-gap: var(--space-4);
@@ -155,17 +125,8 @@ const links = [
 		.links a {
 			font-size: var(--text-lg);
 		}
-
-		.bar {
-			position: sticky;
-			top: 0;
-			z-index: 5;
-			border-bottom: 1px solid
-				color-mix(in oklch, var(--on-desk) 16%, transparent);
-		}
 	}
 
-	/* En modo de contraste forzado los colores de borde se igualan: el subrayado pasa a ser de texto. */
 	@media (forced-colors: active) {
 		.links a[aria-current] {
 			text-decoration: underline;

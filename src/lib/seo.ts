@@ -1,4 +1,4 @@
-import { type Locale, localize } from './i18n';
+import { LANGUAGES, type Locale, localePath, localize } from './i18n';
 import type { ExperienceEntry, Profile, Skill } from './schemas';
 
 /** `og:locale` de cada idioma: Open Graph usa `idioma_PAÍS`, no las etiquetas BCP 47 de `lang`. */
@@ -8,6 +8,12 @@ export const OG_LOCALES = {
 	en: 'en_US',
 } as const satisfies Record<Locale, string>;
 
+export function alternateOgLocales(locale: Locale): string[] {
+	return LANGUAGES.filter((language) => language.locale !== locale).map(
+		(language) => OG_LOCALES[language.locale],
+	);
+}
+
 /** La imagen que se ve al compartir el enlace. La genera `npm run assets:og`: 1200×630 es el formato de Open Graph. */
 export const OG_IMAGE = {
 	path: '/og.jpg',
@@ -16,7 +22,6 @@ export const OG_IMAGE = {
 	type: 'image/jpeg',
 } as const;
 
-/** Convierte una ruta del sitio en una URL absoluta, que es lo que exigen `og:image`, `canonical`… */
 export function absoluteUrl(
 	path: string,
 	site: URL | string | undefined,
@@ -30,13 +35,36 @@ export function absoluteUrl(
 	return new URL(path, site).href;
 }
 
+export interface LanguageAlternate {
+	hreflang: string;
+	href: string;
+}
+
+/**
+ * Las páginas de todos los idiomas, más `x-default` (la del idioma principal, para quien llega con
+ * otro). Cada página tiene que enlazar a todas, incluida ella misma: así los buscadores las
+ * emparejan y enseñan a cada persona la suya.
+ */
+export function languageAlternates(
+	site: URL | string | undefined,
+): LanguageAlternate[] {
+	const alternates = LANGUAGES.map(({ locale }) => ({
+		hreflang: locale,
+		href: absoluteUrl(localePath(locale), site),
+	}));
+	const main = alternates[0];
+
+	return main
+		? [...alternates, { hreflang: 'x-default', href: main.href }]
+		: alternates;
+}
+
 export interface PersonSeo {
 	name: string;
 	jobTitle: string;
 	url: string;
 	image: string;
 	sameAs: readonly string[];
-	/** Nombres de las organizaciones donde trabaja ahora. */
 	worksFor: readonly string[];
 	knowsAbout: readonly string[];
 }
@@ -49,12 +77,10 @@ interface PersonSeoSource {
 	experience: readonly ExperienceEntry[];
 	skills: readonly Skill[];
 	locale: Locale;
-	/** URL absoluta de la página y de una imagen de la persona. */
 	url: string;
 	image: string;
 }
 
-/** Los datos del sitio, ya listos para `siteJsonLd`. */
 export function personSeoFrom({
 	profile,
 	experience,

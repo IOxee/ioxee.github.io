@@ -1,0 +1,333 @@
+---
+import { Image, getImage } from 'astro:assets';
+import { isBackPage } from '../lib/book';
+import { certificationMeta } from '../lib/certifications';
+import { formatPeriod } from '../lib/experience';
+import type { SheetPlan } from '../lib/folder';
+import type { FolderData } from '../lib/folder-data';
+import { localize } from '../lib/i18n';
+import type { Locale } from '../lib/i18n';
+import { pickImage } from '../lib/images';
+import { fill } from '../lib/text';
+import { t } from '../lib/ui';
+import FolderCover from './FolderCover.astro';
+import FolderPage from './FolderPage.astro';
+import FolderSkills from './FolderSkills.astro';
+import Leaders from './Leaders.astro';
+
+interface Props {
+	sheet: SheetPlan;
+	page: number;
+	plan: readonly SheetPlan[];
+	title: string;
+	data: FolderData;
+	locale: Locale;
+}
+
+const { sheet, page, plan, title, data, locale } = Astro.props;
+
+// Cada hoja cae un poco distinta en la vista de lista. En la carpeta, apiladas, van rectas.
+const TILTS = [0.3, -0.35, 0.2, -0.25, 0.4, -0.15];
+const tilt = TILTS[page % TILTS.length] ?? 0;
+const headingId = `${sheet.id}-title`;
+const face = isBackPage(page) ? 'back' : 'front';
+
+const projectImages = import.meta.glob<{ default: ImageMetadata }>(
+	'../assets/projects/*.{png,jpg,jpeg,webp}',
+	{ eager: true },
+);
+
+const presentLabel = t(locale, 'period.present');
+const at = <T,>(list: readonly T[], items: readonly number[]): T[] =>
+	items.flatMap((item) => {
+		const found = list[item];
+
+		return found === undefined ? [] : [found];
+	});
+
+const certificationShots =
+	sheet.kind === 'certifications'
+		? await Promise.all(
+				at(data.certifications, sheet.items).map((cert) =>
+					cert.image
+						? getImage({
+								src: cert.image,
+								width: 1600,
+								format: 'webp',
+								quality: 82,
+							})
+						: undefined,
+				),
+			)
+		: [];
+
+// Los idiomas viajan en la última hoja de habilidades.
+const lastSkills = plan.filter((entry) => entry.kind === 'skills').at(-1);
+// Las dos páginas de un proyecto (la principal y la de sus detalles) son del mismo proyecto.
+const project =
+	sheet.kind === 'project' || sheet.kind === 'project-details'
+		? data.projects[sheet.items[0] ?? 0]
+		: undefined;
+---
+
+{sheet.kind === 'cover' ? (
+	<FolderCover
+		name={data.profile.name}
+		headline={localize(data.profile.headline, locale)}
+		locale={locale}
+	/>
+) : (
+	<FolderPage
+		kind={sheet.kind}
+		section={sheet.section}
+		anchor={sheet.anchor}
+		title={title}
+		labelledby={headingId}
+		face={face}
+		tilt={tilt}
+	>
+		{sheet.kind === 'about' && (
+			<>
+				<h2 id={headingId} class="doc-title">
+					{title}
+				</h2>
+				{localize(data.profile.about, locale).map((paragraph) => (
+					<p class="doc-text">{paragraph}</p>
+				))}
+			</>
+		)}
+
+		{sheet.kind === 'experience' && (
+			<>
+				<h2 id={headingId} class="doc-title">
+					{title}
+				</h2>
+				{at(data.work, sheet.items).map((entry) => (
+					<article class="doc-entry">
+						<h3 class="doc-role">{localize(entry.role, locale)}</h3>
+						<p class="doc-meta">
+							{[
+								entry.organization,
+								formatPeriod(
+									entry.start,
+									entry.end,
+									presentLabel,
+								),
+							]
+								.filter(Boolean)
+								.join(' · ')}
+						</p>
+						<p>{localize(entry.summary, locale)}</p>
+					</article>
+				))}
+			</>
+		)}
+
+		{sheet.kind === 'education' && (
+			<>
+				<h2 id={headingId} class="doc-title">
+					{title}
+				</h2>
+				{at(data.education, sheet.items).map((entry) => (
+					<article class="doc-entry">
+						<h3 class="doc-role">
+							{entry.organization ?? localize(entry.role, locale)}
+						</h3>
+						<p class="doc-meta">
+							{formatPeriod(entry.start, entry.end, presentLabel)}
+						</p>
+						<p>{localize(entry.summary, locale)}</p>
+					</article>
+				))}
+			</>
+		)}
+
+		{sheet.kind === 'skills' && (
+			<FolderSkills
+				groups={at(data.skillGroups, sheet.items)}
+				languages={sheet === lastSkills ? data.languages : []}
+				locale={locale}
+				headingId={headingId}
+				title={title}
+			/>
+		)}
+
+		{sheet.kind === 'certifications' && (
+			<>
+				<h2 id={headingId} class="doc-title">
+					{title}
+				</h2>
+				{at(data.certifications, sheet.items).map((cert, index) => {
+					const shot = certificationShots[index];
+
+					return (
+						<article class="doc-entry doc-cert">
+							{cert.image && shot && (
+								<a
+									class="doc-cert-shot"
+									href={shot.src}
+									target="_blank"
+									rel="noopener noreferrer"
+									data-viewer="image"
+									data-viewer-title={cert.name}
+									aria-label={fill(
+										t(locale, 'cert.imageLabel'),
+										{
+											name: cert.name,
+										},
+									)}
+								>
+									<Image
+										src={cert.image}
+										alt={
+											cert.imageAlt
+												? localize(
+														cert.imageAlt,
+														locale,
+													)
+												: fill(
+														t(
+															locale,
+															'cert.imageAlt',
+														),
+														{
+															name: cert.name,
+														},
+													)
+										}
+										width={960}
+										format="webp"
+										quality={80}
+									/>
+								</a>
+							)}
+							<div class="doc-cert-text">
+								<h3 class="doc-role">{cert.name}</h3>
+								<p class="doc-meta">
+									{certificationMeta(cert, {
+										validUntil: t(
+											locale,
+											'cert.validUntil',
+										),
+										expired: t(locale, 'cert.expired'),
+									})}
+								</p>
+								{cert.summary && (
+									<p>{localize(cert.summary, locale)}</p>
+								)}
+								{(cert.url || cert.document) && (
+									<p class="doc-links">
+										{cert.url && (
+											<a
+												href={cert.url}
+												aria-label={fill(
+													t(
+														locale,
+														'cert.verifyLabel',
+													),
+													{ name: cert.name },
+												)}
+											>
+												{t(locale, 'cert.verify')}
+											</a>
+										)}
+										{cert.document && (
+											<a
+												href={cert.document}
+												target="_blank"
+												rel="noopener noreferrer"
+												data-viewer="pdf"
+												data-viewer-title={cert.name}
+												aria-label={fill(
+													t(
+														locale,
+														'cert.documentLabel',
+													),
+													{ name: cert.name },
+												)}
+											>
+												{t(locale, 'cert.document')}
+											</a>
+										)}
+									</p>
+								)}
+							</div>
+						</article>
+					);
+				})}
+			</>
+		)}
+
+		{sheet.kind === 'project' && project && (
+			<>
+				<h2 id={headingId} class="doc-title">
+					{title}
+				</h2>
+				<Image
+					class="doc-shot"
+					src={pickImage(projectImages, project.id).default}
+					alt={localize(project.imageAlt, locale)}
+					width={960}
+					height={480}
+					fit="cover"
+					format="webp"
+					quality={78}
+				/>
+				<p class="doc-text">{localize(project.summary, locale)}</p>
+				<p class="doc-meta">
+					{[
+						formatPeriod(project.start, project.end, presentLabel),
+						project.stack.join(', '),
+					].join(' · ')}
+				</p>
+				<p>
+					<a
+						href={project.repo}
+						aria-label={fill(t(locale, 'mission.repoLabel'), {
+							name: project.name,
+						})}
+					>
+						{t(locale, 'mission.repo')}
+					</a>
+				</p>
+			</>
+		)}
+
+		{sheet.kind === 'project-details' && project?.details && (
+			<>
+				<h2 id={headingId} class="doc-title">
+					{title}
+				</h2>
+				<p class="doc-text">
+					{localize(project.details.intro, locale)}
+				</p>
+				<ul class="doc-list">
+					{localize(project.details.points, locale).map((point) => (
+						<li>{point}</li>
+					))}
+				</ul>
+				{project.details.closing && (
+					<p class="doc-text">
+						{localize(project.details.closing, locale)}
+					</p>
+				)}
+			</>
+		)}
+
+		{sheet.kind === 'contact' && (
+			<>
+				<h2 id={headingId} class="doc-title">
+					{title}
+				</h2>
+				<Leaders items={data.contact} />
+				{data.profile.cv && (
+					<p class="doc-text">
+						<a class="cv" href={data.profile.cv} download>
+							{t(locale, 'contact.cv')}
+						</a>
+					</p>
+				)}
+			</>
+		)}
+	</FolderPage>
+)}

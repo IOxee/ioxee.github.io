@@ -74,6 +74,8 @@ describe.each(PAGES)('CSP de %s', (path) => {
 						'icon',
 						'apple-touch-icon',
 						'canonical',
+						// Las páginas de los otros idiomas (hreflang): enlaces, no recursos que se carguen.
+						'alternate',
 						'preload',
 					].includes(rel ?? '') ||
 						(rel === 'stylesheet' &&
@@ -116,7 +118,7 @@ describe.each(PAGES)('CSP de %s', (path) => {
 
 	it('carga scripts, estilos, fuentes e imágenes solo del propio sitio', () => {
 		const resources = page.querySelectorAll(
-			'script[src], img[src], link[href]:not([rel="canonical"])',
+			'script[src], img[src], link[href]:not([rel="canonical"]):not([rel="alternate"])',
 		);
 
 		for (const resource of resources) {

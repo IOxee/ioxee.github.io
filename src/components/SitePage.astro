@@ -1,25 +1,24 @@
 ---
+import { existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
 import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import avatar from '../assets/avatar.png';
 import Base from '../layouts/Base.astro';
 import { sortExperience } from '../lib/experience';
+import { folderTabs, planSheets, sheetTitles } from '../lib/folder';
+import type { FolderData } from '../lib/folder-data';
 import type { Locale } from '../lib/i18n';
-import { pickImage } from '../lib/images';
-import { sortByOrder } from '../lib/order';
-import { partialDateKey } from '../lib/partial-date';
-import { SECTION_IDS } from '../lib/sections';
+import { pickOptionalAsset, unusableAssets } from '../lib/images';
+import { sortByOrder, sortNewestFirst } from '../lib/order';
+import { SECTION_IDS, type SectionId } from '../lib/sections';
 import { absoluteUrl, personSeoFrom, siteJsonLd } from '../lib/seo';
 import { groupSkills } from '../lib/skills';
 import { fill } from '../lib/text';
 import { t } from '../lib/ui';
-import About from './About.astro';
-import Cartilla from './Cartilla.astro';
-import Contact from './Contact.astro';
-import Inventory from './Inventory.astro';
-import Languages from './Languages.astro';
-import Mission from './Mission.astro';
-import ServiceRecord from './ServiceRecord.astro';
+import { displayUrl } from '../lib/url';
+import DocumentViewer from './DocumentViewer.astro';
+import FolderBook from './FolderBook.astro';
 import SiteFooter from './SiteFooter.astro';
 import SiteNav from './SiteNav.astro';
 
@@ -31,8 +30,6 @@ const { locale } = Astro.props;
 
 /** Primer año del copyright, heredado del sitio v1. */
 const COPYRIGHT_FROM = 2019;
-/** Cada cupón cae con un giro distinto. */
-const MISSION_TILTS = [0.8, -0.6, 0.45];
 
 const [profileEntry] = await getCollection('profile');
 if (!profileEntry) throw new Error('Falta el perfil en src/data/profile.yaml');
@@ -41,31 +38,122 @@ const profile = profileEntry.data;
 const experience = sortExperience(
 	(await getCollection('experience')).map((entry) => entry.data),
 );
-const work = experience.filter((entry) => entry.kind === 'work');
-const education = experience.filter((entry) => entry.kind === 'education');
-// La cartilla se "expide" el año del primer registro de la trayectoria.
-const issuedYear = Math.floor(
-	Math.min(
-		...experience.map((entry) => partialDateKey(entry.start, 'start')),
-	) / 100,
-);
-
 const skills = (await getCollection('skills')).map((entry) => entry.data);
-const groups = groupSkills(skills);
-// `getCollection` no conserva el orden del archivo: proyectos e idiomas se ordenan por `order`.
-const projects = sortByOrder(
-	(await getCollection('projects')).map((entry) => entry.data),
-);
-const languages = sortByOrder(
-	(await getCollection('languages')).map((entry) => entry.data),
-);
+const { email, github, linkedin } = profile.links;
 
-// La captura de cada proyecto se llama como su id: `src/assets/projects/<id>.png`.
-const projectImages = import.meta.glob<{ default: ImageMetadata }>(
-	'../assets/projects/*.{png,jpg,jpeg,webp}',
+// Lo que se adjunta a una certificación (su foto y su documento) va en src/assets/certifications/ y
+// se llama como su `id`. Sin archivo no sale nada: no hay que declarar nada en el YAML.
+const CERTIFICATION_FILES = join(process.cwd(), 'src/assets/certifications');
+const CERTIFICATION_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'pdf'];
+const certificationImages = import.meta.glob<{ default: ImageMetadata }>(
+	'../assets/certifications/*.{png,jpg,jpeg,webp}',
 	{ eager: true },
 );
-const projectImage = (id: string) => pickImage(projectImages, id).default;
+// `no-inline`: un PDF pequeño se incrustaría como `data:` en el enlace, y los navegadores no abren esos.
+const certificationDocuments = import.meta.glob<string>(
+	'../assets/certifications/*.pdf',
+	{ query: '?url&no-inline', import: 'default', eager: true },
+);
+const certificationList = sortByOrder(
+	(await getCollection('certifications')).map((entry) => entry.data),
+);
+
+// Un archivo mal nombrado no se usaría y no diría por qué: mejor que el build avise.
+const attached = existsSync(CERTIFICATION_FILES)
+	? readdirSync(CERTIFICATION_FILES).filter((name) => !name.startsWith('.'))
+	: [];
+const unused = unusableAssets(
+	attached,
+	certificationList.map((entry) => entry.id),
+	CERTIFICATION_EXTENSIONS,
+);
+if (unused.length > 0) {
+	throw new Error(
+		`En src/assets/certifications/ hay archivos que no se van a usar: ${unused.join(', ')}. ` +
+			`Cada uno debe llamarse como el id de una certificación de certifications.yaml y acabar en ` +
+			`${CERTIFICATION_EXTENSIONS.map((extension) => `.${extension}`).join(', ')} (en minúsculas).`,
+	);
+}
+
+// `getCollection` no conserva el orden del archivo: lo que lo necesita se ordena por `order`.
+const data: FolderData = {
+	profile,
+	work: experience.filter((entry) => entry.kind === 'work'),
+	education: experience.filter((entry) => entry.kind === 'education'),
+	skillGroups: groupSkills(skills),
+	languages: sortByOrder(
+		(await getCollection('languages')).map((entry) => entry.data),
+	),
+	certifications: certificationList.map((entry) => ({
+		...entry,
+		image: pickOptionalAsset(certificationImages, entry.id)?.default,
+		document: pickOptionalAsset(certificationDocuments, entry.id),
+	})),
+	projects: sortNewestFirst(
+		(await getCollection('projects')).map((entry) => entry.data),
+	),
+	contact: [
+		{
+			label: t(locale, 'contact.email'),
+			value: email,
+			href: `mailto:${email}`,
+		},
+		{
+			label: t(locale, 'contact.github'),
+			value: displayUrl(github),
+			href: github,
+		},
+		{
+			label: t(locale, 'contact.linkedin'),
+			value: displayUrl(linkedin),
+			href: linkedin,
+		},
+	],
+};
+
+const plan = planSheets({
+	experience: data.work.length,
+	education: data.education.length,
+	skillGroups: data.skillGroups.length,
+	languages: data.languages.length,
+	certifications: data.certifications.length,
+	projects: data.projects.length,
+	detailedProjects: data.projects.flatMap((project, index) =>
+		project.details ? [index] : [],
+	),
+	photographedCertifications: data.certifications.flatMap((cert, index) =>
+		cert.image ? [index] : [],
+	),
+});
+
+const titles = sheetTitles(plan, {
+	labels: {
+		cover: profile.name,
+		about: t(locale, 'section.about'),
+		experience: t(locale, 'section.experience'),
+		education: t(locale, 'section.education'),
+		skills: t(locale, 'section.skills'),
+		certifications: t(locale, 'section.certifications'),
+		project: t(locale, 'section.projects'),
+		'project-details': t(locale, 'section.projects'),
+		contact: t(locale, 'section.contact'),
+	},
+	projectNames: data.projects.map((project) => project.name),
+	partTemplate: t(locale, 'folder.part'),
+});
+
+const TAB_LABEL: Record<SectionId, string> = {
+	[SECTION_IDS.home]: profile.name,
+	[SECTION_IDS.about]: t(locale, 'nav.about'),
+	[SECTION_IDS.resume]: t(locale, 'nav.resume'),
+	[SECTION_IDS.certifications]: t(locale, 'nav.certifications'),
+	[SECTION_IDS.projects]: t(locale, 'nav.projects'),
+	[SECTION_IDS.contact]: t(locale, 'nav.contact'),
+};
+const tabs = folderTabs(plan).map(({ section }) => ({
+	section,
+	label: TAB_LABEL[section],
+}));
 
 const title = fill(t(locale, 'meta.title'), { name: profile.name });
 const description = fill(t(locale, 'meta.description'), { name: profile.name });
@@ -93,62 +181,10 @@ const jsonLd = siteJsonLd(
 	jsonLd={jsonLd}
 	locale={locale}
 >
-	<SiteNav locale={locale} />
+	<SiteNav locale={locale} tabs={tabs} />
 
 	<main id="contenido" class="page">
-		<div id={SECTION_IDS.home}>
-			<Cartilla
-				profile={profile}
-				issuedYear={issuedYear}
-				locale={locale}
-			/>
-		</div>
-
-		<div id={SECTION_IDS.about}>
-			<About profile={profile} locale={locale} />
-		</div>
-
-		<div id={SECTION_IDS.resume} class="resume">
-			<div class="column">
-				<ServiceRecord
-					title={t(locale, 'section.experience')}
-					titleId="experience-title"
-					entries={work}
-					locale={locale}
-				/>
-				<ServiceRecord
-					title={t(locale, 'section.education')}
-					titleId="education-title"
-					entries={education}
-					locale={locale}
-					tilt={-0.4}
-				/>
-			</div>
-			<div class="column column--offset">
-				<Inventory groups={groups} locale={locale} />
-				<Languages languages={languages} locale={locale} />
-			</div>
-		</div>
-
-		<section id={SECTION_IDS.projects} aria-labelledby="projects-title">
-			<h2 id="projects-title" class="desk-title">
-				{t(locale, 'section.projects')}
-			</h2>
-			<div class="missions">
-				{projects.map((project, index) => (
-					<Mission
-						project={project}
-						image={projectImage(project.id)}
-						locale={locale}
-						tilt={MISSION_TILTS[index % MISSION_TILTS.length]}
-					/>
-				))}
-			</div>
-		</section>
-
-		<div id={SECTION_IDS.contact}>
-			<Contact profile={profile} locale={locale} />
-		</div>
+		<FolderBook plan={plan} titles={titles} data={data} locale={locale} />
 	</main>
 
 	<SiteFooter
@@ -156,58 +192,15 @@ const jsonLd = siteJsonLd(
 		startYear={COPYRIGHT_FROM}
 		locale={locale}
 	/>
+
+	{data.certifications.some((cert) => cert.image || cert.document) && (
+		<DocumentViewer locale={locale} />
+	)}
 </Base>
 
 <style>
 	.page {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr);
-		gap: var(--space-7);
-		width: min(100% - 2 * var(--gutter), var(--page-width));
-		margin: var(--space-5) auto 0;
-		padding-bottom: var(--space-6);
-	}
-
-	.resume {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr);
-		gap: var(--space-5);
-		align-items: start;
-	}
-
-	.column {
-		display: grid;
-		gap: var(--space-5);
-	}
-
-	.desk-title {
-		margin-bottom: var(--space-4);
-		font-size: var(--text-h2);
-		color: var(--on-desk);
-	}
-
-	.missions {
-		display: grid;
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
-		gap: var(--space-5);
-		align-items: start;
-	}
-
-	@media (min-width: 48rem) {
-		/* La barra de navegación es fija: las anclas dejan sitio para que no tape el título. */
-		.page > :global(*) {
-			scroll-margin-top: 5rem;
-		}
-	}
-
-	@media (min-width: 72rem) {
-		.resume {
-			grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-		}
-
-		/* Las dos columnas no arrancan a la misma altura: se nota que son papeles distintos. */
-		.column--offset {
-			margin-top: var(--space-5);
-		}
+		width: 100%;
+		padding-inline: var(--gutter);
 	}
 </style>

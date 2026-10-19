@@ -5,7 +5,6 @@ import { t } from '../lib/ui';
 
 interface Props {
 	name: string;
-	/** Primer año del copyright. El rango hasta hoy se calcula al compilar. */
 	startYear: number;
 	locale: Locale;
 }
@@ -14,18 +13,29 @@ const { name, startYear, locale } = Astro.props;
 ---
 
 <footer class="footer">
-	<p>
-		© {yearRange(startYear)} {name}. {t(locale, 'footer.rights')}.
-	</p>
+	<div class="inner">
+		<p>
+			© {yearRange(startYear)} {name}. {t(locale, 'footer.rights')}.
+		</p>
+	</div>
 </footer>
 
 <style>
+	/* Altura mínima fija: el script la mide, y la carpeta sabe cuánto queda para ella antes de medir. */
 	.footer {
-		width: min(100% - 2 * var(--gutter), var(--page-width));
-		margin: 0 auto;
-		padding-block: var(--space-4) var(--space-5);
+		display: flex;
+		align-items: center;
+		min-height: var(--foot-h);
 		font-size: var(--text-sm);
+		line-height: 1.35;
+		background: var(--desk);
 		border-top: 1px solid
 			color-mix(in oklch, var(--on-desk) 22%, transparent);
+	}
+
+	.inner {
+		width: min(100% - 2 * var(--gutter), var(--page-width));
+		margin-inline: auto;
+		padding-block: var(--space-1);
 	}
 </style>

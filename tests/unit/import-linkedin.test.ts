@@ -58,7 +58,6 @@ beforeEach(() => {
 	writeFileSync(join(exportDir, 'Positions.csv'), POSITIONS);
 });
 
-/** Ejecuta un script como lo haría la persona: con Node, desde la terminal. */
 function run(name: string, args: string[], env: Record<string, string> = {}) {
 	const result = spawnSync(process.execPath, [script(name), ...args], {
 		encoding: 'utf8',

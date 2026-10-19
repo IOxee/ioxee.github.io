@@ -1,11 +1,8 @@
 ---
 interface Props {
 	as?: 'section' | 'article' | 'div';
-	/** Giro en grados: cada hoja cae un poco distinta, como papeles sobre una mesa. */
 	tilt?: number;
-	/** Borde izquierdo con muescas de troquel, como una cartilla. */
 	perforated?: boolean;
-	/** Id del título, para `section` y `article`. */
 	labelledby?: string;
 }
 
@@ -48,7 +45,6 @@ const {
 		);
 	}
 
-	/* Grano por encima del papel. `multiply` oscurece el papel y no toca la tinta. */
 	.paper::after {
 		content: '';
 		position: absolute;
@@ -68,7 +64,6 @@ const {
 				no-repeat;
 	}
 
-	/* En modo de contraste forzado el grano ensucia el texto: se quita. */
 	@media (forced-colors: active) {
 		.paper::after {
 			display: none;

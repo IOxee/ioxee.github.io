@@ -1,6 +1,5 @@
 import type { LinkedinRow } from './linkedin.ts';
 
-/** Los dominios del Member Snapshot API que usa la web: posiciones y estudios. */
 export type SnapshotDomain = 'POSITIONS' | 'EDUCATION';
 
 const SNAPSHOT_URL = 'https://api.linkedin.com/rest/memberSnapshotData';
@@ -40,7 +39,6 @@ function describeFailure(status: number): string {
 const isObject = (value: unknown): value is Record<string, unknown> =>
 	typeof value === 'object' && value !== null && !Array.isArray(value);
 
-/** Una fila de la API con todos los valores como texto, como en el CSV del export. */
 const toRow = (value: Record<string, unknown>): LinkedinRow =>
 	Object.fromEntries(
 		Object.entries(value).map(([column, cell]) => [
@@ -49,7 +47,6 @@ const toRow = (value: Record<string, unknown>): LinkedinRow =>
 		]),
 	);
 
-/** Las filas de la respuesta: `elements[].snapshotData[]`. Lo que no tenga esa forma se ignora. */
 function rowsOf(body: unknown): LinkedinRow[] {
 	if (!isObject(body) || !Array.isArray(body.elements)) return [];
 

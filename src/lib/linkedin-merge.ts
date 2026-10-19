@@ -12,7 +12,6 @@ export interface EntryUpdate {
 	changes: DateChange[];
 }
 
-/** Un registro nuevo, con el texto de LinkedIn en el campo español. */
 export interface NewEntry {
 	id: string;
 	kind: ExperienceEntry['kind'];
@@ -24,17 +23,14 @@ export interface NewEntry {
 }
 
 export interface MergePlan {
-	/** Registros que ya estaban y cuyas fechas cambian. */
 	updates: EntryUpdate[];
 	additions: NewEntry[];
-	/** Registros que ya estaban y coinciden con LinkedIn. */
 	unchanged: string[];
 	/** Registros de la web que LinkedIn no tiene. No se tocan ni se borran. */
 	onlyOnSite: string[];
 }
 
 export interface MergeOptions {
-	/** `false`: solo actualizar fechas, sin crear registros nuevos. */
 	addNew?: boolean;
 	/**
 	 * Tipos de registro de los que LinkedIn ha dado datos. Los demás no se comparan ni se listan
@@ -46,7 +42,6 @@ export interface MergeOptions {
 /** Más años de diferencia entre dos inicios y es otra etapa en la misma organización. */
 const MAX_START_GAP_YEARS = 2;
 
-/** Texto en minúsculas, sin acentos y con guiones en lugar de símbolos y espacios. */
 export function slugify(text: string): string {
 	const slug = text
 		.normalize('NFD')
@@ -82,7 +77,6 @@ const yearOf = (date: string): number => Number(date.slice(0, 4));
 interface Pairing {
 	imported: number;
 	site: number;
-	/** Menor es mejor: 0 si empiezan igual, y crece con los años de diferencia. */
 	distance: number;
 }
 
@@ -157,10 +151,6 @@ function dateChanges(
 	return changes;
 }
 
-/**
- * Qué hay que cambiar en `experience.yaml` para que coincida con LinkedIn. Solo mueve fechas y
- * añade registros: nunca reescribe un texto ya escrito ni borra nada.
- */
 export function planMerge(
 	site: readonly ExperienceEntry[],
 	imported: readonly ImportedEntry[],

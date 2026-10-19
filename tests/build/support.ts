@@ -4,7 +4,12 @@ import { type HTMLElement, parse } from 'node-html-parser';
 
 export const DIST = new URL('../../dist/', import.meta.url);
 export const SITE = 'https://ioxee.github.io';
-export const PAGES = ['index.html', '404.html'] as const;
+export const PAGES = [
+	'index.html',
+	'en/index.html',
+	'ca/index.html',
+	'404.html',
+] as const;
 
 if (!existsSync(new URL('index.html', DIST))) {
 	throw new Error(
@@ -23,7 +28,6 @@ export const distHas = (path: string): boolean => existsSync(inDist(path));
 export const parsePage = (path: string): HTMLElement =>
 	parse(readDist(path), { comment: false });
 
-/** Las directivas de la política: nombre → fuentes. */
 export type Csp = ReadonlyMap<string, readonly string[]>;
 
 export function cspOf(page: HTMLElement): Csp {
@@ -67,6 +71,5 @@ export const isExecutableInlineScript = (script: HTMLElement): boolean => {
 	);
 };
 
-/** Dirección que sale del sitio: con protocolo o `//host`. */
 export const isExternal = (url: string): boolean =>
 	/^(?:[a-z][a-z0-9+.-]*:|\/\/)/i.test(url);

@@ -17,7 +17,6 @@ const page = (...rows: Record<string, unknown>[]) =>
 
 const notFound = () => json({ status: 404, message: 'No data found' }, 404);
 
-/** `fetch` falso que responde con cada respuesta de la lista, en orden. */
 function fakeFetch(...responses: (Response | Error)[]) {
 	const queue = [...responses];
 

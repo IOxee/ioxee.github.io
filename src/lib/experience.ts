@@ -1,7 +1,7 @@
 import { parsePartialDate, partialDateKey } from './partial-date';
 import type { ExperienceEntry } from './schemas';
 
-function formatPartialDate(date: string): string {
+export function formatPartialDate(date: string): string {
 	const { year, month } = parsePartialDate(date);
 
 	return month === null
@@ -9,7 +9,6 @@ function formatPartialDate(date: string): string {
 		: `${String(month).padStart(2, '0')}/${year}`;
 }
 
-/** `2022 - Actualidad`, `2018 - 2020` o `02/2022 - 07/2022`. La etiqueta de "en curso" depende del idioma. */
 export function formatPeriod(
 	start: string,
 	end: string | null,

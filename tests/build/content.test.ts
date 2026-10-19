@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
+import { SECTION_IDS } from '../../src/lib/sections';
 import { PAGES, distHas, isExternal, parsePage, readDist } from './support';
 
 /** Servicios del sitio v1 que no deben volver: mapa, fuentes de iconos, jQuery y analítica de terceros. */
@@ -41,6 +42,32 @@ describe.each(PAGES)('contenido de %s', (path) => {
 			const href = link.getAttribute('href') ?? '';
 
 			expect(href).toMatch(/^(?:https:\/\/|mailto:|#|\/(?!\/))/);
+		}
+	});
+
+	it('si hay enlaces al visor de documentos, la página trae el visor y los enlaces funcionan sin él', () => {
+		const links = page.querySelectorAll('a[data-viewer]');
+		if (links.length === 0) {
+			expect(
+				page.querySelectorAll('dialog[data-viewer-dialog]'),
+			).toHaveLength(0);
+
+			return;
+		}
+
+		expect(
+			page.querySelectorAll('dialog[data-viewer-dialog]'),
+		).toHaveLength(1);
+		// Cerrado no lleva ningún enlace: uno sin `href` se vería como un enlace roto (Lighthouse y buscadores).
+		expect(
+			page.querySelectorAll('dialog[data-viewer-dialog] a'),
+		).toHaveLength(0);
+		for (const link of links) {
+			expect(link.getAttribute('href')).toMatch(
+				/^\/_astro\/.+\.(webp|pdf)$/,
+			);
+			expect(link.getAttribute('target')).toBe('_blank');
+			expect(link.getAttribute('data-viewer-title')).toMatch(/\S/);
 		}
 	});
 
@@ -109,5 +136,104 @@ describe('página principal', () => {
 
 		expect(skip?.getAttribute('href')).toBe('#contenido');
 		expect(page.querySelector('#contenido')).not.toBeNull();
+	});
+});
+
+describe('la carpeta de la página principal', () => {
+	const page = parsePage('index.html');
+	const folder = page.querySelector('[data-folder]');
+	const pages = page.querySelectorAll('[data-page]');
+	const leaves = page.querySelectorAll('[data-leaf]');
+	const order = Object.values(SECTION_IDS) as string[];
+
+	it('es una sola carpeta, sin botones a la vista ni texto de estado: se maneja con el scroll, el teclado y el menú', () => {
+		expect(page.querySelectorAll('[data-folder]')).toHaveLength(1);
+		const buttons = folder?.querySelectorAll('button') ?? [];
+		expect(
+			buttons.map((button) => button.getAttribute('data-turn')),
+		).toEqual(['prev', 'next']);
+		for (const button of buttons) {
+			expect(button.classList.contains('visually-hidden')).toBe(true);
+			expect(button.getAttribute('tabindex')).toBe('-1');
+		}
+		expect(page.querySelector('[data-status]')).toBeNull();
+	});
+
+	it('empieza por la portada, que es el inicio (#home) y se llama como el único h1', () => {
+		const [cover] = pages;
+
+		expect(cover?.getAttribute('data-kind')).toBe('cover');
+		expect(cover?.id).toBe('home');
+		// El h1 va fuera de las hojas para que la página tenga título con cualquier hoja a la vista.
+		expect(
+			page.getElementById(cover?.getAttribute('aria-labelledby') ?? '')
+				?.tagName,
+		).toBe('H1');
+		expect(cover?.querySelectorAll('h1')).toHaveLength(0);
+	});
+
+	it('pone las páginas en el orden de las secciones, sin volver atrás', () => {
+		const positions = pages.map((element) =>
+			order.indexOf(element.getAttribute('data-section') ?? ''),
+		);
+
+		expect(positions.every((position) => position >= 0)).toBe(true);
+		expect(positions).toEqual([...positions].sort((a, b) => a - b));
+	});
+
+	it('reparte las páginas en hojas de doble cara: la portada sola y luego de dos en dos', () => {
+		// La portada sola y, después, una hoja por cada dos páginas: ninguna página queda fuera ni repetida.
+		expect(leaves).toHaveLength(1 + Math.ceil((pages.length - 1) / 2));
+		expect(
+			leaves.reduce(
+				(sum, leaf) =>
+					sum + leaf.querySelectorAll('[data-page]').length,
+				0,
+			),
+		).toBe(pages.length);
+
+		leaves.forEach((leaf, index) => {
+			const faces = leaf.querySelectorAll('[data-page]');
+			const blank = leaf.querySelectorAll('.page--blank');
+
+			expect(faces.length + blank.length).toBe(2);
+			expect(faces[0]?.classList.contains('page--front')).toBe(true);
+			if (faces[1])
+				expect(faces[1].classList.contains('page--back')).toBe(true);
+			if (index === 0) expect(faces).toHaveLength(1);
+		});
+	});
+
+	it('da nombre a cada página con un encabezado que existe y dice algo', () => {
+		for (const element of pages) {
+			const id = element.getAttribute('aria-labelledby') ?? '';
+			const heading = page.getElementById(id);
+
+			expect(
+				heading,
+				`página ${element.getAttribute('data-title')}`,
+			).not.toBeNull();
+			expect(heading?.textContent.trim()).not.toBe('');
+		}
+	});
+
+	it('tiene una pestaña por sección con páginas, que lleva a la primera página de esa sección', () => {
+		const tabs = page.querySelectorAll('[data-site-nav] a');
+		const sections = new Set(
+			pages
+				.map((element) => element.getAttribute('data-section') ?? '')
+				.filter((section) => section !== 'home'),
+		);
+
+		expect(tabs.map((tab) => tab.getAttribute('href'))).toEqual(
+			[...sections].map((section) => `#${section}`),
+		);
+		for (const section of sections) {
+			const first = pages.find(
+				(element) => element.getAttribute('data-section') === section,
+			);
+
+			expect(first?.id).toBe(section);
+		}
 	});
 });

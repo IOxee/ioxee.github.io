@@ -7,6 +7,8 @@ import {
 	OG_IMAGE,
 	OG_LOCALES,
 	absoluteUrl,
+	alternateOgLocales,
+	languageAlternates,
 	siteJsonLd,
 	personSeoFrom,
 	serializeJsonLd,
@@ -143,6 +145,37 @@ describe('OG_LOCALES', () => {
 	it('has an Open Graph locale for every supported locale', () => {
 		expect(Object.keys(OG_LOCALES).sort()).toEqual([...LOCALES].sort());
 		expect(OG_LOCALES.es).toBe('es_ES');
+	});
+});
+
+describe('alternateOgLocales', () => {
+	it('lists the Open Graph locale of every other language, never the page own one', () => {
+		expect(alternateOgLocales('es')).toEqual(['en_US', 'ca_ES']);
+		expect(alternateOgLocales('en')).toEqual(['es_ES', 'ca_ES']);
+		expect(alternateOgLocales('ca')).toEqual(['es_ES', 'en_US']);
+	});
+});
+
+describe('languageAlternates', () => {
+	const site = 'https://ioxee.github.io';
+
+	it('points to the page of every language, and x-default to the main one', () => {
+		expect(languageAlternates(site)).toEqual([
+			{ hreflang: 'es', href: 'https://ioxee.github.io/' },
+			{ hreflang: 'en', href: 'https://ioxee.github.io/en/' },
+			{ hreflang: 'ca', href: 'https://ioxee.github.io/ca/' },
+			{ hreflang: 'x-default', href: 'https://ioxee.github.io/' },
+		]);
+	});
+
+	it('accepts the site as a URL too, as Astro gives it', () => {
+		expect(languageAlternates(new URL(site))[1]?.href).toBe(
+			'https://ioxee.github.io/en/',
+		);
+	});
+
+	it('refuses to build relative links when the site is not known', () => {
+		expect(() => languageAlternates(undefined)).toThrow(/site/);
 	});
 });
 

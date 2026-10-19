@@ -1,6 +1,6 @@
 import { type Page, expect, test } from '@playwright/test';
 import sharp from 'sharp';
-import { SCHEMES, settle } from './support';
+import { SCHEMES, folderGeometry, settle, showPosition } from './support';
 
 // La medida inyecta una hoja de estilo para esconder el texto, y la CSP del sitio lo impediría.
 test.use({ bypassCSP: true, viewport: { width: 1440, height: 900 } });
@@ -9,7 +9,6 @@ test.skip(
 	'Mide lo que se pinta: un navegador basta.',
 );
 
-/** Un renglón de texto con su caja en la página y su color ya como RGB. */
 interface TextLine {
 	label: string;
 	x: number;
@@ -21,9 +20,15 @@ interface TextLine {
 	bold: boolean;
 }
 
-/** Cada renglón de texto visible, con el rectángulo del texto y no el de su caja (que tiene bordes). */
-function collectTextLines(page: Page): Promise<TextLine[]> {
-	return page.evaluate(() => {
+type Origin = 'page' | 'viewport';
+
+/**
+ * Cada renglón de texto que se ve, con el rectángulo del texto y no el de su caja (que tiene
+ * bordes). No cuenta lo que no se ve: lo oculto, lo `inert` (las páginas de la carpeta que no se
+ * están leyendo) ni las caras de las hojas que están de espaldas.
+ */
+function collectTextLines(page: Page, origin: Origin): Promise<TextLine[]> {
+	return page.evaluate((mode) => {
 		const canvas = document.createElement('canvas');
 		canvas.width = canvas.height = 1;
 		const context = canvas.getContext('2d', { willReadFrequently: true });
@@ -38,6 +43,8 @@ function collectTextLines(page: Page): Promise<TextLine[]> {
 
 			return [r, g, b];
 		};
+		const offsetX = mode === 'page' ? scrollX : 0;
+		const offsetY = mode === 'page' ? scrollY : 0;
 
 		const lines: TextLine[] = [];
 		const walker = document.createTreeWalker(
@@ -51,22 +58,32 @@ function collectTextLines(page: Page): Promise<TextLine[]> {
 			// El sello y el enlace de salto son adorno o solo salen al enfocar; el resto es contenido.
 			if (
 				parent.closest(
-					'svg, script, style, .visually-hidden, .stamp, .skip-link',
+					'svg, script, style, .visually-hidden, .stamp, .skip-link, [inert]',
 				)
 			) {
 				continue;
 			}
+			if (!parent.checkVisibility({ visibilityProperty: true })) continue;
 
 			const style = getComputedStyle(parent);
 			const range = document.createRange();
 			range.selectNodeContents(node);
 			for (const rect of range.getClientRects()) {
 				if (rect.width < 4 || rect.height < 4) continue;
+				if (
+					mode === 'viewport' &&
+					(rect.bottom < 0 ||
+						rect.top > innerHeight ||
+						rect.right < 0 ||
+						rect.left > innerWidth)
+				) {
+					continue;
+				}
 
 				lines.push({
 					label: `${parent.tagName.toLowerCase()} «${node.textContent.trim().slice(0, 24)}»`,
-					x: Math.round(rect.left + scrollX),
-					y: Math.round(rect.top + scrollY),
+					x: Math.round(rect.left + offsetX),
+					y: Math.round(rect.top + offsetY),
 					width: Math.round(rect.width),
 					height: Math.round(rect.height),
 					color: toRgb(style.color),
@@ -77,7 +94,7 @@ function collectTextLines(page: Page): Promise<TextLine[]> {
 		}
 
 		return lines;
-	});
+	}, origin);
 }
 
 const channel = (value: number): number => {
@@ -92,33 +109,47 @@ const luminance = (r: number, g: number, b: number): number =>
 const ratio = (a: number, b: number): number =>
 	(Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 
-/** Los renglones que no llegan al contraste que exige WCAG sobre el fondo ya pintado. */
-async function lowContrast(page: Page): Promise<string[]> {
-	const lines = await collectTextLines(page);
+const HIDE_TEXT = `
+html[data-contrast-probe] *, html[data-contrast-probe] *::before, html[data-contrast-probe] *::after {
+	color: transparent !important;
+	-webkit-text-fill-color: transparent !important;
+	text-decoration-color: transparent !important;
+}
+html[data-contrast-probe] .stamp { visibility: hidden !important; }`;
 
-	// Sin texto, queda solo el fondo: papel, grano, degradados y sombras.
-	await page.addStyleTag({
-		content:
-			'*, *::before, *::after { color: transparent !important; -webkit-text-fill-color: transparent !important; text-decoration-color: transparent !important; } .stamp { visibility: hidden !important; }',
-	});
-	// Se mide contra lo que hay y se comprueba que hay algo y que la captura llega al final de la
-	// página: si no, los textos de más abajo no se medirían.
-	expect(lines.length).toBeGreaterThan(50);
-	const documentHeight = await page.evaluate(
-		() => document.documentElement.scrollHeight,
+/**
+ * Mete la hoja de estilo con `evaluate` y no con `addStyleTag`, que sin JavaScript se queda
+ * esperando a un evento que la página nunca recibe.
+ */
+function injectStyle(page: Page, css: string): Promise<void> {
+	return page.evaluate((content) => {
+		const style = document.createElement('style');
+		style.textContent = content;
+		document.head.append(style);
+	}, css);
+}
+
+async function lowContrast(
+	page: Page,
+	lines: readonly TextLine[],
+	fullPage: boolean,
+): Promise<string[]> {
+	await page.evaluate(() =>
+		document.documentElement.setAttribute('data-contrast-probe', ''),
 	);
-	const screenshot = await page.screenshot({ fullPage: true });
+	const screenshot = await page.screenshot({ fullPage });
+	await page.evaluate(() =>
+		document.documentElement.removeAttribute('data-contrast-probe'),
+	);
+
 	const { data, info } = await sharp(screenshot)
 		.removeAlpha()
 		.raw()
 		.toBuffer({ resolveWithObject: true });
 
-	expect(info.height).toBeGreaterThanOrEqual(documentHeight);
-
 	const failures: string[] = [];
 	for (const line of lines) {
 		const lights: number[] = [];
-		// Todo el renglón: el fondo cambia de un extremo a otro (degradado, sombras, grano).
 		const right = Math.min(info.width, line.x + line.width);
 		const bottom = Math.min(info.height, line.y + line.height);
 		for (let y = Math.max(0, line.y); y < bottom; y += 2) {
@@ -160,14 +191,78 @@ async function lowContrast(page: Page): Promise<string[]> {
 
 test.describe('contraste del texto sobre el fondo renderizado', () => {
 	for (const scheme of SCHEMES) {
-		test(`todo el texto llega al contraste de WCAG AA, también sobre el grano y el degradado: ${scheme}`, async ({
+		test(`todo el texto de la carpeta llega al contraste de WCAG AA, en cada hoja y también sobre el grano y el degradado: ${scheme}`, async ({
 			page,
 		}) => {
 			await page.emulateMedia({ colorScheme: scheme });
 			await page.goto('/');
 			await settle(page);
+			await injectStyle(page, HIDE_TEXT);
 
-			expect(await lowContrast(page)).toEqual([]);
+			const { parallax, positions } = await folderGeometry(page);
+			// Sin esto se mediría la carpeta sin girar y no se vería ninguna hoja de dentro.
+			expect(parallax).toBe(true);
+			expect(positions).toBeGreaterThanOrEqual(5);
+
+			const failures: string[] = [];
+			let measured = 0;
+			for (let position = 0; position < positions; position += 1) {
+				await showPosition(page, position);
+				await settle(page);
+
+				const lines = await collectTextLines(page, 'viewport');
+				measured += lines.length;
+				for (const failure of await lowContrast(page, lines, false)) {
+					failures.push(`posición ${position}: ${failure}`);
+				}
+			}
+
+			await page.evaluate(() =>
+				window.scrollTo({
+					top: document.documentElement.scrollHeight,
+					behavior: 'instant',
+				}),
+			);
+			await settle(page);
+			const footer = await collectTextLines(page, 'viewport');
+			measured += footer.length;
+			for (const failure of await lowContrast(page, footer, false)) {
+				failures.push(`pie: ${failure}`);
+			}
+
+			// Que haya texto que medir: sin esto, esconder todo dejaría la prueba en verde.
+			expect(measured).toBeGreaterThan(80);
+			expect(failures).toEqual([]);
+		});
+	}
+});
+
+test.describe('contraste en la lista que sale sin JavaScript', () => {
+	test.use({ javaScriptEnabled: false });
+
+	for (const scheme of SCHEMES) {
+		test(`todas las páginas seguidas llegan al contraste de WCAG AA: ${scheme}`, async ({
+			page,
+		}) => {
+			await page.emulateMedia({ colorScheme: scheme });
+			await page.goto('/');
+			await page.evaluate(() => document.fonts.ready);
+			await injectStyle(page, HIDE_TEXT);
+
+			const lines = await collectTextLines(page, 'page');
+			// Se mide contra lo que hay y se comprueba que hay algo y que la captura llega al final de la
+			// página: si no, los textos de más abajo no se medirían.
+			expect(lines.length).toBeGreaterThan(80);
+			const documentHeight = await page.evaluate(
+				() => document.documentElement.scrollHeight,
+			);
+			const failures = await lowContrast(page, lines, true);
+			const { height } = await sharp(
+				await page.screenshot({ fullPage: true }),
+			).metadata();
+
+			expect(height).toBeGreaterThanOrEqual(documentHeight);
+			expect(failures).toEqual([]);
 		});
 	}
 });

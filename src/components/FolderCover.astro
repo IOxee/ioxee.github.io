@@ -1,0 +1,77 @@
+---
+import { Image } from 'astro:assets';
+import avatar from '../assets/avatar.png';
+import type { Locale } from '../lib/i18n';
+import { fill } from '../lib/text';
+import { t } from '../lib/ui';
+import FolderPage from './FolderPage.astro';
+import Stamp from './Stamp.astro';
+
+interface Props {
+	name: string;
+	headline: string;
+	locale: Locale;
+}
+
+const { name, headline, locale } = Astro.props;
+const photoAlt = fill(t(locale, 'card.photoAlt'), { name });
+---
+
+<FolderPage
+	kind="cover"
+	section="home"
+	anchor
+	current
+	title={name}
+	labelledby="folder-name"
+>
+	<p class="cover-tab">{t(locale, 'folder.tab')}</p>
+
+	<figure class="polaroid">
+		<Image
+			src={avatar}
+			alt={photoAlt}
+			width={720}
+			height={720}
+			loading="eager"
+			fetchpriority="high"
+		/>
+		<svg
+			class="clip"
+			viewBox="0 0 24 52"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2.4"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			aria-hidden="true"
+			focusable="false"
+		>
+			<path d="M8 26V8a5 5 0 0 1 10 0v34a8 8 0 0 1-16 0V12"></path>
+		</svg>
+	</figure>
+
+	{/* El sello es adorno para los lectores de pantalla: el nombre de verdad es el h1 de la carpeta. */}
+	<div class="cover-stamp">
+		<Stamp text={name} tilt={-5} animate />
+	</div>
+
+	<p class="cover-headline">{headline}</p>
+
+	{/* Invita a bajar: el scroll es lo que abre la carpeta. Es adorno; la ayuda para lectores de pantalla va en la carpeta. */}
+	<p class="cover-scroll" aria-hidden="true">
+		<span>{t(locale, 'folder.scrollHint')}</span>
+		<svg
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2.6"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+			focusable="false"
+		>
+			<path d="M6 7l6 6 6-6"></path>
+			<path d="M6 13l6 6 6-6"></path>
+		</svg>
+	</p>
+</FolderPage>

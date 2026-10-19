@@ -1,9 +1,3 @@
-/**
- * Genera el favicon y el icono de Apple a partir de la paleta del sitio, para que los iconos
- * no se queden con colores viejos si cambia el diseño.
- *
- * Uso: `npm run assets:brand` (Node 22.19 o superior, que ejecuta TypeScript sin compilar).
- */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import sharp from 'sharp';
 import { oklchToHex } from '../src/lib/color.ts';
@@ -12,11 +6,6 @@ import { PALETTES } from '../src/lib/theme.ts';
 const KRAFT = oklchToHex(PALETTES.day.paper);
 const VIOLET = oklchToHex(PALETTES.day.ink);
 
-/**
- * Monograma «IO», el comienzo del alias ioxee: una «I» de stencil (dos barras separadas por el
- * puente de la plantilla) y una «O» que es el anillo de un sello. `rounded` redondea las esquinas;
- * el icono de Apple va a sangre porque iOS ya aplica su propia máscara.
- */
 const icon = (rounded: boolean): string =>
 	`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">` +
 	`<rect width="32" height="32"${rounded ? ' rx="6"' : ''} fill="${KRAFT}"/>` +

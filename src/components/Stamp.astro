@@ -9,7 +9,6 @@ interface Props {
 const { text, tilt = -8, animate = false } = Astro.props;
 ---
 
-{/* Es adorno: lo que dice ya consta en el contenido, así que los lectores de pantalla lo omiten. */}
 <p
 	class="stamp"
 	style={`--tilt: ${tilt}deg`}
@@ -36,7 +35,6 @@ const { text, tilt = -8, animate = false } = Astro.props;
 		border-radius: 0.35rem;
 		opacity: 0.92;
 		transform: rotate(var(--tilt));
-		/* Tinta sobre papel: se mezcla con lo que hay debajo y tiene el borde irregular. */
 		mix-blend-mode: multiply;
 		filter: url(#ink-rough);
 	}
@@ -45,7 +43,6 @@ const { text, tilt = -8, animate = false } = Astro.props;
 		animation: stamp-down var(--duration-stamp) var(--ease-stamp) 700ms both;
 	}
 
-	/* Sin movimiento no hay caída: el sello ya está estampado, sin esperar al retardo de la animación. */
 	@media (prefers-reduced-motion: reduce) {
 		.stamp[data-animate='true'] {
 			animation: none;

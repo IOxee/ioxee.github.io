@@ -31,7 +31,6 @@ const compareSkills = (a: SkillWithYears, b: SkillWithYears): number =>
 	b.years - a.years ||
 	a.name.localeCompare(b.name, 'es');
 
-/** Agrupa por categoría (en orden fijo), descarta las vacías y ordena cada grupo por estado, años y nombre. */
 export function groupSkills(
 	skills: readonly Skill[],
 	today: Date = new Date(),

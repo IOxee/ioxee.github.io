@@ -1,0 +1,153 @@
+---
+import { localize } from '../lib/i18n';
+import type { Locale } from '../lib/i18n';
+import type { Language } from '../lib/schemas';
+import type { SkillGroup } from '../lib/skills';
+import { formatYears, t } from '../lib/ui';
+import Leaders from './Leaders.astro';
+
+interface Props {
+	groups: readonly SkillGroup[];
+	/** Los idiomas, solo en la última hoja de habilidades; en las demás, vacío. */
+	languages: readonly Language[];
+	locale: Locale;
+	headingId: string;
+	title: string;
+}
+
+const { groups, languages, locale, headingId, title } = Astro.props;
+
+const spoken = languages.map((language) => ({
+	label: localize(language.name, locale),
+	value: t(locale, `language.level.${language.level}`),
+}));
+---
+
+<h2 id={headingId} class="doc-title">
+	{title}
+</h2>
+
+{groups.map((group) => (
+	<div
+		class="group"
+		role="group"
+		aria-labelledby={`skills-${group.category}`}
+	>
+		<h3 id={`skills-${group.category}`} class="doc-role category">
+			{t(locale, `skill.category.${group.category}`)}
+		</h3>
+		<ul class="list" role="list">
+			{group.skills.map((skill) => (
+				<li class="skill">
+					<span class="name">{skill.name}</span>
+					<span class="leader" aria-hidden="true" />
+					{/* Mientras `since` esté sin confirmar no se publican años inventados. */}
+					{!skill.provisional && (
+						<span class="years">
+							{formatYears(skill.years, locale)}
+						</span>
+					)}
+					<span class="state" data-level={skill.state}>
+						<span class="box" aria-hidden="true" />
+						{t(locale, `skill.state.${skill.state}`)}
+					</span>
+				</li>
+			))}
+		</ul>
+	</div>
+))}
+
+{spoken.length > 0 && (
+	<div class="group">
+		<h3 class="doc-role category">{t(locale, 'section.languages')}</h3>
+		<Leaders items={spoken} />
+	</div>
+)}
+
+<style>
+	.group + .group {
+		margin-top: var(--space-3);
+	}
+
+	.category {
+		padding-bottom: var(--space-1);
+		margin-bottom: var(--space-2);
+		border-bottom: 2px solid var(--ink);
+	}
+
+	.list {
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.skill {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0 var(--space-2);
+		padding-block: 0.15rem;
+	}
+
+	.name {
+		font-weight: 700;
+	}
+
+	.leader {
+		flex: 1 1 1rem;
+		min-width: 1rem;
+		border-bottom: 2px dotted var(--rule);
+		translate: 0 -0.2em;
+	}
+
+	.years {
+		min-width: 4.5rem;
+		font-size: var(--text-sm);
+		color: var(--ink-muted);
+		text-align: right;
+	}
+
+	.state {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.45rem;
+		min-width: 8rem;
+		font-size: var(--text-sm);
+	}
+
+	/* Casilla: llena, a medias o vacía. El texto lo dice igual: no depende de la forma. */
+	.box {
+		width: 0.95rem;
+		height: 0.95rem;
+		flex: none;
+		border: 2px solid var(--ink);
+		background: linear-gradient(
+			to top,
+			var(--ink) var(--fill, 0%),
+			transparent var(--fill, 0%)
+		);
+	}
+
+	[data-level='daily'] {
+		--fill: 100%;
+	}
+
+	[data-level='comfortable'] {
+		--fill: 75%;
+	}
+
+	[data-level='intermediate'] {
+		--fill: 50%;
+	}
+
+	[data-level='basic'] {
+		--fill: 25%;
+	}
+
+	@media (max-width: 30rem) {
+		.years,
+		.state {
+			min-width: 0;
+		}
+	}
+</style>

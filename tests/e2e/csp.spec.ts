@@ -17,7 +17,6 @@ test.describe('política de contenido (CSP)', () => {
 			await page.goto('/');
 			await settle(page);
 
-			// Usarlo: cambiar de tema y recorrer la página, que es lo que ejecuta los scripts.
 			await page.locator('[data-theme-toggle]').click();
 			await page.evaluate(async () => {
 				for (const fraction of [0.25, 0.5, 0.75, 1]) {

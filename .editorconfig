@@ -10,3 +10,8 @@ end_of_line = crlf
 charset = utf-8
 trim_trailing_whitespace = false
 insert_final_newline = false
+
+# YAML no admite tabulaciones para sangrar: con ellas, un dato mal puesto rompe el build.
+[*.{yaml,yml}]
+indent_style = space
+insert_final_newline = true

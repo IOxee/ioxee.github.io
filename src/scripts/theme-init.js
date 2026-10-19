@@ -1,5 +1,5 @@
-// Fija el tema antes de pintar para que no haya parpadeo. Base.astro lo incrusta en el <head> y
-// astro.config.mjs calcula su hash para la CSP a partir de este mismo archivo.
+// Fija el tema antes de pintar, sin parpadeo. `Base.astro` lo incrusta en línea y `astro.config.mjs` calcula su hash
+// para la CSP de este mismo archivo.
 (function () {
 	var root = document.documentElement;
 	var theme = null;

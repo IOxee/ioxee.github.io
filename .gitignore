@@ -10,18 +10,14 @@
 /blob-report/
 /tests/e2e/*-snapshots/
 
-# cobertura y caches de herramientas
 coverage/
 *.tsbuildinfo
 
-# entorno y secretos
 .env
 .env.*
 !.env.example
 
-# configuración local del asistente
 .claude/
 
-# sistema operativo
 .DS_Store
 Thumbs.db

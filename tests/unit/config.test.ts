@@ -44,6 +44,16 @@ describe('astro.config.mjs security.csp', () => {
 		expect(directives).toContain("font-src 'self'");
 	});
 
+	it('lets the page frame only its own documents, for the PDF viewer, and nobody else', () => {
+		expect(directives).toContain("frame-src 'self'");
+		for (const directive of directives) {
+			if (directive.startsWith('frame-src')) {
+				expect(directive).not.toMatch(/\*|https?:|data:|blob:/);
+			}
+		}
+		expect(directives).toContain("object-src 'none'");
+	});
+
 	it('closes the injection routes that no page here needs', () => {
 		expect(directives).toContain("object-src 'none'");
 		expect(directives).toContain("base-uri 'none'");

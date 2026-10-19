@@ -1,13 +1,10 @@
 /**
- * Pone al día `src/data/experience.yaml` con lo que hay en LinkedIn: mueve las fechas que han
- * cambiado y añade los registros que faltan. Nunca reescribe un texto ya escrito ni borra nada.
- * Sin `--write` solo enseña lo que haría.
+ * Pone al día `src/data/experience.yaml` con lo que hay en LinkedIn: mueve las fechas que han cambiado y añade los
+ * registros que faltan. Nunca reescribe un texto ya escrito ni borra nada. Sin `--write` solo enseña lo que haría.
  *
  *   npm run import:linkedin -- <carpeta del export>        (con Positions.csv y/o Education.csv)
  *   npm run import:linkedin -- --positions P.csv --education E.csv
  *   npm run import:linkedin -- --json instantanea.json      (la que deja `fetch-linkedin`)
- *
- * Node 22.19 o superior.
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';

@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { parse } from 'yaml';
-import { OG_IMAGE } from '../../src/lib/seo';
+import { LANGUAGES, localePath } from '../../src/lib/i18n';
+import { OG_IMAGE, OG_LOCALES } from '../../src/lib/seo';
 import { SITE, distHas, parsePage, readDist } from './support';
 
 const meta = (
@@ -12,10 +13,83 @@ const meta = (
 		.querySelector(`meta[name="${key}"], meta[property="${key}"]`)
 		?.getAttribute('content');
 
+const distFile = (locale: (typeof LANGUAGES)[number]['locale']): string =>
+	`${localePath(locale).replace(/^\//, '')}index.html`;
+
+describe.each(LANGUAGES)('SEO de la página en $name', ({ locale }) => {
+	const page = parsePage(distFile(locale));
+
+	it('declara su idioma y un título y una descripción propios', () => {
+		expect(page.querySelector('html')?.getAttribute('lang')).toBe(locale);
+		expect(page.querySelector('title')?.text).toMatch(/\S/);
+		expect(meta(page, 'description')?.length).toBeGreaterThan(50);
+		expect(meta(page, 'description')?.length).toBeLessThanOrEqual(160);
+	});
+
+	it('tiene su propia URL canónica y no la de otro idioma', () => {
+		const canonicals = page.querySelectorAll('link[rel="canonical"]');
+
+		expect(canonicals).toHaveLength(1);
+		expect(canonicals[0]?.getAttribute('href')).toBe(
+			`${SITE}${localePath(locale)}`,
+		);
+		expect(meta(page, 'og:url')).toBe(`${SITE}${localePath(locale)}`);
+	});
+
+	it('enlaza a la misma página en cada idioma, incluida ella, y a la principal como x-default', () => {
+		const alternates = page
+			.querySelectorAll('link[rel="alternate"][hreflang]')
+			.map(
+				(link) =>
+					[
+						link.getAttribute('hreflang'),
+						link.getAttribute('href'),
+					] as const,
+			);
+
+		expect(alternates).toEqual([
+			...LANGUAGES.map(
+				(language) =>
+					[
+						language.locale,
+						`${SITE}${localePath(language.locale)}`,
+					] as const,
+			),
+			['x-default', `${SITE}/`],
+		]);
+	});
+
+	it('dice su idioma a las redes sociales y ofrece los otros', () => {
+		expect(meta(page, 'og:locale')).toBe(OG_LOCALES[locale]);
+
+		const others = page
+			.querySelectorAll('meta[property="og:locale:alternate"]')
+			.map((tag) => tag.getAttribute('content'));
+
+		expect(others.sort()).toEqual(
+			LANGUAGES.filter((language) => language.locale !== locale)
+				.map((language) => OG_LOCALES[language.locale])
+				.sort(),
+		);
+	});
+
+	it('trae el selector de idioma con los tres enlaces y el suyo marcado', () => {
+		const links = page.querySelectorAll('[data-lang-switch] a');
+
+		expect(links.map((link) => link.getAttribute('hreflang'))).toEqual(
+			LANGUAGES.map((language) => language.locale),
+		);
+		expect(
+			links
+				.filter((link) => link.getAttribute('aria-current') === 'page')
+				.map((link) => link.getAttribute('hreflang')),
+		).toEqual([locale]);
+	});
+});
+
 describe('SEO de la página principal', () => {
 	const page = parsePage('index.html');
 
-	/** Un nodo del grafo JSON-LD de la página. */
 	const jsonLdNode = (type: string) => {
 		const blocks = page.querySelectorAll(
 			'script[type="application/ld+json"]',
@@ -143,13 +217,27 @@ describe('rastreo', () => {
 		expect(distHas('sitemap-index.xml')).toBe(true);
 	});
 
-	it('el sitemap lista la página principal y no la 404', () => {
+	it('el sitemap lista la página de cada idioma y no la 404', () => {
 		const index = readDist('sitemap-index.xml');
 		const sitemap = readDist('sitemap-0.xml');
 
 		expect(index).toContain(`${SITE}/sitemap-0.xml`);
-		expect(sitemap).toContain(`<loc>${SITE}/</loc>`);
+		for (const { locale } of LANGUAGES) {
+			expect(sitemap).toContain(
+				`<loc>${SITE}${localePath(locale)}</loc>`,
+			);
+		}
 		expect(sitemap).not.toContain('404');
+	});
+
+	it('el sitemap enlaza cada página con las de los otros idiomas, con los mismos hreflang que el <head>', () => {
+		const sitemap = readDist('sitemap-0.xml');
+
+		for (const { locale } of LANGUAGES) {
+			expect(sitemap).toContain(
+				`<xhtml:link rel="alternate" hreflang="${locale}" href="${SITE}${localePath(locale)}"/>`,
+			);
+		}
 	});
 });
 

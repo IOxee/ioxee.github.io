@@ -1,0 +1,44 @@
+# Certificaciones y cursos que NO son formación reglada (esa va en experience.yaml, `kind: education`).
+# Sin ninguna, la carpeta no tiene esa sección ni su pestaña. Mientras esté vacío, el build avisa
+# «No items found in src/data/certifications.yaml»: es normal y desaparece al añadir la primera.
+#
+# Campos:
+#   id        kebab-case, único.
+#   name      nombre de la certificación o del curso.
+#   issuer    quién la emite (plataforma, academia, fabricante…).
+#   issued    cuándo se obtuvo: 'AAAA' o 'AAAA-MM' (entre comillas).
+#   expires   cuándo caduca, igual formato. Si no caduca, quita la línea.
+#   url       dónde se comprueba que es auténtica (solo https). Opcional.
+#   summary   qué cubre, en una frase. Opcional. Admite es:, ca: y en: (solo es: es obligatorio).
+#   imageAlt  texto alternativo de la foto, igual que summary. Opcional: sin él sale «Certificado: nombre».
+#   order     posición en la lista (1 = primera).
+#
+# La FOTO y el DOCUMENTO no se declaran aquí: deja los archivos en src/assets/certifications/ con el
+# nombre del id (big-school-ai-starter.jpg, big-school-ai-starter.pdf) y salen solos. La foto es una
+# miniatura que se abre en grande; el documento, un enlace «Ver documento (PDF)». Valen png, jpg,
+# jpeg, webp y pdf, con la extensión en minúsculas y un solo archivo de cada tipo por certificación;
+# si un nombre no coincide con ningún id, el build avisa. Ojo: un certificado suele llevar el nombre
+# legal, a veces el DNI y un código QR. Todo lo que está en el repositorio es público: tapa lo que
+# no quieras enseñar.
+#
+# La sangría va con espacios, nunca con tabulaciones (YAML no las admite).
+#
+# Ejemplo (quita el # de cada línea y cambia los datos):
+# - id: ejemplo-curso
+#   name: Nombre del curso
+#   issuer: Plataforma
+#   issued: '2024-06'
+#   expires: '2027-06'
+#   url: https://example.com/verificar/123
+#   summary:
+#       es: Qué cubre, en una frase.
+#   order: 1
+- id: big-school-ai-starter
+  name: INICIACIÓN AL DESARROLLO CON IA
+  issuer: Big School
+  issued: '2026-10'
+  url: https://bigschool.com/certificates/ai-starter
+  summary:
+      es: Introducción a la inteligencia artificial y sus aplicaciones.
+      en: Introduction to artificial intelligence and its applications.
+  order: 1

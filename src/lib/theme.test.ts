@@ -38,6 +38,31 @@ describe.each(THEMES)('palette %s', (theme) => {
 		).toBeGreaterThanOrEqual(3);
 	});
 
+	// Las hojas blancas de la carpeta son otro papel: lo que se lee en ellas tiene su propio contraste.
+	it('keeps the ink, the muted ink and the links readable on the document sheets', () => {
+		expect(
+			contrastRatio(palette.ink, palette.sheet),
+		).toBeGreaterThanOrEqual(7);
+		expect(
+			contrastRatio(palette.inkMuted, palette.sheet),
+		).toBeGreaterThanOrEqual(4.5);
+		expect(
+			contrastRatio(palette.accent, palette.sheet),
+		).toBeGreaterThanOrEqual(4.5);
+	});
+
+	it('keeps the ink readable on the folder and on its darker tab, and the stamp visible on the folder', () => {
+		expect(
+			contrastRatio(palette.ink, palette.folder),
+		).toBeGreaterThanOrEqual(7);
+		expect(
+			contrastRatio(palette.ink, palette.folderShade),
+		).toBeGreaterThanOrEqual(4.5);
+		expect(
+			contrastRatio(palette.stamp, palette.folder),
+		).toBeGreaterThanOrEqual(3);
+	});
+
 	// El foco es de dos tonos: aro de tinta (visible sobre el papel) y halo `onDesk` (visible
 	// sobre la mesa). Un único color no puede tener 3:1 contra ambos a la vez; por eso estos
 	// dos contrastes, junto al de `ink`/`paper`, son los que lo garantizan.

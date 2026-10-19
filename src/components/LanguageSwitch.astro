@@ -1,0 +1,109 @@
+---
+import { LANGUAGES, type Locale, localePath } from '../lib/i18n';
+import { t } from '../lib/ui';
+
+interface Props {
+	locale: Locale;
+}
+
+const { locale } = Astro.props;
+---
+
+{/*
+	Tres idiomas, no un interruptor. Son enlaces a la misma página en cada idioma (una web estática no cambia de
+	idioma en el sitio): funcionan sin JavaScript y los buscadores los siguen. El nombre accesible es el idioma escrito
+	en sí mismo, con su `lang`.
+*/}
+<div
+	class="lang"
+	role="group"
+	aria-label={t(locale, 'lang.label')}
+	data-lang-switch
+>
+	<ul role="list">
+		{LANGUAGES.map((language) => (
+			<li>
+				<a
+					href={localePath(language.locale)}
+					lang={language.locale}
+					hreflang={language.locale}
+					aria-label={language.name}
+					aria-current={
+						language.locale === locale ? 'page' : undefined
+					}
+				>
+					{language.label}
+				</a>
+			</li>
+		))}
+	</ul>
+</div>
+
+<script>
+	// Al cambiar de idioma se conserva la hoja que se está leyendo: la carpeta deja su sección en el
+	// ancla de la dirección (`#resume`…), que es la misma en los tres idiomas.
+	const group = document.querySelector('[data-lang-switch]');
+	const links = group?.querySelectorAll<HTMLAnchorElement>('a') ?? [];
+
+	const keepSection = () => {
+		for (const link of links) link.hash = location.hash;
+	};
+	for (const type of ['pointerdown', 'focusin', 'keydown']) {
+		group?.addEventListener(type, keepSection, { passive: true });
+	}
+</script>
+
+<style>
+	ul {
+		display: flex;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		background: var(--paper);
+		border: 2px solid var(--ink);
+		border-radius: 0.2rem;
+		box-shadow: 0 3px 0 oklch(0% 0 0 / 0.35);
+	}
+
+	li + li {
+		border-left: 2px solid var(--ink);
+	}
+
+	a {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 2.5rem;
+		/* Alto del botón del tema: 2.75rem menos sus dos bordes de 2px. */
+		min-height: calc(2.75rem - 4px);
+		padding-inline: 0.4rem;
+		font-family: var(--font-display);
+		font-weight: 700;
+		font-size: var(--text-sm);
+		color: var(--ink);
+		text-decoration: none;
+	}
+
+	a:hover {
+		background: color-mix(in oklch, var(--ink) 14%, var(--paper));
+	}
+
+	a[aria-current='page'] {
+		color: var(--paper);
+		background: var(--ink);
+	}
+
+	/* El halo del foco de la tecla Tab tiene que quedar por encima de los vecinos. */
+	a:focus-visible {
+		z-index: 1;
+	}
+
+	@media (forced-colors: active) {
+		a[aria-current='page'] {
+			text-decoration: underline;
+			text-decoration-thickness: 3px;
+			text-underline-offset: 0.3em;
+		}
+	}
+</style>

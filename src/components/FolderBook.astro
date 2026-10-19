@@ -1,0 +1,48 @@
+---
+import { leafPages } from '../lib/book';
+import type { SheetPlan } from '../lib/folder';
+import type { FolderData } from '../lib/folder-data';
+import type { Locale } from '../lib/i18n';
+import Folder from './Folder.astro';
+import FolderContentPage from './FolderContentPage.astro';
+import FolderLeaf from './FolderLeaf.astro';
+
+interface Props {
+	plan: readonly SheetPlan[];
+	titles: readonly string[];
+	data: FolderData;
+	locale: Locale;
+}
+
+const { plan, titles, data, locale } = Astro.props;
+
+const leaves = leafPages(plan);
+const pageProps = (sheet: SheetPlan) => {
+	const page = plan.indexOf(sheet);
+
+	return { sheet, page, plan, title: titles[page] ?? '', data, locale };
+};
+---
+
+{/*
+	El nombre es el único h1 de la página. Va fuera de las hojas: la portada se queda `inert` en
+	cuanto se pasa, y la página tiene que seguir teniendo título. La portada lo usa como nombre.
+*/}
+<h1 id="folder-name" class="visually-hidden">
+	{data.profile.name}
+</h1>
+
+<Folder locale={locale}>
+	{leaves.map(({ front, back }, index) =>
+		back ? (
+			<FolderLeaf index={index}>
+				<FolderContentPage slot="front" {...pageProps(front)} />
+				<FolderContentPage slot="back" {...pageProps(back)} />
+			</FolderLeaf>
+		) : (
+			<FolderLeaf index={index}>
+				<FolderContentPage slot="front" {...pageProps(front)} />
+			</FolderLeaf>
+		),
+	)}
+</Folder>

@@ -31,7 +31,7 @@ function parseIsoDate(value: string): CalendarDate {
 	return { year, month, day };
 }
 
-/** Años cumplidos a `today`. Quien nació un 29 de febrero cumple el 1 de marzo en años no bisiestos. */
+/** Quien nació un 29 de febrero cumple el 1 de marzo en los años no bisiestos. */
 export function calculateAge(
 	birthDate: string,
 	today: Date = new Date(),

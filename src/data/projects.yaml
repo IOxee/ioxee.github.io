@@ -1,18 +1,34 @@
-# Proyectos personales, en el orden en que se muestran.
-# El stack sale de la descripción del sitio v1 y de los lenguajes de cada repositorio.
-# Las imágenes se añaden en la Fase 5 (assets optimizados con astro:assets).
-- id: delaware-telegraph
-  name: Delaware Telegraph
+# Proyectos personales. Se muestran del más reciente al más antiguo según `start` y `end`
+# ('AAAA' o 'AAAA-MM'; `end: null` si sigue en marcha): el orden del archivo no cuenta.
+# La captura de cada uno es src/assets/projects/<id>.png, y su texto alternativo va en `imageAlt`.
+# Un proyecto con `details` lleva una segunda página: el reto, los puntos y una frase de cierre.
+- id: cubezon
+  name: Cubezon
   summary:
-      es: Es una web estilo blog con gestión de usuario y de noticias hecha en PHP tradicional, Bootstrap 5.3 y arquitectura MVC.
+      es: 'Marketplace tipo e‑commerce conectado a un servidor de Minecraft: las tiendas de los jugadores venden objetos reales del juego en una web, el comprador paga con dinero del juego y recoge el pedido en una taquilla del servidor.'
   stack:
-      - PHP
-      - Bootstrap 5.3
-      - MVC
-  repo: https://github.com/IOxee/DelawareTelegraph
+      - Java 21 + Paper
+      - Next.js 16 + React 19 + TypeScript
+      - PostgreSQL (Supabase)
+      - 336 tests
+      - CI con GitHub Actions
+  repo: https://github.com/IOxee/Cubezon
   imageAlt:
-      es: 'Portada de Delaware Telegraph: una cuadrícula de noticias con imagen, titular, autor, etiquetas y un botón «Ver más».'
-  order: 1
+      es: 'Portada de la tienda de Cubezon: el buscador, las categorías del juego y los tres pasos para comprar (vincular la cuenta, elegir y pagar, recoger en la taquilla).'
+  start: '2026-10'
+  end: '2026-10'
+  details:
+      intro:
+          es: 'El reto era que una web y un servidor de juego compartieran el mismo dinero y los mismos inventarios sin duplicar nada aunque algo falle a mitad:'
+      points:
+          es:
+              - El plugin es la única autoridad sobre saldos e inventarios; la web solo crea pedidos.
+              - Cada pedido avanza por estados (PENDING → PAID → READY → COLLECTED), cada paso en su propia transacción. Un pedido interrumpido se marca para revisión y nunca se cobra dos veces.
+              - 'El pago al vendedor se marca antes de pagar: un fallo deja un pago pendiente, nunca uno doble.'
+              - Solo se vende lo que el vendedor depositó antes en el juego (escrow, una fila por unidad).
+              - Row Level Security en todas las tablas y permisos comprobados en SQL.
+      closing:
+          es: Incluye panel de vendedor y de administración, un modo roleplay con empleados, rangos, ordenador de empresa y repartidores con comisión y propina, y un diseño propio con modo claro y oscuro.
 
 - id: trellord-connector
   name: Trellord Connector
@@ -25,10 +41,11 @@
   repo: https://github.com/IOxee/TrellordConnector
   imageAlt:
       es: 'Terminal con el logotipo en ASCII de Fractal Game Studios y el mensaje «Server started» al arrancar la herramienta.'
-  order: 2
+  start: '2023-12'
+  end: '2024-04'
 
 - id: animal-crossing-api-wrapper
-  name: Animal Crossing API Wrapper
+  name: Nookphone - Animal Crossing
   summary:
       es: Usando Ionic 6 y Angular 14 para obtener los datos de la API pública de Animal Crossing.
   stack:
@@ -39,4 +56,5 @@
   repo: https://github.com/IOxee/Animal_Crossing_API_Wrapper
   imageAlt:
       es: 'Interfaz «Nook Phone»: una cuadrícula de iconos redondeados con las secciones de Animal Crossing.'
-  order: 3
+  start: '2023-01'
+  end: '2023-02'

@@ -1,7 +1,6 @@
 /** Fecha parcial: `AAAA` o `AAAA-MM`. */
 export const PARTIAL_DATE = /^(\d{4})(?:-(0[1-9]|1[0-2]))?$/;
 
-/** Extremo de un periodo al que pertenece la fecha. */
 export type PeriodBound = 'start' | 'end';
 
 export interface PartialDate {

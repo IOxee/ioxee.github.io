@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatPeriod, sortExperience } from './experience';
+import { formatPartialDate, formatPeriod, sortExperience } from './experience';
 import type { ExperienceEntry } from './schemas';
 
 const entry = (overrides: Partial<ExperienceEntry> = {}): ExperienceEntry => ({
@@ -112,6 +112,20 @@ describe('sortExperience', () => {
 		sortExperience(input);
 
 		expect(ids(input)).toEqual(['old', 'new']);
+	});
+});
+
+describe('formatPartialDate', () => {
+	it('shows only the year when the date has no month', () => {
+		expect(formatPartialDate('2024')).toBe('2024');
+	});
+
+	it('shows month and year when the date has a month', () => {
+		expect(formatPartialDate('2024-03')).toBe('03/2024');
+	});
+
+	it('rejects a malformed date', () => {
+		expect(() => formatPartialDate('marzo')).toThrow(RangeError);
 	});
 });
 

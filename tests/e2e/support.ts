@@ -1,12 +1,10 @@
-import type { Page } from '@playwright/test';
+import { type Page, expect } from '@playwright/test';
 
-/** Los anchos en los que se comprueba la maquetación: de un móvil pequeño a una pantalla grande. */
 export const WIDTHS = [320, 375, 768, 1024, 1440, 1920] as const;
 
 export const SCHEMES = ['light', 'dark'] as const;
 export type Scheme = (typeof SCHEMES)[number];
 
-/** Los enlaces del menú y la sección a la que llevan. */
 export const SECTION_LINKS = [
 	'#about-me',
 	'#resume',
@@ -22,8 +20,69 @@ declare global {
 	}
 }
 
-/** Altura de las capturas y de las pruebas de scroll: la de un portátil. */
 export const VIEWPORT_HEIGHT = 900;
+
+export interface FolderGeometry {
+	/** `true` si la carpeta está fija y el scroll gira las hojas; si no, gira sola. */
+	parallax: boolean;
+	positions: number;
+	step: number;
+	/** Scroll al que la carpeta queda fija (el punto de lectura 0). */
+	base: number;
+}
+
+export function folderGeometry(page: Page): Promise<FolderGeometry> {
+	return page.evaluate(() => {
+		const folder = document.querySelector<HTMLElement>('[data-folder]');
+		const track = document.querySelector<HTMLElement>('[data-track]');
+		const stage = document.querySelector<HTMLElement>('[data-stage]');
+		if (!folder || !track || !stage) throw new Error('No hay carpeta');
+
+		const pin = Number.parseFloat(getComputedStyle(stage).top) || 0;
+
+		return {
+			parallax: folder.dataset.scroll === 'on',
+			positions: Number(folder.style.getPropertyValue('--positions')),
+			step: Number.parseFloat(folder.style.getPropertyValue('--step')),
+			base: track.getBoundingClientRect().top + scrollY - pin,
+		};
+	});
+}
+
+export function visiblePages(page: Page): Promise<number[]> {
+	return page.evaluate(() =>
+		[...document.querySelectorAll<HTMLElement>('[data-page]')]
+			.filter((element) => !element.inert)
+			.map((element) => Number(element.style.getPropertyValue('--i'))),
+	);
+}
+
+/**
+ * Lleva el scroll al punto de lectura `position` y espera a que la carpeta haya llegado: a que el
+ * progreso sea justo ese y a que las hojas se hayan quedado quietas.
+ */
+export async function showPosition(
+	page: Page,
+	position: number,
+): Promise<void> {
+	const { step, base } = await folderGeometry(page);
+	await page.evaluate(
+		(top) => window.scrollTo({ top, behavior: 'instant' }),
+		base + position * step,
+	);
+
+	await expect
+		.poll(() =>
+			page.evaluate(() =>
+				Number.parseFloat(
+					document
+						.querySelector<HTMLElement>('[data-folder]')
+						?.style.getPropertyValue('--progress') ?? 'NaN',
+				),
+			),
+		)
+		.toBeCloseTo(position, 1);
+}
 
 /**
  * Deja la página quieta: fuentes cargadas y todas las animaciones terminadas (el sello que cae al
@@ -32,9 +91,15 @@ export const VIEWPORT_HEIGHT = 900;
 export async function settle(page: Page): Promise<void> {
 	await page.evaluate(async () => {
 		await document.fonts.ready;
+		// Las que no acaban nunca (la flecha que invita a bajar) no se esperan: no terminarían.
 		await Promise.all(
 			document
 				.getAnimations()
+				.filter(
+					(animation) =>
+						animation.effect?.getComputedTiming().endTime !==
+						Infinity,
+				)
 				.map((animation) => animation.finished.catch(() => undefined)),
 		);
 	});
@@ -77,10 +142,6 @@ export async function trackThemeAtBody(page: Page): Promise<void> {
 	});
 }
 
-/**
- * Anota cada violación de la CSP que ocurra en la página. Hay que llamarlo antes de `page.goto`.
- * La lista queda en `window.__violations`.
- */
 export async function trackCspViolations(page: Page): Promise<void> {
 	await page.addInitScript(() => {
 		window.__violations = [];
