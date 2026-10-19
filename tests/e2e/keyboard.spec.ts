@@ -19,9 +19,9 @@ const MAX_TABS = 40;
  */
 const STARTS = [null, '#portfolio', '#contact'] as const;
 
-test.describe('teclado', () => {
+test.describe('keyboard', () => {
 	for (const scheme of SCHEMES) {
-		test(`todo lo enfocable tiene un foco visible de dos tonos: ${scheme}`, async ({
+		test(`everything focusable has a visible two-tone focus: ${scheme}`, async ({
 			page,
 		}) => {
 			await page.emulateMedia({ colorScheme: scheme });
@@ -29,7 +29,7 @@ test.describe('teclado', () => {
 			const missing: string[] = [];
 			const focused: string[] = [];
 			for (const tab of STARTS) {
-				const start = tab ?? 'la portada';
+				const start = tab ?? 'the cover';
 				await page.goto('/');
 				await settle(page);
 				if (tab) {
@@ -72,7 +72,7 @@ test.describe('teclado', () => {
 					focused.push(info.label);
 					if (!info.outline || !info.halo) {
 						missing.push(
-							`${start}: "${info.label}" aro=${info.outline} halo=${info.halo}`,
+							`${start}: "${info.label}" ring=${info.outline} halo=${info.halo}`,
 						);
 					}
 				}
@@ -87,7 +87,7 @@ test.describe('teclado', () => {
 		});
 	}
 
-	test('las flechas, Inicio y Fin pasan las hojas cuando el foco está en la carpeta', async ({
+	test('the arrows, Home and End turn the sheets when the focus is on the folder', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -118,7 +118,7 @@ test.describe('teclado', () => {
 		await expect.poll(pageNow).toBe(0);
 	});
 
-	test('el primer Tab lleva al enlace para saltar al contenido, que salta de verdad el menú', async ({
+	test('the first Tab goes to the skip-to-content link, which really skips the menu', async ({
 		page,
 	}) => {
 		await page.goto('/');
@@ -137,7 +137,7 @@ test.describe('teclado', () => {
 		expect(inMain).toBe(true);
 	});
 
-	test('el botón de tema se maneja con Enter y con Espacio', async ({
+	test('the theme button works with Enter and with Space', async ({
 		page,
 	}) => {
 		await page.emulateMedia({ colorScheme: 'light' });
@@ -155,7 +155,7 @@ test.describe('teclado', () => {
 		expect(await theme()).toBe('day');
 	});
 
-	test('el menú marca la sección de la hoja que se está leyendo al girar la carpeta', async ({
+	test('the menu marks the section of the sheet being read as the folder turns', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -187,7 +187,7 @@ test.describe('teclado', () => {
 		for (const href of SECTION_LINKS) expect(seen).toContain(href);
 	});
 
-	test('las pestañas del menú llevan a la primera hoja de su sección y quedan marcadas', async ({
+	test('the menu tabs lead to the first sheet of their section and get marked', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -207,7 +207,7 @@ test.describe('teclado', () => {
 		}
 	});
 
-	test('el menú no se mueve: se ve siempre, también a mitad de la carpeta', async ({
+	test('the menu does not move: it is always visible, also halfway through the folder', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });

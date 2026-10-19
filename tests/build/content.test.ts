@@ -14,10 +14,10 @@ const LEGACY = [
 	'google-analytics',
 ];
 
-describe.each(PAGES)('contenido de %s', (path) => {
+describe.each(PAGES)('content of %s', (path) => {
 	const page = parsePage(path);
 
-	it('no arrastra nada del sitio v1', () => {
+	it('carries nothing over from the v1 site', () => {
 		const html = readDist(path).toLowerCase();
 
 		for (const marker of LEGACY) {
@@ -25,11 +25,11 @@ describe.each(PAGES)('contenido de %s', (path) => {
 		}
 	});
 
-	it('tiene un único h1', () => {
+	it('has a single h1', () => {
 		expect(page.querySelectorAll('h1')).toHaveLength(1);
 	});
 
-	it('da a cada imagen texto alternativo y tamaño, para no mover la página al cargar', () => {
+	it('gives every image alt text and dimensions, so the page does not shift while loading', () => {
 		for (const image of page.querySelectorAll('img')) {
 			expect(image.getAttribute('alt')).toMatch(/\S/);
 			expect(image.getAttribute('width')).toMatch(/^\d+$/);
@@ -37,7 +37,7 @@ describe.each(PAGES)('contenido de %s', (path) => {
 		}
 	});
 
-	it('solo enlaza por https, mailto, ancla o ruta del propio sitio', () => {
+	it('only links through https, mailto, an anchor or a path on the site itself', () => {
 		for (const link of page.querySelectorAll('a[href]')) {
 			const href = link.getAttribute('href') ?? '';
 
@@ -45,7 +45,7 @@ describe.each(PAGES)('contenido de %s', (path) => {
 		}
 	});
 
-	it('si hay enlaces al visor de documentos, la página trae el visor y los enlaces funcionan sin él', () => {
+	it('when there are links to the document viewer, the page ships the viewer and the links work without it', () => {
 		const links = page.querySelectorAll('a[data-viewer]');
 		if (links.length === 0) {
 			expect(
@@ -71,13 +71,13 @@ describe.each(PAGES)('contenido de %s', (path) => {
 		}
 	});
 
-	it('abre los enlaces externos en pestaña nueva solo con noopener', () => {
+	it('opens links in a new tab only with noopener', () => {
 		for (const link of page.querySelectorAll('a[target="_blank"]')) {
 			expect(link.getAttribute('rel')).toContain('noopener');
 		}
 	});
 
-	it('todos los enlaces internos llevan a algo que existe', () => {
+	it('every internal link leads to something that exists', () => {
 		const ids = new Set(page.querySelectorAll('[id]').map((el) => el.id));
 
 		for (const link of page.querySelectorAll('a[href]')) {
@@ -85,7 +85,7 @@ describe.each(PAGES)('contenido de %s', (path) => {
 			if (isExternal(href)) continue;
 
 			if (href.startsWith('#')) {
-				expect(ids, `ancla ${href}`).toContain(href.slice(1));
+				expect(ids, `anchor ${href}`).toContain(href.slice(1));
 			} else {
 				const file = href.replace(/^\//, '');
 				const exists =
@@ -93,16 +93,16 @@ describe.each(PAGES)('contenido de %s', (path) => {
 					distHas(file) ||
 					distHas(`${file}/index.html`);
 
-				expect(exists, `enlace ${href}`).toBe(true);
+				expect(exists, `link ${href}`).toBe(true);
 			}
 		}
 	});
 });
 
-describe('página principal', () => {
+describe('main page', () => {
 	const page = parsePage('index.html');
 
-	it('mantiene los anclajes de la v1 para que los enlaces antiguos sigan funcionando', () => {
+	it('keeps the v1 anchors so that old links keep working', () => {
 		const ids = new Set(page.querySelectorAll('[id]').map((el) => el.id));
 
 		for (const anchor of [
@@ -116,7 +116,7 @@ describe('página principal', () => {
 		}
 	});
 
-	it('enseña «Descargar CV» solo si el perfil declara un CV, y entonces el archivo existe', () => {
+	it('shows the CV download link only if the profile declares a CV, and then the file exists', () => {
 		const [profile] = parse(
 			readFileSync(
 				new URL('../../src/data/profile.yaml', import.meta.url),
@@ -131,7 +131,7 @@ describe('página principal', () => {
 		}
 	});
 
-	it('tiene el enlace para saltar al contenido', () => {
+	it('has the link to skip to the content', () => {
 		const skip = page.querySelector('a.skip-link');
 
 		expect(skip?.getAttribute('href')).toBe('#contenido');
@@ -139,14 +139,14 @@ describe('página principal', () => {
 	});
 });
 
-describe('la carpeta de la página principal', () => {
+describe("the main page's folder", () => {
 	const page = parsePage('index.html');
 	const folder = page.querySelector('[data-folder]');
 	const pages = page.querySelectorAll('[data-page]');
 	const leaves = page.querySelectorAll('[data-leaf]');
 	const order = Object.values(SECTION_IDS) as string[];
 
-	it('es una sola carpeta, sin botones a la vista ni texto de estado: se maneja con el scroll, el teclado y el menú', () => {
+	it('is a single folder, with no visible buttons or status text: it is driven by the scroll, the keyboard and the menu', () => {
 		expect(page.querySelectorAll('[data-folder]')).toHaveLength(1);
 		const buttons = folder?.querySelectorAll('button') ?? [];
 		expect(
@@ -159,7 +159,7 @@ describe('la carpeta de la página principal', () => {
 		expect(page.querySelector('[data-status]')).toBeNull();
 	});
 
-	it('empieza por la portada, que es el inicio (#home) y se llama como el único h1', () => {
+	it('starts with the cover, which is the start (#home) and is named by the single h1', () => {
 		const [cover] = pages;
 
 		expect(cover?.getAttribute('data-kind')).toBe('cover');
@@ -172,7 +172,7 @@ describe('la carpeta de la página principal', () => {
 		expect(cover?.querySelectorAll('h1')).toHaveLength(0);
 	});
 
-	it('pone las páginas en el orden de las secciones, sin volver atrás', () => {
+	it('puts the pages in the order of the sections, never going back', () => {
 		const positions = pages.map((element) =>
 			order.indexOf(element.getAttribute('data-section') ?? ''),
 		);
@@ -181,7 +181,7 @@ describe('la carpeta de la página principal', () => {
 		expect(positions).toEqual([...positions].sort((a, b) => a - b));
 	});
 
-	it('reparte las páginas en hojas de doble cara: la portada sola y luego de dos en dos', () => {
+	it('splits the pages into double-sided sheets: the cover alone, then two by two', () => {
 		// The cover alone and, after it, one sheet for every two pages: no page is left out or repeated.
 		expect(leaves).toHaveLength(1 + Math.ceil((pages.length - 1) / 2));
 		expect(
@@ -204,20 +204,20 @@ describe('la carpeta de la página principal', () => {
 		});
 	});
 
-	it('da nombre a cada página con un encabezado que existe y dice algo', () => {
+	it('names every page with a heading that exists and says something', () => {
 		for (const element of pages) {
 			const id = element.getAttribute('aria-labelledby') ?? '';
 			const heading = page.getElementById(id);
 
 			expect(
 				heading,
-				`página ${element.getAttribute('data-title')}`,
+				`page ${element.getAttribute('data-title')}`,
 			).not.toBeNull();
 			expect(heading?.textContent.trim()).not.toBe('');
 		}
 	});
 
-	it('tiene una pestaña por sección con páginas, que lleva a la primera página de esa sección', () => {
+	it('has one tab per section with pages, leading to the first page of that section', () => {
 		const tabs = page.querySelectorAll('[data-site-nav] a');
 		const sections = new Set(
 			pages

@@ -13,7 +13,7 @@ export const PAGES = [
 
 if (!existsSync(new URL('index.html', DIST))) {
 	throw new Error(
-		'No hay dist/: ejecuta `npm run build` antes de `npm run test:dist`',
+		'There is no dist/: run `npm run build` before `npm run test:dist`',
 	);
 }
 
@@ -34,7 +34,7 @@ export function cspOf(page: HTMLElement): Csp {
 	const meta = page.querySelector(
 		'meta[http-equiv="content-security-policy"]',
 	);
-	if (!meta) throw new Error('La página no tiene la meta de la CSP');
+	if (!meta) throw new Error('The page has no CSP meta');
 
 	return new Map(
 		(meta.getAttribute('content') ?? '')

@@ -36,7 +36,7 @@ export function folderGeometry(page: Page): Promise<FolderGeometry> {
 		const folder = document.querySelector<HTMLElement>('[data-folder]');
 		const track = document.querySelector<HTMLElement>('[data-track]');
 		const stage = document.querySelector<HTMLElement>('[data-stage]');
-		if (!folder || !track || !stage) throw new Error('No hay carpeta');
+		if (!folder || !track || !stage) throw new Error('There is no folder');
 
 		const pin = Number.parseFloat(getComputedStyle(stage).top) || 0;
 

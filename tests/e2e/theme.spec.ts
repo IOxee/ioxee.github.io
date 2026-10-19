@@ -6,8 +6,8 @@ const STORAGE_KEY = 'ioxee:theme';
 const themeOf = (page: Page) =>
 	page.evaluate(() => document.documentElement.dataset.theme);
 
-test.describe('tema día y noche', () => {
-	test('arranca con el tema del sistema, sin parpadeo', async ({
+test.describe('day and night theme', () => {
+	test('starts with the system theme, without flicker', async ({
 		browser,
 	}) => {
 		for (const [scheme, expected] of [
@@ -28,7 +28,7 @@ test.describe('tema día y noche', () => {
 		}
 	});
 
-	test('el botón cambia el tema y se acuerda de la elección al recargar', async ({
+	test('the button switches the theme and remembers the choice on reload', async ({
 		page,
 	}) => {
 		await page.emulateMedia({ colorScheme: 'light' });
@@ -47,7 +47,7 @@ test.describe('tema día y noche', () => {
 		expect(await themeOf(page)).toBe('night');
 	});
 
-	test('la elección guardada gana al tema del sistema', async ({ page }) => {
+	test('the saved choice beats the system theme', async ({ page }) => {
 		await page.emulateMedia({ colorScheme: 'dark' });
 		await page.addInitScript((key) => {
 			localStorage.setItem(key, 'day');
@@ -57,7 +57,7 @@ test.describe('tema día y noche', () => {
 		expect(await themeOf(page)).toBe('day');
 	});
 
-	test('ignora un valor guardado que no es un tema', async ({ page }) => {
+	test('ignores a saved value that is not a theme', async ({ page }) => {
 		await page.emulateMedia({ colorScheme: 'dark' });
 		await page.addInitScript((key) => {
 			localStorage.setItem(key, 'sepia');
@@ -67,7 +67,7 @@ test.describe('tema día y noche', () => {
 		expect(await themeOf(page)).toBe('night');
 	});
 
-	test('cambiar de tema cambia de verdad los colores', async ({ page }) => {
+	test('switching theme really changes the colors', async ({ page }) => {
 		await page.emulateMedia({ colorScheme: 'light' });
 		await page.goto('/');
 
@@ -85,10 +85,10 @@ test.describe('tema día y noche', () => {
 	});
 });
 
-test.describe('sin JavaScript', () => {
+test.describe('without JavaScript', () => {
 	test.use({ javaScriptEnabled: false });
 
-	test('la página se lee en el tema de día y sin un botón que no haría nada', async ({
+	test('the page reads in the day theme and has no button that would do nothing', async ({
 		page,
 	}) => {
 		await page.goto('/');
@@ -99,8 +99,8 @@ test.describe('sin JavaScript', () => {
 	});
 });
 
-test.describe('preferencias de accesibilidad del sistema', () => {
-	test('con movimiento reducido el sello ya está estampado y el scroll no es animado', async ({
+test.describe('system accessibility preferences', () => {
+	test('with reduced motion the stamp is already stamped and the scroll is not animated', async ({
 		page,
 	}) => {
 		await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -117,7 +117,7 @@ test.describe('preferencias de accesibilidad del sistema', () => {
 		expect(behavior).toBe('auto');
 	});
 
-	test('con colores forzados se quitan el grano y el relieve que ensuciarían el texto', async ({
+	test('with forced colors the grain and the relief that would muddy the text are removed', async ({
 		page,
 	}) => {
 		await page.emulateMedia({ forcedColors: 'active' });

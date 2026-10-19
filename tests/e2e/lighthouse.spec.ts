@@ -5,7 +5,7 @@ import desktopConfig from 'lighthouse/core/config/desktop-config.js';
 
 test.skip(
 	({ browserName }) => browserName !== 'chromium',
-	'Lighthouse solo funciona con Chromium.',
+	'Lighthouse only works with Chromium.',
 );
 
 const PERFORMANCE_MINIMUM = 0.9;
@@ -20,7 +20,7 @@ const KNOWN: Record<string, string> = {
 	// Lighthouse reads robots.txt from inside the page, and the CSP (`default-src 'none'`, which
 	// also closes `connect-src`) prevents it. The file is valid: `tests/build/seo.test.ts` checks it
 	// and there is no reason to open the CSP just for this audit.
-	'robots-txt': 'la CSP impide que Lighthouse descargue el archivo',
+	'robots-txt': 'the CSP stops Lighthouse from downloading the file',
 };
 
 interface Result {
@@ -62,7 +62,7 @@ async function audit(
 			device === 'desktop' ? desktopConfig : undefined,
 		);
 		const lhr = result?.lhr;
-		if (!lhr) throw new Error('Lighthouse no devolvió resultados');
+		if (!lhr) throw new Error('Lighthouse returned no results');
 
 		const failing = STRICT.flatMap((category) =>
 			(lhr.categories[category]?.auditRefs ?? [])
@@ -85,7 +85,7 @@ async function audit(
 				),
 		);
 		if (lhr.runtimeError) {
-			failing.unshift(`Lighthouse falló: ${lhr.runtimeError.message}`);
+			failing.unshift(`Lighthouse failed: ${lhr.runtimeError.message}`);
 		}
 
 		return {
@@ -103,7 +103,7 @@ test.describe('Lighthouse', { tag: '@lighthouse' }, () => {
 	test.setTimeout(120_000);
 
 	for (const device of ['mobile', 'desktop'] as const) {
-		test(`cumple en ${device === 'mobile' ? 'móvil' : 'escritorio'}: rendimiento y ninguna auditoría de accesibilidad, buenas prácticas o SEO fallida`, async ({
+		test(`passes on ${device}: performance and no failing accessibility, best-practices or SEO audit`, async ({
 			baseURL,
 		}) => {
 			const { performance, failing } = await audit(`${baseURL}/`, device);

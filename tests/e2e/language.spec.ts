@@ -8,8 +8,8 @@ const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
 const SECONDARY = LANGUAGES.filter(({ locale }) => locale !== 'es');
 
-test.describe('el selector de idioma', () => {
-	test('está en la barra, a la izquierda del botón del tema, con los tres idiomas y el español primero', async ({
+test.describe('the language switch', () => {
+	test('is in the bar, to the left of the theme button, with the three languages and Spanish first', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -55,7 +55,7 @@ test.describe('el selector de idioma', () => {
 		}
 	});
 
-	test('con el teclado el idioma va justo antes del tema', async ({
+	test('with the keyboard the language comes right before the theme', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -67,7 +67,7 @@ test.describe('el selector de idioma', () => {
 		await expect(page.locator('[data-theme-toggle]')).toBeFocused();
 	});
 
-	test('sin JavaScript también funciona: son enlaces', async ({
+	test('also works without JavaScript: they are links', async ({
 		browser,
 	}) => {
 		const context = await browser.newContext({ javaScriptEnabled: false });
@@ -83,8 +83,8 @@ test.describe('el selector de idioma', () => {
 });
 
 for (const { locale } of LANGUAGES) {
-	test.describe(`la página en ${locale}`, () => {
-		test('declara su idioma, marca el suyo en el selector y usa sus textos', async ({
+	test.describe(`the ${locale} page`, () => {
+		test('declares its language, marks its own in the switch and uses its texts', async ({
 			page,
 		}) => {
 			await page.setViewportSize({
@@ -115,8 +115,8 @@ for (const { locale } of LANGUAGES) {
 	});
 }
 
-test.describe('cambiar de idioma', () => {
-	test('lleva a la misma página en el otro idioma y conserva la hoja que se lee', async ({
+test.describe('switching language', () => {
+	test('leads to the same page in the other language and keeps the sheet being read', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -144,7 +144,7 @@ test.describe('cambiar de idioma', () => {
 		await expect(page.locator('html')).toHaveAttribute('lang', 'es');
 	});
 
-	test('desde la portada no añade ancla', async ({ page }) => {
+	test('from the cover it adds no anchor', async ({ page }) => {
 		await page.goto('/');
 		await settle(page);
 
@@ -154,9 +154,9 @@ test.describe('cambiar de idioma', () => {
 });
 
 for (const { locale } of SECONDARY) {
-	test.describe(`la página en ${locale}, hecha con los mismos cuidados`, () => {
+	test.describe(`the ${locale} page, built with the same care`, () => {
 		for (const width of [375, 1440]) {
-			test(`no tiene violaciones de accesibilidad a ${width}px`, async ({
+			test(`has no accessibility violations at ${width}px`, async ({
 				page,
 			}) => {
 				await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
@@ -178,7 +178,7 @@ for (const { locale } of SECONDARY) {
 			});
 		}
 
-		test('no se desborda en horizontal a 320px: los textos de otro idioma son más largos', async ({
+		test('does not overflow horizontally at 320px: the texts of another language are longer', async ({
 			page,
 		}) => {
 			await page.setViewportSize({ width: 320, height: VIEWPORT_HEIGHT });

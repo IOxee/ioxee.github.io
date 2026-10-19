@@ -4,17 +4,31 @@
   name: Isidro Rosell
   headline:
       es: Programador Full-Stack
+      ca: Programador Full-Stack
+      en: Full-Stack Programmer
   birthDate: '2002-04-14'
   nationality:
       es: Española
+      ca: Catalana
+      en: Spanish
   location:
       es: Cataluña, España
+      ca: Catalunya, Espanya
+      en: Catalonia, Spain
   occupation:
       es: Co-Founder de Fractal Game Studios
+      ca: Co-fundador de Fractal Game Studios
+      en: Co-Founder of Fractal Game Studios
   about:
       es:
           - Soy programador full-stack y vivo en Lleida. Desarrollo aplicaciones web y de escritorio en Techtiva Contech desde 2023, sobre todo con C# y SQL, y co-dirijo Fractal Game Studios, donde creamos recursos y herramientas de programación para servidores roleplay (GTA V, DayZ, Project Zomboid).
           - Mi recorrido une sistemas y desarrollo. He trabajado como técnico informático y en soporte remoto, y entre 2022 y 2024 programé, mantuve y optimicé servidores FiveM de GTA V Roleplay, algo que retomo de vez en cuando. Me interesan el diseño web y el desarrollo de videojuegos.
+      ca:
+          - Sóc programador full-stack i visc a Lleida. Desenvolupo aplicacions web i d'escriptori a Techtiva Contech des del 2023, sobretot amb C# i SQL, i co-dirigeixo Fractal Game Studios, on creem recursos i eines de programació per a servidors roleplay (GTA V, DayZ, Project Zomboid).
+          - El meu recorregut uneix sistemes i desenvolupament. He treballat com a tècnic informàtic i en suport remot, i entre 2022 i 2024 vaig programar, mantenir i optimitzar servidors FiveM de GTA V Roleplay, cosa que de tant en tant torno a fer. M'interessen el disseny web i el desenvolupament de videojocs.
+      en:
+          - I am a full-stack programmer based in Lleida. I develop web and desktop applications at Techtiva Contech since 2023, mainly with C# and SQL, and I co-lead Fractal Game Studios, where we create programming resources and tools for roleplay servers (GTA V, DayZ, Project Zomboid).
+          - My path combines systems and development. I have worked as an IT technician and in remote support, and between 2022 and 2024 I programmed, maintained, and optimized GTA V Roleplay FiveM servers, something I revisit from time to time. I am interested in web design and video game development.
   links:
       github: https://github.com/IOxee
       linkedin: https://linkedin.com/in/ioxee/

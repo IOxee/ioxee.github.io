@@ -10,18 +10,18 @@ import {
 	parsePage,
 } from './support';
 
-describe.each(PAGES)('CSP de %s', (path) => {
+describe.each(PAGES)('CSP of %s', (path) => {
 	const page = parsePage(path);
 	const csp = cspOf(page);
 
-	it('lo deniega todo salvo lo que se abre expresamente', () => {
+	it('denies everything except what is explicitly opened', () => {
 		expect(csp.get('default-src')).toEqual(["'none'"]);
 		expect(csp.get('object-src')).toEqual(["'none'"]);
 		expect(csp.get('base-uri')).toEqual(["'none'"]);
 		expect(csp.get('form-action')).toEqual(["'none'"]);
 	});
 
-	it('no admite scripts en línea sin hash ni eval', () => {
+	it('allows no inline scripts without a hash, and no eval', () => {
 		const sources = csp.get('script-src') ?? [];
 
 		expect(sources).toContain("'self'");
@@ -32,7 +32,7 @@ describe.each(PAGES)('CSP de %s', (path) => {
 	// Astro puts the meta at the end of the <head>, so today the theme script runs before the
 	// policy exists: the hash does not apply yet. It is required anyway so that, if the meta ends up
 	// going first, the script keeps working.
-	it('lleva el hash de cada script en línea que se ejecuta, y su texto en LF', () => {
+	it('has the hash of every inline script that runs, and its text in LF', () => {
 		const scripts = page
 			.querySelectorAll('script')
 			.filter(isExecutableInlineScript);
@@ -47,7 +47,7 @@ describe.each(PAGES)('CSP de %s', (path) => {
 
 	// A meta only governs what comes after it. What precedes it is not watched, so exactly what
 	// it is gets pinned down, so that it does not grow without someone deciding it.
-	it('lo único que va antes de la meta, que no lo gobierna, es contenido estático conocido', () => {
+	it('the only things before the meta, which does not govern them, are known static content', () => {
 		const themeInit = readFileSync(
 			new URL('../../src/scripts/theme-init.js', import.meta.url),
 			'utf8',
@@ -84,11 +84,11 @@ describe.each(PAGES)('CSP de %s', (path) => {
 					(element.getAttribute('type') === 'application/ld+json' ||
 						element.rawText === themeInit));
 
-			expect(known, `${tag} antes de la meta de la CSP`).toBe(true);
+			expect(known, `${tag} before the CSP meta`).toBe(true);
 		}
 	});
 
-	it('lleva el hash de cada <style> en línea', () => {
+	it('has the hash of every inline <style>', () => {
 		const allowed = csp.get('style-src-elem') ?? csp.get('style-src') ?? [];
 
 		for (const style of page.querySelectorAll('style')) {
@@ -96,7 +96,7 @@ describe.each(PAGES)('CSP de %s', (path) => {
 		}
 	});
 
-	it('solo deja en línea los atributos style, y solo para girar cada hoja con --tilt', () => {
+	it('only leaves style attributes inline, and only to rotate each sheet with --tilt', () => {
 		expect(csp.get('style-src-attr')).toEqual(["'unsafe-inline'"]);
 
 		for (const element of page.querySelectorAll('[style]')) {
@@ -106,7 +106,7 @@ describe.each(PAGES)('CSP de %s', (path) => {
 		}
 	});
 
-	it('no tiene manejadores de eventos en línea (onclick…)', () => {
+	it('has no inline event handlers (onclick…)', () => {
 		for (const element of page.querySelectorAll('*')) {
 			const handlers = Object.keys(element.attributes).filter((name) =>
 				name.toLowerCase().startsWith('on'),
@@ -116,7 +116,7 @@ describe.each(PAGES)('CSP de %s', (path) => {
 		}
 	});
 
-	it('carga scripts, estilos, fuentes e imágenes solo del propio sitio', () => {
+	it('loads scripts, styles, fonts and images only from the site itself', () => {
 		const resources = page.querySelectorAll(
 			'script[src], img[src], link[href]:not([rel="canonical"]):not([rel="alternate"])',
 		);

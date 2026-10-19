@@ -81,7 +81,7 @@ describe('src/data/projects.yaml', () => {
 describe('project screenshots', () => {
 	const EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp'];
 
-	it('has a source image in src/assets/projects named after every project id', () => {
+	it('has a source image at src/assets/projects/<id>/image.<ext> for every project', () => {
 		const missing = load('projects.yaml', projectSchema)
 			.map((project) => project.id)
 			.filter(
@@ -89,7 +89,7 @@ describe('project screenshots', () => {
 					!EXTENSIONS.some((extension) =>
 						existsSync(
 							new URL(
-								`../../src/assets/projects/${id}.${extension}`,
+								`../../src/assets/projects/${id}/image.${extension}`,
 								import.meta.url,
 							),
 						),

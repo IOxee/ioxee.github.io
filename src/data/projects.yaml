@@ -1,9 +1,11 @@
 # Personal projects. They are shown from most recent to oldest according to `start` and `end`
 # ('YYYY' or 'YYYY-MM'; `end: null` if still going): the file order does not count.
-# Each one's screenshot is src/assets/projects/<id>.png, and its alt text goes in `imageAlt`.
-# A project can also have a PDF: leave src/assets/projects/<id>.pdf next to the screenshot and a
-# "Ver documento (PDF)" link appears beside the repository link. Lowercase extension, one PDF per
-# project; if a file name matches no project id, the build warns.
+# Each project has its own folder, src/assets/projects/<id>/. Its screenshot is image.png (or .jpg, .jpeg,
+# .webp) and its alt text goes in `imageAlt`.
+# A project can also have a PDF: leave document.pdf in that folder and a "Ver documento (PDF)" link appears
+# beside the repository link. document.pdf is the Spanish one and the fallback for every language; add
+# document.en.pdf or document.ca.pdf and that language links to its own translation instead.
+# Lowercase names; a file that does not follow this layout fails the build and the error names it.
 # A project with `details` carries a second page: the challenge, the points and a closing sentence.
 - id: cubezon
   name: Cubezon

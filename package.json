@@ -22,9 +22,7 @@
 		"test:visual:update": "playwright test --grep @visual --project=chromium --update-snapshots",
 		"test:lighthouse": "playwright test --grep @lighthouse --project=chromium",
 		"assets:brand": "node scripts/generate-brand-assets.ts",
-		"assets:og": "node scripts/generate-og-image.ts",
-		"import:linkedin": "node scripts/import-linkedin.ts",
-		"fetch:linkedin": "node scripts/fetch-linkedin.ts"
+		"assets:og": "node scripts/generate-og-image.ts"
 	},
 	"dependencies": {
 		"@astrojs/sitemap": "^3.7.4",
@@ -38,7 +36,6 @@
 		"@playwright/test": "^1.64.0",
 		"@types/node": "^22.20.5",
 		"@vitest/coverage-v8": "^4.1.11",
-		"csv-parse": "^7.0.3",
 		"lighthouse": "^13.5.0",
 		"node-html-parser": "^9.0.4",
 		"prettier": "^3.9.10",

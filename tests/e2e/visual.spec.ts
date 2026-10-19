@@ -5,7 +5,7 @@ import { type Scheme, VIEWPORT_HEIGHT, WIDTHS, settle } from './support';
 // compared in Chromium only. They are run by hand with `npm run test:visual`, not in CI.
 test.skip(
 	({ browserName }) => browserName !== 'chromium',
-	'Una referencia por plataforma basta con un solo navegador.',
+	'One reference per platform is enough, so a single browser is used.',
 );
 
 test.use({ bypassCSP: true });
@@ -23,9 +23,9 @@ const WITHOUT_GRAIN =
  * folder without animation, so the screenshot always comes out the same.
  */
 const SHEETS = [
-	{ name: 'portada', hash: '' },
-	{ name: 'experiencia', hash: '#resume' },
-	{ name: 'proyectos', hash: '#portfolio' },
+	{ name: 'portada', label: 'cover', hash: '' },
+	{ name: 'experiencia', label: 'experience', hash: '#resume' },
+	{ name: 'proyectos', label: 'projects', hash: '#portfolio' },
 ] as const;
 
 /**
@@ -65,16 +65,16 @@ async function capture(
 	);
 }
 
-test.describe('regresión visual', { tag: '@visual' }, () => {
+test.describe('visual regression', { tag: '@visual' }, () => {
 	for (const sheet of SHEETS) {
 		for (const width of WIDTHS) {
-			test(`${sheet.name}, día a ${width}px`, async ({ page }) => {
+			test(`${sheet.label}, day at ${width}px`, async ({ page }) => {
 				await capture(page, 'light', width, sheet);
 			});
 		}
 
 		for (const width of [375, 1024, 1440]) {
-			test(`${sheet.name}, noche a ${width}px`, async ({ page }) => {
+			test(`${sheet.label}, night at ${width}px`, async ({ page }) => {
 				await capture(page, 'dark', width, sheet);
 			});
 		}

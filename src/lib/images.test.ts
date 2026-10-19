@@ -1,9 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
 	assertAssetsUsed,
-	pickImage,
+	assertProjectAssetsUsed,
 	pickOptionalAsset,
+	pickProjectDocument,
+	pickProjectImage,
 	unusableAssets,
+	unusableProjectAssets,
 } from './images';
 
 describe('pickOptionalAsset', () => {
@@ -137,23 +140,109 @@ describe('assertAssetsUsed', () => {
 	});
 });
 
-describe('pickImage', () => {
+describe('pickProjectImage', () => {
 	const images = {
-		'../assets/projects/demo.png': 'demo',
-		'../assets/projects/other.webp': 'other',
-		'../assets/projects/demo-2.jpg': 'demo-2',
+		'../assets/projects/demo/image.png': 'demo',
+		'../assets/projects/other/image.webp': 'other',
+		'../assets/projects/demo-2/image.jpg': 'demo-2',
 	};
 
-	it('finds the image named after the id, whatever its extension', () => {
-		expect(pickImage(images, 'demo')).toBe('demo');
-		expect(pickImage(images, 'other')).toBe('other');
+	it('finds the image in the id folder, whatever its extension', () => {
+		expect(pickProjectImage(images, 'demo')).toBe('demo');
+		expect(pickProjectImage(images, 'other')).toBe('other');
 	});
 
 	it('does not confuse an id with another one that only starts the same way', () => {
-		expect(pickImage(images, 'demo-2')).toBe('demo-2');
+		expect(pickProjectImage(images, 'demo-2')).toBe('demo-2');
 	});
 
 	it('fails with a message that names the missing image', () => {
-		expect(() => pickImage(images, 'missing')).toThrow(/missing/);
+		expect(() => pickProjectImage(images, 'missing')).toThrow(/missing/);
+	});
+
+	it('fails when a project has two images', () => {
+		expect(() =>
+			pickProjectImage(
+				{
+					'../assets/projects/demo/image.png': 'a',
+					'../assets/projects/demo/image.jpg': 'b',
+				},
+				'demo',
+			),
+		).toThrow(/más de una imagen/);
+	});
+});
+
+describe('pickProjectDocument', () => {
+	const documents = {
+		'../assets/projects/demo/document.pdf': 'es',
+		'../assets/projects/demo/document.en.pdf': 'en',
+		'../assets/projects/other/document.pdf': 'other-es',
+	};
+
+	it('prefers the translation in the requested language', () => {
+		expect(pickProjectDocument(documents, 'demo', 'en')).toBe('en');
+	});
+
+	it('falls back to the default document when that language has no translation', () => {
+		expect(pickProjectDocument(documents, 'demo', 'ca')).toBe('es');
+		expect(pickProjectDocument(documents, 'demo', 'es')).toBe('es');
+	});
+
+	it('is undefined when the project has no document', () => {
+		expect(pickProjectDocument(documents, 'missing', 'es')).toBeUndefined();
+	});
+
+	it('never takes the document of another project', () => {
+		expect(pickProjectDocument(documents, 'other', 'en')).toBe('other-es');
+	});
+});
+
+describe('unusableProjectAssets', () => {
+	const ids = ['demo'];
+	const locales = ['ca', 'en'];
+
+	it('accepts the layout <id>/image.<ext> and <id>/document[.<locale>].pdf', () => {
+		expect(
+			unusableProjectAssets(
+				[
+					'demo/image.png',
+					'demo/image.webp',
+					'demo/document.pdf',
+					'demo/document.en.pdf',
+				],
+				ids,
+				locales,
+			),
+		).toEqual([]);
+	});
+
+	it('flags files outside a project folder, misnamed or of an unknown project', () => {
+		const bad = [
+			'demo.png',
+			'demo/cover.png',
+			'demo/image.PNG',
+			'demo/document.docx',
+			'demo/document.fr.pdf',
+			'demo/document.es.pdf',
+			'demo/image.en.png',
+			'ghost/image.png',
+		];
+
+		expect(unusableProjectAssets(bad, ids, locales)).toEqual(bad);
+	});
+});
+
+describe('assertProjectAssetsUsed', () => {
+	it('names the useless files and the expected layout', () => {
+		expect(() =>
+			assertProjectAssetsUsed(['demo/image.png', 'demo.pdf'], ['demo'], ['en']),
+		).toThrow(/demo\.pdf.*image\.png.*document\.pdf, document\.en\.pdf/);
+	});
+
+	it('accepts a tidy folder', () => {
+		expect(() =>
+			assertProjectAssetsUsed(['demo/image.png'], ['demo'], ['en']),
+		).not.toThrow();
 	});
 });

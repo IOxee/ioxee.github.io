@@ -1,9 +1,11 @@
 import { expect, test } from '@playwright/test';
 import { VIEWPORT_HEIGHT, WIDTHS, settle, trackLayoutShift } from './support';
 
-test.describe('maquetación', () => {
+test.describe('layout', () => {
 	for (const width of WIDTHS) {
-		test(`no se desborda en horizontal a ${width}px`, async ({ page }) => {
+		test(`does not overflow horizontally at ${width}px`, async ({
+			page,
+		}) => {
 			await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
 			await page.goto('/');
 			await settle(page);
@@ -18,7 +20,7 @@ test.describe('maquetación', () => {
 	}
 
 	for (const width of [320, 375, 768, 1440]) {
-		test(`no mueve nada al cargar a ${width}px (CLS)`, async ({
+		test(`moves nothing on load at ${width}px (CLS)`, async ({
 			page,
 			browserName,
 		}) => {
@@ -26,7 +28,7 @@ test.describe('maquetación', () => {
 			// `layout-shift` and the counter would stay at 0.
 			test.skip(
 				browserName !== 'chromium',
-				'Firefox no implementa layout-shift.',
+				'Firefox does not implement layout-shift.',
 			);
 
 			await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
@@ -39,9 +41,7 @@ test.describe('maquetación', () => {
 		});
 	}
 
-	test('carga las fuentes del diseño y todas las imágenes', async ({
-		page,
-	}) => {
+	test('loads the design fonts and all the images', async ({ page }) => {
 		await page.goto('/');
 		await settle(page);
 
@@ -80,7 +80,9 @@ test.describe('maquetación', () => {
 		expect(broken).toEqual([]);
 	});
 
-	test('el texto largo no se sale de su hoja a 320px', async ({ page }) => {
+	test('long text does not spill out of its sheet at 320px', async ({
+		page,
+	}) => {
 		await page.setViewportSize({ width: 320, height: VIEWPORT_HEIGHT });
 		await page.goto('/');
 		await settle(page);

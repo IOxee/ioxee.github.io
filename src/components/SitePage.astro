@@ -1,6 +1,6 @@
 ---
 import { existsSync, readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
 import { getImage } from 'astro:assets';
 import { getCollection } from 'astro:content';
 import avatar from '../assets/avatar.png';
@@ -8,8 +8,14 @@ import Base from '../layouts/Base.astro';
 import { sortExperience } from '../lib/experience';
 import { folderTabs, planSheets, sheetTitles } from '../lib/folder';
 import type { FolderData } from '../lib/folder-data';
+import { DEFAULT_LOCALE, LOCALES } from '../lib/i18n';
 import type { Locale } from '../lib/i18n';
-import { assertAssetsUsed, pickOptionalAsset } from '../lib/images';
+import {
+	assertAssetsUsed,
+	assertProjectAssetsUsed,
+	pickOptionalAsset,
+	pickProjectDocument,
+} from '../lib/images';
 import { sortByOrder, sortNewestFirst } from '../lib/order';
 import { SECTION_IDS, type SectionId } from '../lib/sections';
 import { absoluteUrl, personSeoFrom, siteJsonLd } from '../lib/seo';
@@ -43,7 +49,8 @@ const { email, github, linkedin } = profile.links;
 
 // What is attached to a certification (its photo and its document) goes in src/assets/certifications/ and
 // is named after its `id`. Without a file nothing appears: nothing needs to be declared in the YAML.
-// A project works the same way for its optional document: src/assets/projects/<id>.pdf, next to its screenshot.
+// A project has its own folder, src/assets/projects/<id>/, with its screenshot (image.png) and its optional
+// document (document.pdf, and document.<locale>.pdf for each translation).
 const ATTACHMENT_EXTENSIONS = ['png', 'jpg', 'jpeg', 'webp', 'pdf'];
 const attachmentsIn = (folder: string): string[] => {
 	const path = join(process.cwd(), folder);
@@ -61,11 +68,21 @@ const certificationDocuments = import.meta.glob<string>(
 	'../assets/certifications/*.pdf',
 	{ query: '?url&no-inline', import: 'default', eager: true },
 );
-const projectDocuments = import.meta.glob<string>('../assets/projects/*.pdf', {
-	query: '?url&no-inline',
-	import: 'default',
-	eager: true,
-});
+const projectDocuments = import.meta.glob<string>(
+	'../assets/projects/*/document*.pdf',
+	{ query: '?url&no-inline', import: 'default', eager: true },
+);
+// Every file under src/assets/projects/<id>/, as `<id>/<name>`.
+const projectFiles = (): string[] => {
+	const path = join(process.cwd(), 'src/assets/projects');
+	if (!existsSync(path)) return [];
+
+	return readdirSync(path, { recursive: true, withFileTypes: true })
+		.filter((entry) => entry.isFile() && !entry.name.startsWith('.'))
+		.map((entry) =>
+			join(relative(path, entry.parentPath), entry.name).replaceAll('\\', '/'),
+		);
+};
 const certificationList = sortByOrder(
 	(await getCollection('certifications')).map((entry) => entry.data),
 );
@@ -81,13 +98,11 @@ assertAssetsUsed({
 	extensions: ATTACHMENT_EXTENSIONS,
 	owner: 'una certificación de certifications.yaml',
 });
-assertAssetsUsed({
-	folder: 'src/assets/projects',
-	files: attachmentsIn('src/assets/projects'),
-	ids: projectList.map((entry) => entry.id),
-	extensions: ATTACHMENT_EXTENSIONS,
-	owner: 'un proyecto de projects.yaml',
-});
+assertProjectAssetsUsed(
+	projectFiles(),
+	projectList.map((entry) => entry.id),
+	LOCALES.filter((entry) => entry !== DEFAULT_LOCALE),
+);
 
 // `getCollection` does not keep the file's order: whatever needs it is sorted by `order`.
 const data: FolderData = {
@@ -105,7 +120,7 @@ const data: FolderData = {
 	})),
 	projects: projectList.map((entry) => ({
 		...entry,
-		document: pickOptionalAsset(projectDocuments, entry.id),
+		document: pickProjectDocument(projectDocuments, entry.id, locale),
 	})),
 	contact: [
 		{

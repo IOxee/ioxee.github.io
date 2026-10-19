@@ -1,5 +1,9 @@
 # Skills inventory.
 #
+# `category`: the group the skill is listed under. Any kebab-case id works (`game-dev`, `devops`…), so
+# you can create categories freely. `backend`, `frontend`, `data` and `desktop` come first, in that order;
+# any other category goes after them, alphabetically. A category title is translated when `src/lib/ui.ts`
+# has a `skill.category.<id>` text in es, en and ca; without one, the id is shown as words (`game-dev` → "Game dev").
 # `since`: year you started (the years of experience are computed automatically).
 # `state`: daily = daily use · comfortable = at ease · intermediate = intermediate ·
 #          basic = basic.

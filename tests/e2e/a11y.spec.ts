@@ -24,10 +24,10 @@ async function violationsOf(page: Page): Promise<string[]> {
 	);
 }
 
-test.describe('accesibilidad (axe, WCAG 2.2 AA)', () => {
+test.describe('accessibility (axe, WCAG 2.2 AA)', () => {
 	for (const scheme of SCHEMES) {
 		for (const width of [375, 1440]) {
-			test(`la página principal no tiene violaciones: ${scheme}, ${width}px`, async ({
+			test(`the main page has no violations: ${scheme}, ${width}px`, async ({
 				page,
 			}) => {
 				await page.emulateMedia({ colorScheme: scheme });
@@ -41,7 +41,7 @@ test.describe('accesibilidad (axe, WCAG 2.2 AA)', () => {
 	}
 
 	for (const scheme of SCHEMES) {
-		test(`la carpeta abierta, hoja por hoja, no tiene violaciones: ${scheme}`, async ({
+		test(`the open folder, sheet by sheet, has no violations: ${scheme}`, async ({
 			page,
 		}) => {
 			await page.emulateMedia({ colorScheme: scheme });
@@ -58,7 +58,7 @@ test.describe('accesibilidad (axe, WCAG 2.2 AA)', () => {
 				await settle(page);
 
 				for (const violation of await violationsOf(page)) {
-					found.push(`posición ${position}: ${violation}`);
+					found.push(`position ${position}: ${violation}`);
 				}
 			}
 
@@ -66,7 +66,7 @@ test.describe('accesibilidad (axe, WCAG 2.2 AA)', () => {
 		});
 	}
 
-	test('la página 404 no tiene violaciones y responde con 404', async ({
+	test('the 404 page has no violations and responds with 404', async ({
 		page,
 	}) => {
 		const response = await page.goto('/esta-pagina-no-existe');
@@ -76,7 +76,7 @@ test.describe('accesibilidad (axe, WCAG 2.2 AA)', () => {
 		expect(await violationsOf(page)).toEqual([]);
 	});
 
-	test('tiene una estructura de encabezados y regiones que un lector de pantalla puede seguir', async ({
+	test('has a structure of headings and regions that a screen reader can follow', async ({
 		page,
 	}) => {
 		await page.goto('/');
@@ -108,13 +108,16 @@ test.describe('accesibilidad (axe, WCAG 2.2 AA)', () => {
 		expect(named).toBe(pages);
 	});
 
-	test('el árbol de accesibilidad solo tiene las páginas que se leen: una al cerrar, dos con la carpeta abierta', async ({
+	test('the accessibility tree only has the pages that are read: one when closed, two with the folder open', async ({
 		page,
 		browserName,
 	}) => {
 		// The tree the browser builds is read: Playwright's selectors do not treat `inert`
 		// as hidden, but a screen reader does leave it out.
-		test.skip(browserName !== 'chromium', 'El árbol se pide por CDP.');
+		test.skip(
+			browserName !== 'chromium',
+			'The tree is requested over CDP.',
+		);
 
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
 		await page.goto('/');

@@ -12,11 +12,13 @@ const attached = existsSync(FILES)
 const hasImage = attached.some((name) => /\.(png|jpe?g|webp)$/.test(name));
 const hasPdf = attached.some((name) => name.endsWith('.pdf'));
 
-// A project can carry a document too (src/assets/projects/<id>.pdf); its tests are skipped without one.
+// A project can carry a document too (src/assets/projects/<id>/document.pdf); its tests are skipped without one.
 const PROJECT_FILES = new URL('../../src/assets/projects/', import.meta.url);
 const hasProjectPdf =
 	existsSync(PROJECT_FILES) &&
-	readdirSync(PROJECT_FILES).some((name) => name.endsWith('.pdf'));
+	readdirSync(PROJECT_FILES, { recursive: true }).some((name) =>
+		String(name).endsWith('.pdf'),
+	);
 
 const TAGS = ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'];
 
@@ -37,10 +39,10 @@ async function openCertifications(page: Page): Promise<void> {
 
 const dialog = (page: Page) => page.locator('[data-viewer-dialog]');
 
-test.describe('el visor de la foto de una certificación', () => {
-	test.skip(!hasImage, 'Ninguna certificación tiene foto');
+test.describe("the viewer for a certification's photo", () => {
+	test.skip(!hasImage, 'No certification has a photo');
 
-	test('la amplía dentro de la propia web, sin abrir otra pestaña', async ({
+	test('enlarges it inside the site itself, without opening another tab', async ({
 		page,
 	}) => {
 		await openCertifications(page);
@@ -67,7 +69,7 @@ test.describe('el visor de la foto de una certificación', () => {
 		expect(page.context().pages()).toHaveLength(1);
 	});
 
-	test('deja la página de detrás quieta mientras está abierto: la carpeta se mueve con el scroll', async ({
+	test('keeps the page behind still while it is open: the folder moves with the scroll', async ({
 		page,
 	}) => {
 		await openCertifications(page);
@@ -83,7 +85,7 @@ test.describe('el visor de la foto de una certificación', () => {
 		expect(await page.evaluate(() => Math.round(scrollY))).toBe(before);
 	});
 
-	test('se cierra con Esc, con el botón y pulsando fuera, y el foco vuelve al enlace', async ({
+	test('closes with Esc, with the button and by clicking outside, and the focus returns to the link', async ({
 		page,
 	}) => {
 		await openCertifications(page);
@@ -111,7 +113,7 @@ test.describe('el visor de la foto de una certificación', () => {
 		await expect(dialog(page)).toBeHidden();
 	});
 
-	test('un clic con Ctrl o Cmd sigue siendo el de un enlace: lo deja al navegador', async ({
+	test('a click with Ctrl or Cmd stays a link click: it is left to the browser', async ({
 		page,
 	}) => {
 		await openCertifications(page);
@@ -133,7 +135,7 @@ test.describe('el visor de la foto de una certificación', () => {
 		await expect(dialog(page)).toBeHidden();
 	});
 
-	test('la foto grande se puede recorrer con el teclado: su zona con scroll se enfoca y tiene nombre', async ({
+	test('the large photo can be navigated with the keyboard: its scrolling area takes focus and has a name', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: 500 });
@@ -167,7 +169,7 @@ test.describe('el visor de la foto de una certificación', () => {
 			.toBeGreaterThan(before);
 	});
 
-	test('abierto no tiene violaciones de accesibilidad', async ({ page }) => {
+	test('when open it has no accessibility violations', async ({ page }) => {
 		await openCertifications(page);
 		await page.locator('a[data-viewer="image"]').first().click();
 		await expect(dialog(page)).toBeVisible();
@@ -186,7 +188,7 @@ test.describe('el visor de la foto de una certificación', () => {
 		).toEqual([]);
 	});
 
-	test('en un móvil cabe entero en la pantalla', async ({ page }) => {
+	test('on a phone it fits entirely on the screen', async ({ page }) => {
 		await page.setViewportSize({ width: 375, height: 700 });
 		await page.goto('/#certifications');
 		await settle(page);
@@ -200,10 +202,10 @@ test.describe('el visor de la foto de una certificación', () => {
 	});
 });
 
-test.describe('el visor del documento de una certificación', () => {
-	test.skip(!hasPdf, 'Ninguna certificación tiene documento');
+test.describe("the viewer for a certification's document", () => {
+	test.skip(!hasPdf, 'No certification has a document');
 
-	test('con visor de PDF en el navegador, lo enseña dentro de la web en un marco del propio sitio', async ({
+	test('with a PDF viewer in the browser, shows it inside the site in a frame of the site itself', async ({
 		page,
 	}) => {
 		await pdfViewer(page, true);
@@ -232,7 +234,7 @@ test.describe('el visor del documento de una certificación', () => {
 		await expect(page.locator('[data-viewer-external]')).toHaveCount(0);
 	});
 
-	test('sin visor de PDF en el navegador (un móvil), el enlace sigue su camino y no se abre un marco en blanco', async ({
+	test('without a PDF viewer in the browser (a phone), the link goes on its way and no blank frame opens', async ({
 		page,
 	}) => {
 		await pdfViewer(page, false);

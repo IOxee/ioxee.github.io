@@ -16,17 +16,17 @@ const meta = (
 const distFile = (locale: (typeof LANGUAGES)[number]['locale']): string =>
 	`${localePath(locale).replace(/^\//, '')}index.html`;
 
-describe.each(LANGUAGES)('SEO de la página en $name', ({ locale }) => {
+describe.each(LANGUAGES)('SEO of the $name page', ({ locale }) => {
 	const page = parsePage(distFile(locale));
 
-	it('declara su idioma y un título y una descripción propios', () => {
+	it('declares its language and its own title and description', () => {
 		expect(page.querySelector('html')?.getAttribute('lang')).toBe(locale);
 		expect(page.querySelector('title')?.text).toMatch(/\S/);
 		expect(meta(page, 'description')?.length).toBeGreaterThan(50);
 		expect(meta(page, 'description')?.length).toBeLessThanOrEqual(160);
 	});
 
-	it('tiene su propia URL canónica y no la de otro idioma', () => {
+	it('has its own canonical URL and not that of another language', () => {
 		const canonicals = page.querySelectorAll('link[rel="canonical"]');
 
 		expect(canonicals).toHaveLength(1);
@@ -36,7 +36,7 @@ describe.each(LANGUAGES)('SEO de la página en $name', ({ locale }) => {
 		expect(meta(page, 'og:url')).toBe(`${SITE}${localePath(locale)}`);
 	});
 
-	it('enlaza a la misma página en cada idioma, incluida ella, y a la principal como x-default', () => {
+	it('links to the same page in every language, itself included, and to the main one as x-default', () => {
 		const alternates = page
 			.querySelectorAll('link[rel="alternate"][hreflang]')
 			.map(
@@ -59,7 +59,7 @@ describe.each(LANGUAGES)('SEO de la página en $name', ({ locale }) => {
 		]);
 	});
 
-	it('dice su idioma a las redes sociales y ofrece los otros', () => {
+	it('tells social networks its language and offers the others', () => {
 		expect(meta(page, 'og:locale')).toBe(OG_LOCALES[locale]);
 
 		const others = page
@@ -73,7 +73,7 @@ describe.each(LANGUAGES)('SEO de la página en $name', ({ locale }) => {
 		);
 	});
 
-	it('trae el selector de idioma con los tres enlaces y el suyo marcado', () => {
+	it('ships the language switch with the three links and its own one marked', () => {
 		const links = page.querySelectorAll('[data-lang-switch] a');
 
 		expect(links.map((link) => link.getAttribute('hreflang'))).toEqual(
@@ -87,7 +87,7 @@ describe.each(LANGUAGES)('SEO de la página en $name', ({ locale }) => {
 	});
 });
 
-describe('SEO de la página principal', () => {
+describe('SEO of the main page', () => {
 	const page = parsePage('index.html');
 
 	const jsonLdNode = (type: string) => {
@@ -102,19 +102,19 @@ describe('SEO de la página principal', () => {
 		const node = data['@graph'].find(
 			(item: { '@type': string }) => item['@type'] === type,
 		);
-		expect(node, `nodo ${type} en el JSON-LD`).toBeDefined();
+		expect(node, `${type} node in the JSON-LD`).toBeDefined();
 
 		return node;
 	};
 
-	it('declara el idioma, un título y una descripción de longitud razonable', () => {
+	it('declares the language, a title and a description of reasonable length', () => {
 		expect(page.querySelector('html')?.getAttribute('lang')).toBe('es');
 		expect(page.querySelector('title')?.text).toMatch(/\S/);
 		expect(meta(page, 'description')?.length).toBeGreaterThan(50);
 		expect(meta(page, 'description')?.length).toBeLessThanOrEqual(160);
 	});
 
-	it('tiene una única URL canónica, absoluta y del propio sitio', () => {
+	it('has a single canonical URL, absolute and on the site itself', () => {
 		const canonicals = page.querySelectorAll('link[rel="canonical"]');
 
 		expect(canonicals).toHaveLength(1);
@@ -122,7 +122,7 @@ describe('SEO de la página principal', () => {
 		expect(meta(page, 'og:url')).toBe(`${SITE}/`);
 	});
 
-	it('completa Open Graph y Twitter con una imagen absoluta que existe', () => {
+	it('fills in Open Graph and Twitter with an absolute image that exists', () => {
 		const image = `${SITE}${OG_IMAGE.path}`;
 
 		expect(meta(page, 'og:type')).toBe('website');
@@ -137,7 +137,7 @@ describe('SEO de la página principal', () => {
 		expect(distHas(OG_IMAGE.path)).toBe(true);
 	});
 
-	it('tiene un color de tema para el modo claro y otro para el oscuro', () => {
+	it('has a theme color for light mode and another for dark mode', () => {
 		const colors = page.querySelectorAll('meta[name="theme-color"]');
 
 		expect(
@@ -151,7 +151,7 @@ describe('SEO de la página principal', () => {
 		}
 	});
 
-	it('nombra el sitio con el de la persona, para que no salga el dominio', () => {
+	it('names the site after the person, so that the domain does not show', () => {
 		const site = jsonLdNode('WebSite');
 		const person = jsonLdNode('Person');
 
@@ -160,7 +160,7 @@ describe('SEO de la página principal', () => {
 		expect(site.url).toBe(`${SITE}/`);
 	});
 
-	it('lleva datos estructurados válidos, con una imagen de la persona que existe y sin correo ni fecha de nacimiento', () => {
+	it('has valid structured data, with an image of the person that exists and no email or birth date', () => {
 		const person = jsonLdNode('Person');
 
 		expect(person['@id']).toBe(`${SITE}/#person`);
@@ -177,7 +177,7 @@ describe('SEO de la página principal', () => {
 		expect(Object.keys(person)).not.toContain('email');
 	});
 
-	it('no publica la fecha de nacimiento exacta en ningún punto del HTML', () => {
+	it('does not publish the exact birth date anywhere in the HTML', () => {
 		const [profile] = parse(
 			readFileSync(
 				new URL('../../src/data/profile.yaml', import.meta.url),
@@ -191,15 +191,15 @@ describe('SEO de la página principal', () => {
 	});
 });
 
-describe('SEO de la página 404', () => {
+describe('SEO of the 404 page', () => {
 	const page = parsePage('404.html');
 
-	it('pide que no se indexe y no declara canónica', () => {
+	it('asks not to be indexed and declares no canonical', () => {
 		expect(meta(page, 'robots')).toBe('noindex');
 		expect(page.querySelector('link[rel="canonical"]')).toBeNull();
 	});
 
-	it('no tiene etiquetas para compartir: no es una página que se comparta', () => {
+	it('has no sharing tags: it is not a page meant to be shared', () => {
 		expect(
 			page.querySelectorAll(
 				'meta[property^="og:"], meta[name^="twitter:"]',
@@ -208,8 +208,8 @@ describe('SEO de la página 404', () => {
 	});
 });
 
-describe('rastreo', () => {
-	it('robots.txt permite el sitio y apunta al sitemap', () => {
+describe('crawling', () => {
+	it('robots.txt allows the site and points to the sitemap', () => {
 		const robots = readDist('robots.txt');
 
 		expect(robots).toContain('User-agent: *');
@@ -217,7 +217,7 @@ describe('rastreo', () => {
 		expect(distHas('sitemap-index.xml')).toBe(true);
 	});
 
-	it('el sitemap lista la página de cada idioma y no la 404', () => {
+	it('the sitemap lists the page of each language and not the 404', () => {
 		const index = readDist('sitemap-index.xml');
 		const sitemap = readDist('sitemap-0.xml');
 
@@ -230,7 +230,7 @@ describe('rastreo', () => {
 		expect(sitemap).not.toContain('404');
 	});
 
-	it('el sitemap enlaza cada página con las de los otros idiomas, con los mismos hreflang que el <head>', () => {
+	it('the sitemap links each page to those of the other languages, with the same hreflang as the <head>', () => {
 		const sitemap = readDist('sitemap-0.xml');
 
 		for (const { locale } of LANGUAGES) {
@@ -241,8 +241,8 @@ describe('rastreo', () => {
 	});
 });
 
-describe('tema', () => {
-	it('theme.css lleva la paleta de día y la de noche', () => {
+describe('theme', () => {
+	it('theme.css has the day palette and the night palette', () => {
 		const css = readDist('theme.css');
 
 		expect(css).toContain("[data-theme='day']");

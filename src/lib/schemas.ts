@@ -1,6 +1,5 @@
 import { z } from 'astro/zod';
-// With extension: the `import-linkedin` script runs this file directly with Node.
-import { PARTIAL_DATE, partialDateKey } from './partial-date.ts';
+import { PARTIAL_DATE, partialDateKey } from './partial-date';
 
 /** Categories shown first, in this order. Any other category is allowed and goes after them, alphabetically. */
 export const PREFERRED_SKILL_CATEGORIES = [
@@ -134,7 +133,7 @@ export const projectSchema = z
 		name: nonEmpty,
 		summary: localizedText,
 		stack: z.array(nonEmpty).min(1),
-		/** Alt text of the screenshot `src/assets/projects/<id>.png`: it is content, not decoration. */
+		/** Alt text of the screenshot `src/assets/projects/<id>/image.png`: it is content, not decoration. */
 		imageAlt: localizedText,
 		repo: httpsUrl,
 		start: partialDate,

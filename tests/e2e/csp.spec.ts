@@ -1,9 +1,9 @@
 import { expect, test } from '@playwright/test';
 import { SCHEMES, settle, trackCspViolations } from './support';
 
-test.describe('política de contenido (CSP)', () => {
+test.describe('content security policy (CSP)', () => {
 	for (const scheme of SCHEMES) {
-		test(`el propio sitio no la incumple, ni al cargar ni al usarlo: ${scheme}`, async ({
+		test(`the site itself does not break it, neither on load nor in use: ${scheme}`, async ({
 			page,
 		}) => {
 			const problems: string[] = [];
@@ -30,7 +30,7 @@ test.describe('política de contenido (CSP)', () => {
 		});
 	}
 
-	test('de verdad bloquea un script en línea y una imagen de otro sitio', async ({
+	test('really does block an inline script and an image from another site', async ({
 		page,
 	}) => {
 		await trackCspViolations(page);

@@ -7,7 +7,7 @@ import type { SheetPlan } from '../lib/folder';
 import type { FolderData } from '../lib/folder-data';
 import { localize } from '../lib/i18n';
 import type { Locale } from '../lib/i18n';
-import { pickImage } from '../lib/images';
+import { pickProjectImage } from '../lib/images';
 import { fill } from '../lib/text';
 import { t } from '../lib/ui';
 import FolderCover from './FolderCover.astro';
@@ -33,7 +33,7 @@ const headingId = `${sheet.id}-title`;
 const face = isBackPage(page) ? 'back' : 'front';
 
 const projectImages = import.meta.glob<{ default: ImageMetadata }>(
-	'../assets/projects/*.{png,jpg,jpeg,webp}',
+	'../assets/projects/*/image.{png,jpg,jpeg,webp}',
 	{ eager: true },
 );
 
@@ -265,7 +265,7 @@ const project =
 				</h2>
 				<Image
 					class="doc-shot"
-					src={pickImage(projectImages, project.id).default}
+					src={pickProjectImage(projectImages, project.id).default}
 					alt={localize(project.imageAlt, locale)}
 					width={960}
 					height={480}

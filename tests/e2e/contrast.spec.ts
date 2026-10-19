@@ -6,7 +6,7 @@ import { SCHEMES, folderGeometry, settle, showPosition } from './support';
 test.use({ bypassCSP: true, viewport: { width: 1440, height: 900 } });
 test.skip(
 	({ browserName }) => browserName !== 'chromium',
-	'Mide lo que se pinta: un navegador basta.',
+	'It measures what gets painted: one browser is enough.',
 );
 
 interface TextLine {
@@ -32,7 +32,7 @@ function collectTextLines(page: Page, origin: Origin): Promise<TextLine[]> {
 		const canvas = document.createElement('canvas');
 		canvas.width = canvas.height = 1;
 		const context = canvas.getContext('2d', { willReadFrequently: true });
-		if (!context) throw new Error('Sin canvas 2D');
+		if (!context) throw new Error('No 2D canvas');
 
 		// Chrome returns `oklch(...)` as is: it is converted to RGB by painting one pixel.
 		const toRgb = (color: string): [number, number, number] => {
@@ -166,7 +166,7 @@ async function lowContrast(
 		}
 		// A line without a single pixel to measure (outside the capture) cannot be taken as passing.
 		if (lights.length === 0) {
-			failures.push(`${line.label}: sin píxeles que medir`);
+			failures.push(`${line.label}: no pixels to measure`);
 			continue;
 		}
 
@@ -181,7 +181,7 @@ async function lowContrast(
 
 		if (actual < required) {
 			failures.push(
-				`${line.label}: ${actual.toFixed(2)}:1, pide ${required}:1`,
+				`${line.label}: ${actual.toFixed(2)}:1, needs ${required}:1`,
 			);
 		}
 	}
@@ -189,9 +189,9 @@ async function lowContrast(
 	return failures;
 }
 
-test.describe('contraste del texto sobre el fondo renderizado', () => {
+test.describe('text contrast over the rendered background', () => {
 	for (const scheme of SCHEMES) {
-		test(`todo el texto de la carpeta llega al contraste de WCAG AA, en cada hoja y también sobre el grano y el degradado: ${scheme}`, async ({
+		test(`all the text of the folder reaches WCAG AA contrast, on every sheet and also over the grain and the gradient: ${scheme}`, async ({
 			page,
 		}) => {
 			await page.emulateMedia({ colorScheme: scheme });
@@ -213,7 +213,7 @@ test.describe('contraste del texto sobre el fondo renderizado', () => {
 				const lines = await collectTextLines(page, 'viewport');
 				measured += lines.length;
 				for (const failure of await lowContrast(page, lines, false)) {
-					failures.push(`posición ${position}: ${failure}`);
+					failures.push(`position ${position}: ${failure}`);
 				}
 			}
 
@@ -227,7 +227,7 @@ test.describe('contraste del texto sobre el fondo renderizado', () => {
 			const footer = await collectTextLines(page, 'viewport');
 			measured += footer.length;
 			for (const failure of await lowContrast(page, footer, false)) {
-				failures.push(`pie: ${failure}`);
+				failures.push(`footer: ${failure}`);
 			}
 
 			// That there is text to measure: without this, hiding everything would leave the test green.
@@ -237,11 +237,11 @@ test.describe('contraste del texto sobre el fondo renderizado', () => {
 	}
 });
 
-test.describe('contraste en la lista que sale sin JavaScript', () => {
+test.describe('contrast in the list shown without JavaScript', () => {
 	test.use({ javaScriptEnabled: false });
 
 	for (const scheme of SCHEMES) {
-		test(`todas las páginas seguidas llegan al contraste de WCAG AA: ${scheme}`, async ({
+		test(`all the pages, one after another, reach WCAG AA contrast: ${scheme}`, async ({
 			page,
 		}) => {
 			await page.emulateMedia({ colorScheme: scheme });

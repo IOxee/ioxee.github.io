@@ -33,8 +33,8 @@ function jumpTo(page: Page, top: number): Promise<void> {
 	);
 }
 
-test.describe('la carpeta', () => {
-	test('no tiene botones ni texto de estado: se maneja con el scroll, el teclado y el menú', async ({
+test.describe('the folder', () => {
+	test('has no buttons or status text: it is driven by the scroll, the keyboard and the menu', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -56,7 +56,7 @@ test.describe('la carpeta', () => {
 	});
 
 	for (const [width, height] of SCREENS) {
-		test(`llena la pantalla entre el menú y el pie a ${width}×${height}`, async ({
+		test(`fills the screen between the menu and the footer at ${width}×${height}`, async ({
 			page,
 		}) => {
 			await page.setViewportSize({ width, height });
@@ -99,7 +99,7 @@ test.describe('la carpeta', () => {
 		});
 	}
 
-	test('el scroll hace girar las hojas de forma continua y marca la página que se lee', async ({
+	test('scrolling turns the sheets continuously and marks the page being read', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -126,7 +126,7 @@ test.describe('la carpeta', () => {
 		expect(await visiblePages(page)).toEqual([2, 3]);
 	});
 
-	test('con la carpeta abierta las dos páginas quedan a la misma altura y pegadas en el lomo', async ({
+	test('with the folder open, the two pages sit at the same height and flush at the spine', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -146,7 +146,7 @@ test.describe('la carpeta', () => {
 						return { left, right, top, bottom };
 					}),
 			);
-			if (!left || !right) throw new Error('Debería haber dos páginas');
+			if (!left || !right) throw new Error('There should be two pages');
 
 			expect(Math.abs(left.top - right.top)).toBeLessThanOrEqual(1);
 			expect(Math.abs(left.bottom - right.bottom)).toBeLessThanOrEqual(1);
@@ -161,7 +161,7 @@ test.describe('la carpeta', () => {
 		[375, '#portfolio'],
 		[375, '#resume'],
 	] as const) {
-		test(`entrar por el ancla ${anchor} a ${width}px deja la carpeta en esa hoja, quieta y marcada en el menú`, async ({
+		test(`entering through the ${anchor} anchor at ${width}px leaves the folder on that sheet, still and marked in the menu`, async ({
 			page,
 		}) => {
 			await page.setViewportSize({ width, height: VIEWPORT_HEIGHT });
@@ -199,7 +199,7 @@ test.describe('la carpeta', () => {
 		});
 	}
 
-	test('en una pantalla estrecha gira sola, una página cada vez, y se maneja con el menú', async ({
+	test('on a narrow screen it turns by itself, one page at a time, and is driven by the menu', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 375, height: 700 });
@@ -218,8 +218,8 @@ test.describe('la carpeta', () => {
 	});
 });
 
-test.describe('la portada', () => {
-	test('en una pantalla alta la carpeta es de folio, más alta que ancha, y deja aire arriba y abajo', async ({
+test.describe('the cover', () => {
+	test('on a tall screen the folder has the proportions of a sheet of paper, taller than wide, and leaves room above and below', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1920, height: 1080 });
@@ -243,7 +243,7 @@ test.describe('la portada', () => {
 		expect(stage.bottom - cover.bottom).toBeGreaterThan(30);
 	});
 
-	test('invita a hacer scroll cuando el scroll pasa las hojas, y no cuando no', async ({
+	test('invites scrolling when scrolling turns the sheets, and not when it does not', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -261,10 +261,10 @@ test.describe('la portada', () => {
 	});
 });
 
-test.describe('la carpeta sin JavaScript', () => {
+test.describe('the folder without JavaScript', () => {
 	test.use({ javaScriptEnabled: false });
 
-	test('son todas las páginas seguidas, con su menú, y sin mandos que no funcionarían', async ({
+	test('shows all the pages one after another, with its menu, and no controls that would not work', async ({
 		page,
 	}) => {
 		await page.goto('/');
@@ -288,7 +288,7 @@ test.describe('la carpeta sin JavaScript', () => {
 	});
 });
 
-test.describe('la carpeta no pierde el hilo', () => {
+test.describe('the folder keeps its place', () => {
 	const currentPage = (page: Page) =>
 		page.evaluate(() =>
 			Number(
@@ -308,7 +308,7 @@ test.describe('la carpeta no pierde el hilo', () => {
 			),
 		);
 
-	test('al cambiar de ancho, de carpeta abierta a una página y al revés, sigue en la misma página', async ({
+	test('when the width changes, from an open folder to one page and back, it stays on the same page', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -335,7 +335,7 @@ test.describe('la carpeta no pierde el hilo', () => {
 		await expect(page).toHaveURL(/#portfolio$/);
 	});
 
-	test('«Atrás» hasta la dirección sin ancla vuelve a la portada', async ({
+	test('"Back" to the address without an anchor returns to the cover', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -352,7 +352,7 @@ test.describe('la carpeta no pierde el hilo', () => {
 		).toHaveCount(0);
 	});
 
-	test('las flechas siguen pasando hojas después de saltar con una pestaña', async ({
+	test('the arrows keep turning sheets after jumping with a tab', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -366,7 +366,7 @@ test.describe('la carpeta no pierde el hilo', () => {
 		await expect.poll(() => currentPage(page)).toBeGreaterThan(before);
 	});
 
-	test('al soltar el scroll entre dos hojas, la carpeta termina de girar la que estaba pasando', async ({
+	test('when the scroll is released between two sheets, the folder finishes turning the one that was passing', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -388,7 +388,7 @@ test.describe('la carpeta no pierde el hilo', () => {
 			.toBeLessThan(0.02);
 	});
 
-	test('con movimiento reducido no hay hojas a medio girar: saltan enteras', async ({
+	test('with reduced motion there are no half-turned sheets: they jump whole', async ({
 		page,
 	}) => {
 		await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -403,7 +403,7 @@ test.describe('la carpeta no pierde el hilo', () => {
 		await expect.poll(() => progress(page)).toBe(1);
 	});
 
-	test('un toque de la rueda pasa una hoja entera y subir la devuelve: no hay que «cargar» el scroll', async ({
+	test('one wheel tick turns a whole sheet and scrolling up turns it back: there is no need to "charge" the scroll', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -424,7 +424,7 @@ test.describe('la carpeta no pierde el hilo', () => {
 		}
 	});
 
-	test('una flecha del teclado, con el foco fuera de la carpeta, también pasa una hoja', async ({
+	test('a keyboard arrow, with the focus outside the folder, also turns a sheet', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -437,7 +437,7 @@ test.describe('la carpeta no pierde el hilo', () => {
 		await expect.poll(() => progress(page)).toBe(0);
 	});
 
-	test('el pie se ve siempre y el recorrido acaba justo en la última hoja, sin tramo de scroll de más', async ({
+	test('the footer is always visible and the run ends right on the last sheet, with no extra stretch of scroll', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -473,7 +473,7 @@ test.describe('la carpeta no pierde el hilo', () => {
 		expect(await progress(page)).toBe(positions - 1);
 	});
 
-	test('el pie se ve siempre también cuando la carpeta no se fija', async ({
+	test('the footer is always visible also when the folder is not pinned', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 390, height: 844 });
@@ -492,7 +492,7 @@ test.describe('la carpeta no pierde el hilo', () => {
 		await expect.poll(bottom).toBeCloseTo(844, 0);
 	});
 
-	test('los botones para lectores de pantalla pasan la hoja adelante y atrás', async ({
+	test('the buttons for screen readers turn the sheet forward and back', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
@@ -507,17 +507,17 @@ test.describe('la carpeta no pierde el hilo', () => {
 	});
 });
 
-test.describe('la carpeta con el dedo', () => {
+test.describe('the folder with a finger', () => {
 	test.use({ hasTouch: true, viewport: { width: 375, height: 700 } });
 
-	test('un toque en el borde derecho pasa la hoja y uno en el izquierdo la devuelve', async ({
+	test('a tap on the right edge turns the sheet and one on the left edge turns it back', async ({
 		page,
 	}) => {
 		await page.goto('/');
 		await settle(page);
 
 		const box = await page.locator('[data-viewport]').boundingBox();
-		if (!box) throw new Error('No se ve la carpeta');
+		if (!box) throw new Error('The folder is not visible');
 		const middle = box.y + Math.min(box.height, 600) / 2;
 		const current = () =>
 			page.evaluate(() =>
