@@ -146,9 +146,9 @@ describe("the main page's folder", () => {
 	const leaves = page.querySelectorAll('[data-leaf]');
 	const order = Object.values(SECTION_IDS) as string[];
 
-	it('is a single folder, with no visible buttons or status text: it is driven by the scroll, the keyboard and the menu', () => {
+	it('is a single folder, driven on a wide screen by the scroll, the keyboard and the menu: its turn buttons are only for screen readers', () => {
 		expect(page.querySelectorAll('[data-folder]')).toHaveLength(1);
-		const buttons = folder?.querySelectorAll('button') ?? [];
+		const buttons = folder?.querySelectorAll('.viewport > button') ?? [];
 		expect(
 			buttons.map((button) => button.getAttribute('data-turn')),
 		).toEqual(['prev', 'next']);
@@ -157,6 +157,28 @@ describe("the main page's folder", () => {
 			expect(button.getAttribute('tabindex')).toBe('-1');
 		}
 		expect(page.querySelector('[data-status]')).toBeNull();
+	});
+
+	it('carries the bar that turns the sheets on a narrow screen, with real buttons and a counter that is not read twice', () => {
+		const pager = folder?.querySelector('.pager');
+		const buttons = pager?.querySelectorAll('button') ?? [];
+
+		expect(pager?.getAttribute('role')).toBe('group');
+		expect(pager?.getAttribute('aria-label')).toBeTruthy();
+		expect(
+			buttons.map((button) => button.getAttribute('data-turn')),
+		).toEqual(['prev', 'next']);
+		for (const button of buttons) {
+			expect(button.getAttribute('type')).toBe('button');
+			expect(button.hasAttribute('tabindex')).toBe(false);
+			expect(button.textContent?.trim()).not.toBe('');
+		}
+		// The page being read is announced by the live region: the counter is only for the eyes.
+		expect(
+			pager
+				?.querySelector('[data-pager-count]')
+				?.getAttribute('aria-hidden'),
+		).toBe('true');
 	});
 
 	it('starts with the cover, which is the start (#home) and is named by the single h1', () => {

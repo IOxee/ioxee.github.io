@@ -16,6 +16,7 @@ import {
 	sheetStates,
 	swipeAction,
 	turn,
+	verticalSwipeAction,
 } from './pager';
 
 const counts: FolderCounts = {
@@ -104,6 +105,24 @@ describe('swipeAction', () => {
 	it('takes the distance that counts as a swipe', () => {
 		expect(swipeAction(-30, 0, 20)).toBe('next');
 		expect(swipeAction(-30, 0, 40)).toBeNull();
+	});
+});
+
+describe('verticalSwipeAction', () => {
+	it('turns to the next sheet when the finger pushes the page up, to the previous when it pulls it down', () => {
+		expect(verticalSwipeAction(5, -120)).toBe('next');
+		expect(verticalSwipeAction(-5, 120)).toBe('prev');
+	});
+
+	it('ignores a short move and a mostly sideways one, which is the other swipe', () => {
+		expect(verticalSwipeAction(0, -20)).toBeNull();
+		expect(verticalSwipeAction(-200, 80)).toBeNull();
+		expect(verticalSwipeAction(80, -80)).toBeNull();
+	});
+
+	it('takes the distance that counts as a swipe', () => {
+		expect(verticalSwipeAction(0, -30, 20)).toBe('next');
+		expect(verticalSwipeAction(0, -30, 40)).toBeNull();
 	});
 });
 
