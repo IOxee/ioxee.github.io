@@ -10,9 +10,9 @@
 - id: cubezon
   name: Cubezon
   summary:
-      es: 'Marketplace tipo e‑commerce conectado a un servidor de Minecraft: las tiendas de los jugadores venden objetos reales del juego en una web, el comprador paga con dinero del juego y recoge el pedido en una taquilla del servidor.'
-      ca: 'Marketplace tipus e-commerce connectat a un servidor de Minecraft: les botigues dels jugadors venen objectes reals del joc en una web, el comprador paga amb diners del joc i recull la comanda en una taquilla del servidor.'
-      en: 'E-commerce-style marketplace connected to a Minecraft server: players'' shops sell real in-game items on a website, the buyer pays with in-game money, and picks up the order from a server locker.'
+      es: 'Marketplace web conectado a un servidor de Minecraft. Los jugadores ponen a la venta objetos del juego en la web, el comprador paga con el dinero del servidor y recoge el pedido en una taquilla dentro del juego. Hice el plugin del servidor y la web.'
+      ca: 'Marketplace web connectat a un servidor de Minecraft. Els jugadors posen a la venda objectes del joc a la web, el comprador paga amb els diners del servidor i recull la comanda en una taquilla dins del joc. Vaig fer el plugin del servidor i la web.'
+      en: "Web marketplace connected to a Minecraft server. Players list in-game items for sale on the website, the buyer pays with the server's money and picks up the order from a locker inside the game. I built the server plugin and the website."
   stack:
       - Java 21 + Paper
       - Next.js 16 + React 19 + TypeScript
@@ -28,39 +28,39 @@
   end: '2026-10'
   details:
       intro:
-          es: 'El reto era que una web y un servidor de juego compartieran el mismo dinero y los mismos inventarios sin duplicar nada aunque algo falle a mitad:'
-          ca: 'El repte era fer que una web i un servidor de joc compartissin els mateixos diners i inventaris sense duplicar res encara que alguna cosa fallés a mig camí:'
-          en: 'The challenge was to make a web app and a game server share the same money and inventories without duplicating anything, even if something failed halfway through:'
+          es: 'Lo difícil era que la web y el servidor compartieran dinero e inventarios sin duplicar nada aunque algo fallara a mitad:'
+          ca: 'El difícil era que la web i el servidor compartissin diners i inventaris sense duplicar res encara que alguna cosa fallés a mig camí:'
+          en: 'The hard part was making the website and the server share money and inventories without duplicating anything, even if something failed halfway:'
       points:
           es:
               - El plugin es la única autoridad sobre saldos e inventarios; la web solo crea pedidos.
-              - Cada pedido avanza por estados (PENDING → PAID → READY → COLLECTED), cada paso en su propia transacción. Un pedido interrumpido se marca para revisión y nunca se cobra dos veces.
-              - 'El pago al vendedor se marca antes de pagar: un fallo deja un pago pendiente, nunca uno doble.'
+              - Cada pedido pasa por estados (PENDING → PAID → READY → COLLECTED), cada paso en su propia transacción. Un pedido interrumpido se marca para revisión y nunca se cobra dos veces.
+              - 'El pago al vendedor se registra antes de abonarlo: si falla, queda pendiente, nunca duplicado.'
               - Solo se vende lo que el vendedor depositó antes en el juego (escrow, una fila por unidad).
               - Row Level Security en todas las tablas y permisos comprobados en SQL.
           ca:
               - El plugin és l'única autoritat sobre saldos i inventaris; la web només crea comandes.
-              - Cada comanda avança per estats (PENDING → PAID → READY → COLLECTED), i cada pas va en la seva pròpia transacció. Una comanda interrompuda es marca per revisar i mai es cobra dues vegades.
+              - Cada comanda passa per estats (PENDING → PAID → READY → COLLECTED), i cada pas va en la seva pròpia transacció. Una comanda interrompuda es marca per revisar i mai es cobra dues vegades.
               - "El pagament al venedor es registra abans d'abonar-lo: si falla, queda pendent, mai duplicat."
               - Només es ven allò que el venedor havia dipositat abans al joc (escrow, una fila per unitat).
-              - Row Level Security a totes les taules i permisos verificats en SQL.
+              - Row Level Security a totes les taules i permisos comprovats en SQL.
           en:
-              - The plugin is the only authority over balances and inventories; the web only creates orders.
+              - The plugin is the only authority over balances and inventories; the website only creates orders.
               - Each order moves through states (PENDING → PAID → READY → COLLECTED), with every step in its own transaction. An interrupted order is flagged for review and is never charged twice.
-              - 'The seller payout is recorded before the money is sent: a failure leaves a pending payout, never a duplicate one.'
+              - 'The seller payout is recorded before the money is sent: if it fails, it stays pending, never duplicated.'
               - Only what the seller previously deposited in the game can be sold (escrow, one row per unit).
-              - Row Level Security on every table and SQL permissions checked explicitly.
+              - Row Level Security on every table and permissions checked in SQL.
       closing:
-          es: Incluye panel de vendedor y de administración, un modo roleplay con empleados, rangos, ordenador de empresa y repartidores con comisión y propina, y un diseño propio con modo claro y oscuro.
-          ca: Inclou panell de venedor i d'administració, un mode roleplay amb empleats, rangs, ordinador d'empresa i repartidors amb comissió i propina, i un disseny propi amb mode clar i fosc.
-          en: Includes seller and admin panels, a roleplay mode with employees, ranks, a company computer and delivery riders with commission and tips, plus a custom design with light and dark modes.
+          es: También hice los paneles de vendedor y de administración, un modo roleplay (empleados, rangos, ordenador de empresa, repartidores con comisión y propina) y el diseño, con modo claro y oscuro.
+          ca: També vaig fer els panells de venedor i d'administració, un mode roleplay (empleats, rangs, ordinador d'empresa, repartidors amb comissió i propina) i el disseny, amb mode clar i fosc.
+          en: I also built the seller and admin panels, a roleplay mode (employees, ranks, a company computer, delivery riders with commission and tips) and the design, with light and dark modes.
 
 - id: trellord-connector
   name: Trellord Connector
   summary:
-      es: Herramienta de automatización entre Trello y Discord que detecta cambios en tableros, listas y tarjetas, y los reenvía a canales de Discord para llevar el seguimiento del trabajo en tiempo real.
-      ca: Eina d'automatització entre Trello i Discord que detecta canvis en taulers, llistes i targetes, i els reenvia a canals de Discord per fer el seguiment de la feina en temps real.
-      en: Automation tool between Trello and Discord that detects changes in boards, lists, and cards, then forwards them to Discord channels to keep track of work in real time.
+      es: Servicio en JavaScript que conecta Trello con Discord. Detecta los cambios en tableros, listas y tarjetas y los publica en canales de Discord, para seguir el trabajo del equipo sin tener que abrir Trello.
+      ca: Servei en JavaScript que connecta Trello amb Discord. Detecta els canvis en taulers, llistes i targetes i els publica en canals de Discord, per seguir la feina de l'equip sense haver d'obrir Trello.
+      en: JavaScript service that connects Trello to Discord. It detects changes in boards, lists and cards and posts them to Discord channels, so the team can follow the work without opening Trello.
   stack:
       - JavaScript
       - Trello API
@@ -74,36 +74,29 @@
   end: '2024-04'
   details:
       intro:
-          es: 'El objetivo era conectar dos herramientas que normalmente viven separadas, sin perder contexto cuando en Trello cambiaba algo importante:'
-          ca: "L'objectiu era connectar dues eines que normalment viuen separades, sense perdre context quan a Trello canviava alguna cosa important:"
-          en: 'The goal was to connect two tools that usually live apart, without losing context when something important changed in Trello:'
+          es: 'Lo hice para que los cambios de Trello llegaran solos a Discord, con el contexto necesario para no tener que ir al tablero:'
+          ca: "El vaig fer perquè els canvis de Trello arribessin sols a Discord, amb el context necessari per no haver d'anar al tauler:"
+          en: 'I built it so that Trello changes would reach Discord on their own, with enough context not to have to open the board:'
       points:
           es:
-              - Escucha cambios en Trello y los traduce a mensajes claros para Discord.
-              - Permite trabajar con varios proyectos a la vez, manteniendo cada flujo de avisos separado.
-              - Usa webhooks para publicar las notificaciones de forma inmediata en el canal elegido.
-              - Centraliza el seguimiento del trabajo en un solo lugar para que el equipo no tenga que revisar Trello manualmente.
+              - Recibe los cambios de Trello y los convierte en mensajes de Discord.
+              - Puede seguir varios proyectos a la vez; los avisos de cada uno van por separado.
+              - Publica los mensajes en el canal configurado mediante webhooks.
           ca:
-              - Escolta canvis a Trello i els tradueix en missatges clars per a Discord.
-              - Permet treballar amb diversos projectes alhora, mantenint separat cada flux d'avisos.
-              - Fa servir webhooks per publicar les notificacions de manera immediata al canal escollit.
-              - Centralitza el seguiment de la feina en un sol lloc perquè l'equip no hagi de revisar Trello manualment.
+              - Rep els canvis de Trello i els converteix en missatges de Discord.
+              - Pot seguir diversos projectes alhora; els avisos de cadascun van per separat.
+              - Publica els missatges al canal configurat mitjançant webhooks.
           en:
-              - Listens for changes in Trello and translates them into clear messages for Discord.
-              - Lets multiple projects run at once while keeping each notification stream separate.
-              - Uses webhooks to post notifications immediately to the chosen channel.
-              - Centralizes work tracking in one place so the team does not need to check Trello manually.
-      closing:
-          es: Una integración sencilla pero útil para convertir el tablero en una fuente de avisos automática y tener el estado del trabajo siempre visible en Discord.
-          ca: Una integració senzilla però útil per convertir el tauler en una font d'avisos automàtica i tenir l'estat de la feina sempre visible a Discord.
-          en: A simple but useful integration that turns the board into an automatic notification source and keeps the work status always visible in Discord.
+              - Receives Trello changes and turns them into Discord messages.
+              - Can follow several projects at once, keeping each one's notifications separate.
+              - Posts the messages to the configured channel through webhooks.
 
 - id: animal-crossing-api-wrapper
   name: Nookphone - Animal Crossing
   summary:
-      es: Aplicación con interfaz estilo NookPhone para consultar y presentar los datos de la API pública de Animal Crossing en una experiencia móvil hecha con Ionic y Angular.
-      ca: Aplicació amb interfície d'estil NookPhone per consultar i presentar les dades de l'API pública d'Animal Crossing en una experiència mòbil feta amb Ionic i Angular.
-      en: App with a NookPhone-style interface to browse and present data from the public Animal Crossing API in a mobile experience built with Ionic and Angular.
+      es: App móvil hecha con Ionic y Angular que consulta la API pública de Animal Crossing y muestra sus datos con una interfaz que imita el NookPhone del juego.
+      ca: App mòbil feta amb Ionic i Angular que consulta l'API pública d'Animal Crossing i en mostra les dades amb una interfície que imita el NookPhone del joc.
+      en: Mobile app built with Ionic and Angular that queries the public Animal Crossing API and shows its data with an interface that mimics the game's NookPhone.
   stack:
       - Ionic 6
       - Angular 14
@@ -118,26 +111,19 @@
   end: '2023-02'
   details:
       intro:
-          es: 'La idea era convertir una API pública en una app visual y fácil de explorar, con una interfaz que recordara al teléfono del juego:'
-          ca: "La idea era convertir una API pública en una app visual i fàcil d'explorar, amb una interfície que recordés el telèfon del joc:"
-          en: 'The idea was to turn a public API into a visual, easy-to-browse app with an interface that felt like the game''s phone:'
+          es: 'La hice para consultar los datos del juego desde el móvil, con una interfaz parecida a la del teléfono que sale en él:'
+          ca: 'La vaig fer per consultar les dades del joc des del mòbil, amb una interfície semblant a la del telèfon que hi surt:'
+          en: "I made it to look up the game's data from a phone, with an interface like the phone that appears in the game:"
       points:
           es:
-              - Consume la API pública de Animal Crossing y organiza sus datos en una navegación clara.
-              - Presenta la información con una interfaz inspirada en el NookPhone, pensada para parecer una app móvil.
-              - Está construida con Ionic 6 y Angular 14, usando TypeScript para la lógica y SCSS para el estilo.
-              - Prioriza una lectura rápida de los datos y una experiencia visual coherente con el universo del juego.
+              - Pide los datos a la API pública de Animal Crossing y los organiza por secciones.
+              - 'La pantalla de inicio imita el NookPhone: una cuadrícula de iconos, uno por sección.'
+              - Está hecha con Ionic 6 y Angular 14, en TypeScript, con los estilos en SCSS.
           ca:
-              - Consumeix l'API pública d'Animal Crossing i organitza les dades en una navegació clara.
-              - Presenta la informació amb una interfície inspirada en el NookPhone, pensada per semblar una app mòbil.
-              - Està construïda amb Ionic 6 i Angular 14, fent servir TypeScript per a la lògica i SCSS per a l'estil.
-              - Prioritza una lectura ràpida de les dades i una experiència visual coherent amb l'univers del joc.
+              - Demana les dades a l'API pública d'Animal Crossing i les organitza per seccions.
+              - "La pantalla d'inici imita el NookPhone: una quadrícula d'icones, una per secció."
+              - Està feta amb Ionic 6 i Angular 14, en TypeScript, amb els estils en SCSS.
           en:
-              - Consumes the public Animal Crossing API and organizes its data into clear navigation.
-              - Presents the information with a NookPhone-inspired interface designed to feel like a mobile app.
-              - Built with Ionic 6 and Angular 14, using TypeScript for logic and SCSS for styling.
-              - Focuses on quick data scanning and a visual experience that fits the game's universe.
-      closing:
-          es: Un wrapper ligero para explorar el contenido de Animal Crossing desde una interfaz reconocible, cómoda y adaptada a móvil.
-          ca: Un wrapper lleuger per explorar el contingut d'Animal Crossing des d'una interfície reconeixible, còmoda i adaptada a mòbil.
-          en: A lightweight wrapper for exploring Animal Crossing content through a familiar, comfortable interface designed for mobile.
+              - Fetches data from the public Animal Crossing API and organizes it by section.
+              - 'The home screen mimics the NookPhone: a grid of icons, one per section.'
+              - Built with Ionic 6 and Angular 14, in TypeScript, with styles in SCSS.
