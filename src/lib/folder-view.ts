@@ -49,6 +49,10 @@ export function readingStatus(
 	return fill(templates.one, { page: String(page), total: content, title });
 }
 
+/** What the bar under the folder shows on a narrow screen: the page being read and how many there are. */
+export const pagerCount = (page: number, total: number): string =>
+	`${page + 1} / ${Math.max(total, 1)}`;
+
 /** The requested page (with a tab or an anchor), if it is visible there even as the left one; otherwise, the right one. */
 export function pageForPosition(
 	position: number,

@@ -36,6 +36,23 @@ const { locale, tabs } = Astro.props;
 	</div>
 </header>
 
+<script>
+	// Which edges of the menu hide tabs: the CSS fades them. The folder slides the menu to the tab of the section being read.
+	for (const nav of document.querySelectorAll<HTMLElement>(
+		'[data-site-nav]',
+	)) {
+		const mark = () => {
+			const hidden = nav.scrollWidth - nav.clientWidth;
+			nav.toggleAttribute('data-more-start', nav.scrollLeft > 1);
+			nav.toggleAttribute('data-more-end', nav.scrollLeft < hidden - 1);
+		};
+		nav.addEventListener('scroll', mark, { passive: true });
+		addEventListener('resize', mark);
+		void document.fonts.ready.then(mark);
+		mark();
+	}
+</script>
+
 <style>
 	.bar {
 		position: sticky;
@@ -74,6 +91,29 @@ const { locale, tabs } = Astro.props;
 
 	nav::-webkit-scrollbar {
 		display: none;
+	}
+
+	/* When the tabs do not fit, the edge where more of them are hidden fades out, instead of a word cut in half. */
+	nav[data-more-end] {
+		mask-image: linear-gradient(
+			to right,
+			#000 calc(100% - 2.5rem),
+			transparent
+		);
+	}
+
+	nav[data-more-start] {
+		mask-image: linear-gradient(to right, transparent, #000 2.5rem);
+	}
+
+	nav[data-more-start][data-more-end] {
+		mask-image: linear-gradient(
+			to right,
+			transparent,
+			#000 2.5rem,
+			#000 calc(100% - 2.5rem),
+			transparent
+		);
 	}
 
 	.tools {

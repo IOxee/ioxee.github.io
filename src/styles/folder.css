@@ -3,8 +3,11 @@
  *  - LIST: all the pages one after another. It is what you get without JavaScript and when printing, and it allows searching and copying.
  *  - PARALLAX (`data-scroll="on"`): with JavaScript, the folder fills the screen between the menu and the footer and stays fixed;
  *    scrolling turns the sheets on the spine, continuously (`--progress`). It is scaled with `--fit`.
- *  - TURNS BY ITSELF (`data-scroll="off"`): not pinned, for when it would have to shrink so much that it could not be read (a phone, a
- *    very short window). The sheets turn with an animation.
+ *  - TURNS BY ITSELF (`data-scroll="off"`): not pinned, for when it would have to shrink so much that it could not be read (a very
+ *    short window). The sheets turn with an animation.
+ *  - FITS THE SCREEN (below 60rem: a phone, a tablet upright): one page at a time, exactly as tall as the gap between the menu
+ *    and the footer. The scroll does not turn the sheets: a bar under the folder does, and swiping. Whatever does not fit on
+ *    a page goes on to new sheets behind it, cut by the script (`paginator.ts`).
  *
  * A sheet carries two pages (`.page`): from 60rem up the folder is shown open (the back of the turned sheet on the
  * left and the front of the next one on the right); below that, one page at a time. The threshold is the same one the script uses
@@ -96,6 +99,17 @@ html:not(.js) .folder [data-turn] {
 	content: '— ' counter(folio) ' —';
 }
 
+/* The head of a sheet that carries on a page that did not fit (narrow screens): which page it is. */
+.folder .doc-runhead {
+	margin-bottom: var(--space-3);
+	padding-bottom: var(--space-1);
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: var(--text-sm);
+	color: var(--ink-muted);
+	border-bottom: 1px dotted var(--rule);
+}
+
 .folder .doc-title {
 	margin-bottom: var(--space-4);
 	padding-bottom: var(--space-2);
@@ -141,6 +155,11 @@ html:not(.js) .folder [data-turn] {
 .folder .doc-list li::marker {
 	content: '■  ';
 	font-size: 0.7em;
+}
+
+/* The second half of a point cut between two sheets is not a new point. */
+.folder .doc-list li[data-continued]::marker {
+	content: '';
 }
 
 .folder .doc-note {
@@ -259,7 +278,9 @@ html:not(.js) .folder [data-turn] {
 	text-align: center;
 }
 
-.folder .cover-scroll {
+.folder .cover-scroll,
+.folder .cover-swipe,
+.folder .pager {
 	display: none;
 }
 
@@ -609,6 +630,10 @@ html:not(.js) .folder [data-turn] {
 		}
 	}
 
+	/*
+	 * Narrow screen: one page at a time, turned by a bar under the folder, by swiping or by the menu; the scroll
+	 * does not turn the sheets.
+	 */
 	@media (width < 60rem) {
 		/* Here each face turns like a loose sheet, so the sheets do not count. */
 		html.js .folder .page {
@@ -631,16 +656,234 @@ html:not(.js) .folder [data-turn] {
 			z-index: var(--i, 0);
 		}
 
-		html.js .folder[data-scroll='on'] .page,
-		html.js .folder[data-scroll='on'] .page[data-state='past'] {
-			--turn: calc(
-				clamp(0, var(--progress, 0) - var(--i, 0), 1) * -180deg
-			);
-			transition: none;
-		}
-
 		html.js .folder .page--blank {
 			display: none;
+		}
+
+		html.js .folder .cover-swipe {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			gap: var(--space-1);
+			justify-self: center;
+			margin: 0;
+			font-family: var(--font-display);
+			font-weight: 700;
+			font-size: var(--text-sm);
+			text-align: center;
+		}
+
+		html.js .folder .cover-swipe svg {
+			width: 1.75rem;
+			height: 1.75rem;
+			animation: cover-swipe-nudge 1.6s ease-in-out infinite;
+		}
+
+		@keyframes cover-swipe-nudge {
+			0%,
+			100% {
+				translate: 0 0;
+			}
+
+			50% {
+				translate: -0.4rem 0;
+			}
+		}
+
+		/* The bar takes the place of the buttons for screen readers: there is no need for both. */
+		html.js .folder .viewport > [data-turn] {
+			display: none;
+		}
+
+		html.js .folder .pager {
+			display: flex;
+			flex: none;
+			gap: var(--space-2);
+			align-items: center;
+			justify-content: space-between;
+			width: var(--leaf-width);
+			margin-inline: auto;
+			padding-block: var(--space-2);
+		}
+
+		html.js .folder .pager-turn {
+			display: inline-flex;
+			gap: var(--space-1);
+			align-items: center;
+			justify-content: center;
+			min-width: 2.75rem;
+			min-height: 2.75rem;
+			padding: 0.4rem 0.7rem;
+			font-family: var(--font-display);
+			font-weight: 700;
+			font-size: var(--text-sm);
+			color: var(--ink);
+			cursor: pointer;
+			background: var(--paper);
+			border: 2px solid var(--ink);
+			border-radius: 0.2rem;
+			box-shadow: 0 3px 0 oklch(0% 0 0 / 0.35);
+			touch-action: manipulation;
+			transition:
+				translate 120ms ease-out,
+				box-shadow 120ms ease-out;
+		}
+
+		html.js .folder .pager-turn svg {
+			flex: none;
+			width: 1.1rem;
+			height: 1.1rem;
+		}
+
+		/* Its own `box-shadow` would override the global focus halo: it is repeated here with the halo included. */
+		html.js .folder .pager-turn:focus-visible {
+			box-shadow:
+				0 3px 0 oklch(0% 0 0 / 0.35),
+				0 0 0 7px var(--on-desk);
+		}
+
+		html.js .folder .pager-turn:active:not([aria-disabled='true']) {
+			translate: 0 2px;
+			box-shadow: 0 1px 0 oklch(0% 0 0 / 0.35);
+		}
+
+		/* At the first or the last page there is nowhere to go: it stays, so the bar does not jump, but flat. */
+		html.js .folder .pager-turn[aria-disabled='true'] {
+			cursor: default;
+			border-style: dashed;
+			box-shadow: none;
+		}
+
+		html.js .folder .pager-turn[aria-disabled='true'] svg {
+			opacity: 0.35;
+		}
+
+		html.js .folder .pager-count {
+			margin: 0;
+			font-family: var(--font-display);
+			font-weight: 700;
+			font-size: var(--text-base);
+			font-variant-numeric: tabular-nums;
+			white-space: nowrap;
+			color: var(--on-desk);
+		}
+	}
+
+	/*
+	 * Narrow and tall enough (a phone upright, a tablet): the folder fits the gap between the menu and the footer
+	 * and the page does not scroll. Every sheet is as tall as the gap; whatever does not fit on a page is moved by
+	 * the script to new sheets right behind it. Until it does, the sheet clips it: the cover, which is what is
+	 * seen on load, always fits. The height threshold is the same one the script uses.
+	 */
+	@media (width < 60rem) and (height >= 28rem) {
+		html.js:has(.folder) {
+			/* Pulling the page down turns the sheet back: it does not reload the page. */
+			overscroll-behavior-y: none;
+		}
+
+		/* The page is exactly as tall as the screen: a taller body would leave a stretch of scroll with nothing in it. */
+		html.js:has(.folder) body {
+			min-height: 0;
+		}
+
+		/* The footer keeps its fixed height even when the line does not fit and wraps. */
+		html.js:has(.folder) body > footer {
+			height: var(--foot-h);
+			font-size: 0.75rem;
+			line-height: 1.25;
+		}
+
+		html.js .folder .stage {
+			display: flex;
+			flex-direction: column;
+			height: var(
+				--stage-h,
+				calc(100svh - var(--pin-top) - var(--foot-h))
+			);
+			min-height: 0;
+		}
+
+		html.js .folder .viewport {
+			display: flex;
+			flex: 1 1 auto;
+			flex-direction: column;
+			min-height: 0;
+			padding-block: 0;
+		}
+
+		/* Just the room the cover tab needs: every pixel goes to the text. */
+		html.js .folder .spread {
+			flex: 1 1 auto;
+			grid-template-rows: minmax(0, 1fr);
+			min-height: 0;
+			padding-top: 1.9rem;
+		}
+
+		html.js .folder .stack {
+			grid-template: 'leaf' minmax(0, 1fr) / minmax(0, 1fr);
+			aspect-ratio: auto;
+			min-height: 0;
+		}
+
+		/* A little smaller than on a wide screen: in a narrow column the typewriter letter leaves few words per line. */
+		html.js .folder .page--sheet {
+			overflow: hidden;
+			padding: var(--space-4);
+			font-size: var(--text-sm);
+		}
+
+		html.js .folder .doc-entry {
+			padding-block: var(--space-2);
+		}
+
+		/* The certificate stays whole (`contain`), only smaller, so its text fits on the same sheet. */
+		html.js .folder .doc-cert-shot img {
+			max-height: 24svh;
+		}
+
+		/* A block taller than the whole sheet, which could not be cut, scrolls inside its page. */
+		html.js .folder .page[data-overflow] {
+			overflow-y: auto;
+			overscroll-behavior: contain;
+		}
+
+		/* The bar under the folder already says which page it is. */
+		html.js .folder .folio {
+			display: none;
+		}
+
+		html.js .folder .page--cover {
+			gap: var(--space-3);
+			min-height: 0;
+			padding: var(--space-4);
+		}
+
+		/* The photo gives way on a short screen, so that the cover always fits whole. */
+		html.js .folder .polaroid {
+			width: min(11.5rem, 52%, 26svh);
+		}
+	}
+
+	/* Narrow and short (a phone lying down): the page scrolls, and the bar stays at hand at the foot of the screen. */
+	@media (width < 60rem) and (height < 28rem) {
+		html.js .folder .pager {
+			position: sticky;
+			bottom: var(--foot-h);
+			z-index: 4;
+			background: var(--desk);
+		}
+	}
+
+	/* On the narrowest phones only the arrows fit: the word stays for screen readers. */
+	@media (width < 23rem) {
+		html.js .folder .pager-word {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			margin: -1px;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
 		}
 	}
 }

@@ -236,7 +236,11 @@ describe('unusableProjectAssets', () => {
 describe('assertProjectAssetsUsed', () => {
 	it('names the useless files and the expected layout', () => {
 		expect(() =>
-			assertProjectAssetsUsed(['demo/image.png', 'demo.pdf'], ['demo'], ['en']),
+			assertProjectAssetsUsed(
+				['demo/image.png', 'demo.pdf'],
+				['demo'],
+				['en'],
+			),
 		).toThrow(/demo\.pdf.*image\.png.*document\.pdf, document\.en\.pdf/);
 	});
 

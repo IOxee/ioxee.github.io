@@ -14,6 +14,7 @@ const labels = {
 	'data-status-cover': t(locale, 'folder.statusCover'),
 	'data-status-one': t(locale, 'folder.statusOne'),
 	'data-status-two': t(locale, 'folder.statusTwo'),
+	'data-continued': t(locale, 'folder.continued'),
 };
 ---
 
@@ -49,7 +50,8 @@ const labels = {
 			>
 				{/*
 					For screen readers and voice control, which send neither arrows nor gestures. They are not visible
-					(the folder has no buttons) and are not in the Tab order.
+					(on a wide screen the folder has no buttons) and are not in the Tab order. On a narrow one the
+					bar under the folder takes their place.
 				*/}
 				<button
 					type="button"
@@ -74,6 +76,61 @@ const labels = {
 					</div>
 				</div>
 			</div>
+			{/*
+				On a narrow screen the folder fits the screen and the scroll does not turn the sheets: this bar
+				says where the reading is and turns them, besides swiping. On a wide one it is not shown.
+			*/}
+			<div
+				class="pager"
+				role="group"
+				aria-label={t(locale, 'folder.pager')}
+			>
+				<button
+					type="button"
+					class="pager-turn"
+					data-turn="prev"
+					data-pager-turn
+				>
+					<svg
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2.6"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true"
+						focusable="false"
+					>
+						<path d="M15 6l-6 6 6 6"></path>
+					</svg>
+					<span class="pager-word">
+						{t(locale, 'folder.pagerPrev')}
+					</span>
+				</button>
+				<p class="pager-count" data-pager-count aria-hidden="true"></p>
+				<button
+					type="button"
+					class="pager-turn"
+					data-turn="next"
+					data-pager-turn
+				>
+					<span class="pager-word">
+						{t(locale, 'folder.pagerNext')}
+					</span>
+					<svg
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2.6"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true"
+						focusable="false"
+					>
+						<path d="M9 6l6 6-6 6"></path>
+					</svg>
+				</button>
+			</div>
 		</div>
 	</div>
 </div>
@@ -90,6 +147,7 @@ const labels = {
 		gestureAction,
 		pageForHash,
 		pageForPosition,
+		pagerCount,
 		readingStatus,
 		shownProgress,
 	} from '../lib/folder-view';
@@ -110,8 +168,10 @@ const labels = {
 		settleTarget,
 		sheetStates,
 		turn,
+		verticalSwipeAction,
 	} from '../lib/pager';
 	import type { SectionId } from '../lib/sections';
+	import { Paginator } from '../scripts/paginator';
 
 	interface GoOptions {
 		focus?: boolean;
@@ -124,6 +184,7 @@ const labels = {
 
 	interface Parts {
 		folder: HTMLElement;
+		/** The pages as they come in the HTML, before the narrow screen cuts any. */
 		pages: HTMLElement[];
 		leaves: HTMLElement[];
 		viewport: HTMLElement;
@@ -131,6 +192,7 @@ const labels = {
 		track: HTMLElement;
 		announce: HTMLElement;
 		turners: HTMLButtonElement[];
+		pagerCount: HTMLElement | null;
 		bar: HTMLElement | null;
 		foot: HTMLElement | null;
 		navLinks: HTMLAnchorElement[];
@@ -138,6 +200,9 @@ const labels = {
 
 	// Same threshold as the CSS: from here two pages fit and the folder is shown open.
 	const WIDE = '(min-width: 60rem)';
+	// Same threshold as the CSS: below it (a phone lying down) a sheet as tall as the screen would hold a handful of
+	// lines, and the folder keeps its own height instead of fitting the screen.
+	const TALL = '(min-height: 28rem)';
 	// How long to wait after the last page change before announcing it: this way a long jump does not fire one announcement per sheet.
 	const ANNOUNCE_DELAY = 300;
 	// How long, when entering through an anchor, to watch that the browser does not leave the folder out of place.
@@ -187,6 +252,7 @@ const labels = {
 			turners: [
 				...folder.querySelectorAll<HTMLButtonElement>('[data-turn]'),
 			],
+			pagerCount: one('[data-pager-count]'),
 			bar: document.querySelector<HTMLElement>('[data-site-bar]'),
 			foot: document.querySelector<HTMLElement>('body > footer'),
 			navLinks: [
@@ -197,8 +263,16 @@ const labels = {
 		};
 	}
 
+	const planOf = (pages: readonly HTMLElement[]): AnchoredPage[] =>
+		pages.map((element) => ({
+			section: (element.dataset.section ?? 'home') as SectionId,
+			anchor: element.dataset.anchor === 'true',
+		}));
+
 	class FolderView {
 		private readonly parts: Parts;
+		/** The pages being read: on a narrow screen, with the sheets cut so that everything fits on screen. */
+		private pages: HTMLElement[];
 		/** The page the reading is on. In spreads it is the right one, unless the left one was requested. */
 		private page = 0;
 		/** The page that was requested (tab, anchor, key): it takes precedence over the right one if it is the left one. */
@@ -223,20 +297,25 @@ const labels = {
 		private heading: { top: number; since: number } | null = null;
 		private announceTimer = 0;
 		private markedSection: SectionId | null = null;
-		private readonly plan: AnchoredPage[];
-		private readonly total: number;
+		private plan: AnchoredPage[];
+		private total: number;
+		private readonly paginator: Paginator;
+		/** The size the sheets were last cut for, on a narrow screen: they are cut again only if it changes. */
+		private pagedSize = '';
 		private readonly reduceMotion = matchMedia(
 			'(prefers-reduced-motion: reduce)',
 		);
 		private readonly wide = matchMedia(WIDE);
+		private readonly tall = matchMedia(TALL);
 
 		constructor(parts: Parts) {
 			this.parts = parts;
+			this.pages = parts.pages;
 			this.total = parts.pages.length;
-			this.plan = parts.pages.map((element) => ({
-				section: (element.dataset.section ?? 'home') as SectionId,
-				anchor: element.dataset.anchor === 'true',
-			}));
+			this.plan = planOf(parts.pages);
+			this.paginator = new Paginator({
+				continued: parts.folder.dataset.continued ?? '{title}',
+			});
 			this.layout = this.wide.matches ? 'spread' : 'single';
 		}
 
@@ -264,9 +343,15 @@ const labels = {
 			return positionCount(this.total, this.layout);
 		}
 
+		/** One page at a time, fitting the screen: see `fitScreen`. */
+		private get fitsScreen(): boolean {
+			return this.layout === 'single' && this.tall.matches;
+		}
+
 		// Data of each sheet and page for the CSS. Set through the CSSOM: the CSP only allows `--tilt` inline.
 		private tag(): void {
-			const { folder, leaves, pages } = this.parts;
+			const { folder, leaves } = this.parts;
+			const { pages } = this;
 			folder.style.setProperty('--pages', String(this.total));
 			folder.style.setProperty('--leaves', String(leaves.length));
 			leaves.forEach((leaf, index) =>
@@ -294,8 +379,24 @@ const labels = {
 				this.layout === 'spread' && at > 0 && right === null,
 			);
 			this.markTab();
+			this.paintPager(at);
 			if (announce) this.announceSoon();
 			this.focusPending(left, right);
+		}
+
+		private paintPager(at: number): void {
+			const { pagerCount: count, turners } = this.parts;
+			if (count) count.textContent = pagerCount(this.page, this.total);
+
+			for (const button of turners) {
+				if (!button.hasAttribute('data-pager-turn')) continue;
+				const stuck =
+					button.dataset.turn === 'prev'
+						? at === 0
+						: at === this.count - 1;
+				if (stuck) button.setAttribute('aria-disabled', 'true');
+				else button.removeAttribute('aria-disabled');
+			}
 		}
 
 		private paintSheets(left: number | null, right: number | null): void {
@@ -303,7 +404,7 @@ const labels = {
 			// Turned sheets, according to the spreads: with the folder open it decides what is seen on the left.
 			const turned = positionOfPage(this.page, 'spread');
 
-			this.parts.pages.forEach((element, index) => {
+			this.pages.forEach((element, index) => {
 				element.dataset.state = states[index] ?? 'future';
 				element.toggleAttribute('data-near', isNear(index, this.page));
 				element.inert = index !== left && index !== right;
@@ -342,7 +443,8 @@ const labels = {
 		}
 
 		private announceSoon(): void {
-			const { folder, pages, announce } = this.parts;
+			const { folder, announce } = this.parts;
+			const { pages } = this;
 			const sentence = readingStatus(
 				this.page,
 				this.total,
@@ -366,7 +468,7 @@ const labels = {
 				return;
 
 			this.pendingFocus = null;
-			this.parts.pages[target]?.focus({ preventScroll: true });
+			this.pages[target]?.focus({ preventScroll: true });
 		}
 
 		private syncHash(): void {
@@ -476,9 +578,18 @@ const labels = {
 							0,
 					)
 				: 0;
+			if (this.fitsScreen) {
+				this.fitScreen();
+				return;
+			}
+			if (this.pagedSize) {
+				this.pagedSize = '';
+				this.repaginate(false);
+			}
 			// `offsetHeight` does not count the scale: it is the natural height of the pages.
 			const natural = spread.offsetHeight;
-			const scale = this.fit(natural);
+			// With one page at a time the scroll never turns the sheets: they turn by themselves.
+			const scale = this.layout === 'spread' ? this.fit(natural) : null;
 
 			this.scrollMode = scale !== null;
 			this.step = scrollStep(innerHeight);
@@ -499,6 +610,53 @@ const labels = {
 			}
 			if (reanchor || !wasOn) this.rest = this.restingPosition();
 			this.onScroll();
+		}
+
+		/**
+		 * On a narrow screen the folder fits the gap between the bar and the footer, as it is, and the scroll does not
+		 * turn the sheets: the bar under it and the fingers do. What does not fit on a page goes on to new sheets,
+		 * which are cut again only if the size changes.
+		 */
+		private fitScreen(): void {
+			const { folder, viewport } = this.parts;
+			const stage = Math.max(innerHeight - this.pin - this.foot, 0);
+
+			this.scrollMode = false;
+			folder.dataset.scroll = 'off';
+			folder.style.setProperty('--pin-top', `${this.pin}px`);
+			folder.style.setProperty('--fit', '1');
+			folder.style.setProperty('--stage-h', `${stage}px`);
+
+			const size = `${viewport.clientWidth}x${stage}`;
+			if (size === this.pagedSize) return;
+			this.pagedSize = size;
+			this.repaginate();
+		}
+
+		/**
+		 * Cuts the pages again for the current size, or puts them back whole (`cut` false: a wide screen, printing).
+		 * The reading stays on the same page; if it was on a cut sheet, on the first one of its page.
+		 */
+		private repaginate(cut = this.fitsScreen): void {
+			const reading = this.pages[this.page];
+			const origin = reading ? this.paginator.originOf(reading) : null;
+
+			this.paginator.restore();
+			if (cut) this.paginator.paginate(this.parts.pages);
+			this.pages = [
+				...this.parts.folder.querySelectorAll<HTMLElement>(
+					'[data-page]',
+				),
+			];
+			this.total = this.pages.length;
+			this.plan = planOf(this.pages);
+			this.markedSection = null;
+			this.preferred = null;
+			this.pendingFocus = null;
+			this.tag();
+
+			const index = origin ? this.pages.indexOf(origin) : 0;
+			this.apply(Math.max(index, 0), { instant: true, syncHash: false });
 		}
 
 		private restingPosition(): number {
@@ -602,6 +760,8 @@ const labels = {
 					this.layout,
 				),
 			);
+			// From the bar at the foot of the screen, with the page scrolled down, the new page starts above.
+			if (!this.scrollMode) this.reveal();
 		}
 
 		private onLayoutChange(): void {
@@ -609,6 +769,9 @@ const labels = {
 			this.layout = this.wide.matches ? 'spread' : 'single';
 
 			folder.dataset.instant = '';
+			// The sheets cut for the narrow screen are put back whole before the folder opens.
+			this.pagedSize = '';
+			if (this.layout === 'spread') this.repaginate();
 			this.render(false);
 			this.measure(true);
 			afterPaint(() => folder.removeAttribute('data-instant'));
@@ -748,7 +911,22 @@ const labels = {
 			const sizes = new ResizeObserver(remeasure);
 			sizes.observe(spread);
 			if (bar) sizes.observe(bar);
-			void document.fonts.ready.then(remeasure);
+			// On a narrow screen the sheets keep their size, but with the final font the text takes up something else.
+			void document.fonts.ready.then(() => {
+				this.pagedSize = '';
+				remeasure();
+			});
+			// What is printed is the list of pages as they come in the HTML, not the sheets cut for the screen.
+			addEventListener('beforeprint', () => {
+				if (!this.fitsScreen) return;
+				this.pagedSize = '';
+				this.repaginate(false);
+			});
+			// Back on screen (after a frame, when the screen styles are back), the sheets are cut again.
+			addEventListener('afterprint', () => {
+				this.pagedSize = '';
+				afterPaint(() => this.measure());
+			});
 		}
 
 		// Keys turn sheets with focus on the folder or on the page being read, not on a link inside it.
@@ -773,6 +951,8 @@ const labels = {
 
 		// Swiping a finger sideways, or tapping an edge, turns the sheet. Not with a mouse: that is how text gets selected.
 		private listenToFingers(viewport: HTMLElement): void {
+			this.listenToVerticalSwipes(viewport);
+
 			let start: { x: number; y: number } | null = null;
 			viewport.addEventListener('pointerdown', (event) => {
 				if (event.pointerType === 'mouse') return;
@@ -795,6 +975,55 @@ const labels = {
 			viewport.addEventListener('pointercancel', () => {
 				start = null;
 			});
+		}
+
+		/**
+		 * On a narrow screen the page does not scroll: pushing it up or down turns the sheet, like the wheel on a wide
+		 * one. With touch events and not pointer ones: the browser keeps vertical drags (`pan-y`, so a zoomed-in page
+		 * can still be moved) and cancels the pointer, but it still reports where the finger was lifted. Not on a
+		 * page that scrolls inside, nor with the page zoomed in, where the drag is to move around it.
+		 */
+		private listenToVerticalSwipes(viewport: HTMLElement): void {
+			let start: { x: number; y: number } | null = null;
+			viewport.addEventListener(
+				'touchstart',
+				(event) => {
+					const finger = event.touches[0];
+					const target = event.target as Element;
+					const free =
+						this.fitsScreen &&
+						event.touches.length === 1 &&
+						(visualViewport?.scale ?? 1) <= 1 &&
+						!target.closest('button, [data-overflow]');
+					start =
+						free && finger
+							? { x: finger.clientX, y: finger.clientY }
+							: null;
+				},
+				{ passive: true },
+			);
+			viewport.addEventListener(
+				'touchend',
+				(event) => {
+					const finger = event.changedTouches[0];
+					if (!start || !finger) return;
+
+					const action = verticalSwipeAction(
+						finger.clientX - start.x,
+						finger.clientY - start.y,
+					);
+					start = null;
+					if (action) this.turnTo(action);
+				},
+				{ passive: true },
+			);
+			viewport.addEventListener(
+				'touchcancel',
+				() => {
+					start = null;
+				},
+				{ passive: true },
+			);
 		}
 
 		private onLinkClick(event: MouseEvent): void {

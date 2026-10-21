@@ -4,6 +4,7 @@ import {
 	gestureAction,
 	pageForHash,
 	pageForPosition,
+	pagerCount,
 	readingStatus,
 	shownProgress,
 	tapAction,
@@ -127,5 +128,16 @@ describe('gestureAction', () => {
 		expect(gestureAction(1, 1, 200, 400)).toBeNull();
 		expect(gestureAction(-30, 2, 380, 400)).toBeNull();
 		expect(gestureAction(-40, 300, 380, 400)).toBeNull();
+	});
+});
+
+describe('pagerCount', () => {
+	it('counts from the cover, which is the first one, to the last page', () => {
+		expect(pagerCount(0, TOTAL)).toBe('1 / 12');
+		expect(pagerCount(11, TOTAL)).toBe('12 / 12');
+	});
+
+	it('never shows a folder with no pages', () => {
+		expect(pagerCount(0, 0)).toBe('1 / 1');
 	});
 });

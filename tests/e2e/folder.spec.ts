@@ -34,14 +34,17 @@ function jumpTo(page: Page, top: number): Promise<void> {
 }
 
 test.describe('the folder', () => {
-	test('has no buttons or status text: it is driven by the scroll, the keyboard and the menu', async ({
+	test('on a wide screen it has no buttons or status text: it is driven by the scroll, the keyboard and the menu', async ({
 		page,
 	}) => {
 		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
 		await page.goto('/');
 		await settle(page);
 
-		const buttons = await page.locator('[data-folder] button').all();
+		await expect(page.locator('.pager')).toBeHidden();
+		const buttons = await page
+			.locator('[data-folder] .viewport > button')
+			.all();
 		expect(buttons).toHaveLength(2);
 		for (const button of buttons) {
 			await expect(button).toHaveAttribute('tabindex', '-1');
@@ -258,6 +261,10 @@ test.describe('the cover', () => {
 			'off',
 		);
 		await expect(page.locator('.cover-scroll')).toBeHidden();
+		await expect(page.locator('.cover-swipe')).toBeVisible();
+		await expect(page.locator('.cover-swipe')).toContainText(
+			'Desliza para pasar hoja',
+		);
 	});
 });
 
@@ -500,9 +507,13 @@ test.describe('the folder keeps its place', () => {
 		await settle(page);
 
 		// A screen reader activates them even if they are not visible: here, with a programmatic click.
-		await page.locator('[data-turn="next"]').dispatchEvent('click');
+		await page
+			.locator('.viewport > [data-turn="next"]')
+			.dispatchEvent('click');
 		await expect.poll(() => currentPage(page)).toBe(1);
-		await page.locator('[data-turn="prev"]').dispatchEvent('click');
+		await page
+			.locator('.viewport > [data-turn="prev"]')
+			.dispatchEvent('click');
 		await expect.poll(() => currentPage(page)).toBe(0);
 	});
 });
@@ -534,5 +545,219 @@ test.describe('the folder with a finger', () => {
 		await expect.poll(current).toBe(1);
 		await page.touchscreen.tap(box.x + 12, middle);
 		await expect.poll(current).toBe(0);
+	});
+});
+
+/** The page being read and the pages there are, as the folder counts them (with the sheets cut for the screen). */
+function reading(page: Page) {
+	return page.evaluate(() => {
+		const pages = [
+			...document.querySelectorAll<HTMLElement>('[data-page]'),
+		];
+
+		return {
+			index: pages.findIndex(
+				(element) => element.dataset.state === 'current',
+			),
+			total: pages.length,
+			cut: pages.filter((element) =>
+				element.hasAttribute('data-continued'),
+			).length,
+		};
+	});
+}
+
+test.describe('the folder on a phone', () => {
+	for (const [width, height] of [
+		[320, 568],
+		[375, 700],
+		[412, 840],
+	] as const) {
+		test(`fits the screen between the menu and the footer at ${width}×${height}, and every sheet holds its text`, async ({
+			page,
+		}) => {
+			await page.setViewportSize({ width, height });
+			await page.goto('/');
+			await settle(page);
+
+			// The page does not scroll: the folder, the bar and the footer fit on the screen.
+			const fit = await page.evaluate(() => ({
+				page: document.documentElement.scrollHeight,
+				footer: document
+					.querySelector('body > footer')
+					?.getBoundingClientRect().bottom,
+				pager: document
+					.querySelector('.pager')
+					?.getBoundingClientRect(),
+			}));
+			expect(fit.page).toBeLessThanOrEqual(height);
+			expect(fit.footer).toBeCloseTo(height, 0);
+			await expect(page.locator('.pager')).toBeVisible();
+
+			// No sheet clips its text, nor needs to scroll inside: what did not fit went to the next sheet.
+			const clipped = await page.evaluate(() =>
+				[...document.querySelectorAll<HTMLElement>('[data-page]')]
+					.filter((sheet) => {
+						if (sheet.hasAttribute('data-overflow')) return true;
+						const bottom =
+							sheet.clientHeight -
+							Number.parseFloat(
+								getComputedStyle(sheet).paddingBottom,
+							);
+
+						return [...sheet.children].some((block) => {
+							const element = block as HTMLElement;
+
+							return (
+								!element.classList.contains('folio') &&
+								element.offsetTop + element.offsetHeight >
+									bottom + 1
+							);
+						});
+					})
+					.map((sheet) => sheet.dataset.title),
+			);
+			expect(clipped).toEqual([]);
+		});
+	}
+
+	test('the bar turns the sheets, says which one is being read and cannot go past the ends', async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 375, height: 700 });
+		await page.goto('/');
+		await settle(page);
+
+		const prev = page.locator('.pager [data-turn="prev"]');
+		const next = page.locator('.pager [data-turn="next"]');
+		const count = page.locator('[data-pager-count]');
+		const { total } = await reading(page);
+
+		await expect(count).toHaveText(`1 / ${total}`);
+		await expect(prev).toHaveAttribute('aria-disabled', 'true');
+		await next.click();
+		await expect(count).toHaveText(`2 / ${total}`);
+		await expect(prev).not.toHaveAttribute('aria-disabled', /.*/);
+		expect((await reading(page)).index).toBe(1);
+
+		await page.locator('[data-site-nav] a[href="#contact"]').click();
+		await expect(count).toHaveText(`${total} / ${total}`);
+		await expect(next).toHaveAttribute('aria-disabled', 'true');
+		// Playwright does not click a button marked as disabled: a screen reader still could.
+		await next.dispatchEvent('click');
+		await expect(count).toHaveText(`${total} / ${total}`);
+	});
+
+	test('a page that does not fit goes on to new sheets, which say which page they carry on and are undone on a wide screen', async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 375, height: 700 });
+		await page.goto('/#resume');
+		await settle(page);
+
+		const narrow = await reading(page);
+		expect(narrow.cut).toBeGreaterThan(0);
+
+		const sheet = page.locator('[data-page][data-continued]').first();
+		await expect(sheet).not.toHaveAttribute('id', /.*/);
+		await expect(sheet).toHaveAttribute('data-anchor', 'false');
+		const name = await sheet.evaluate(
+			(element) =>
+				document.getElementById(
+					element.getAttribute('aria-labelledby') ?? '',
+				)?.textContent,
+		);
+		expect(name).toMatch(/ — continuación$/);
+
+		// Going to the next sheet from the start of the experience lands on its continuation.
+		await page.locator('.pager [data-turn="next"]').click();
+		await expect(
+			page.locator('[data-page][data-state="current"]'),
+		).toHaveAttribute(
+			'data-title',
+			/^Experiencia \(1 de 2\) — continuación$/,
+		);
+
+		await page.setViewportSize({ width: 1440, height: VIEWPORT_HEIGHT });
+		await page.waitForFunction(
+			() => matchMedia('(min-width: 60rem)').matches,
+		);
+		await expect(page.locator('[data-page][data-continued]')).toHaveCount(
+			0,
+		);
+		await expect(
+			page.locator('[data-page][data-state="current"]'),
+		).toHaveAttribute('data-title', 'Experiencia (1 de 2)');
+
+		await page.setViewportSize({ width: 375, height: 700 });
+		await expect
+			.poll(async () => (await reading(page)).cut)
+			.toBe(narrow.cut);
+	});
+
+	test('lying down, the folder keeps its own height and the bar stays at hand at the foot of the screen', async ({
+		page,
+	}) => {
+		await page.setViewportSize({ width: 740, height: 360 });
+		await page.goto('/');
+		await settle(page);
+
+		expect((await reading(page)).cut).toBe(0);
+		const { pager, footer } = await page.evaluate(() => ({
+			pager: document.querySelector('.pager')?.getBoundingClientRect()
+				.bottom,
+			footer: document
+				.querySelector('body > footer')
+				?.getBoundingClientRect().top,
+		}));
+		expect(pager).toBeCloseTo(footer ?? 0, 0);
+		await page.locator('.pager [data-turn="next"]').click();
+		expect((await reading(page)).index).toBe(1);
+	});
+});
+
+test.describe('the folder on a phone, with a finger', () => {
+	test.use({
+		hasTouch: true,
+		isMobile: true,
+		viewport: { width: 375, height: 700 },
+	});
+	test.skip(
+		({ browserName }) => browserName !== 'chromium',
+		'The swipe is sent with the Chromium protocol.',
+	);
+
+	test('pushing the page up turns to the next sheet and pulling it down turns back, since the page does not scroll', async ({
+		page,
+		context,
+	}) => {
+		await page.goto('/');
+		await settle(page);
+
+		const session = await context.newCDPSession(page);
+		const swipe = async (from: number, to: number) => {
+			await session.send('Input.dispatchTouchEvent', {
+				type: 'touchStart',
+				touchPoints: [{ x: 187, y: from }],
+			});
+			for (let step = 1; step <= 5; step++) {
+				await session.send('Input.dispatchTouchEvent', {
+					type: 'touchMove',
+					touchPoints: [
+						{ x: 187, y: from + ((to - from) * step) / 5 },
+					],
+				});
+			}
+			await session.send('Input.dispatchTouchEvent', {
+				type: 'touchEnd',
+				touchPoints: [],
+			});
+		};
+
+		await swipe(450, 250);
+		await expect.poll(async () => (await reading(page)).index).toBe(1);
+		await swipe(250, 450);
+		await expect.poll(async () => (await reading(page)).index).toBe(0);
+		expect(await page.evaluate(() => scrollY)).toBe(0);
 	});
 });

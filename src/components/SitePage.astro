@@ -80,7 +80,10 @@ const projectFiles = (): string[] => {
 	return readdirSync(path, { recursive: true, withFileTypes: true })
 		.filter((entry) => entry.isFile() && !entry.name.startsWith('.'))
 		.map((entry) =>
-			join(relative(path, entry.parentPath), entry.name).replaceAll('\\', '/'),
+			join(relative(path, entry.parentPath), entry.name).replaceAll(
+				'\\',
+				'/',
+			),
 		);
 };
 const certificationList = sortByOrder(

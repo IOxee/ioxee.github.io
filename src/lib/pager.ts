@@ -53,6 +53,20 @@ export function swipeAction(
 	return dx < 0 ? 'next' : 'prev';
 }
 
+/**
+ * The same, upwards and downwards: on a narrow screen the folder fits the screen and the page does not scroll,
+ * so pushing the page up (as when scrolling down) turns to the next sheet, like the wheel on a wide one.
+ */
+export function verticalSwipeAction(
+	dx: number,
+	dy: number,
+	distance = DEFAULT_SWIPE_DISTANCE,
+): PagerAction | null {
+	if (Math.abs(dy) < distance || Math.abs(dy) <= Math.abs(dx)) return null;
+
+	return dy < 0 ? 'next' : 'prev';
+}
+
 export function sheetStates(index: number, total: number): SheetState[] {
 	return Array.from({ length: Math.max(total, 0) }, (_, position) => {
 		if (position < index) return 'past';
